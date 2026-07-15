@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VERA - Tableau de bord</title>
+<link rel="stylesheet" href="styleI.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">V</div>
+      <div>
+        <div class="brand-name">VERA</div>
+        <div class="brand-tag">Real Opportunities, Smart Jobs</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item active" href="#">
+        <svg viewBox="0 0 24 24"><path d="M4 11L12 4l8 7"/><path d="M6 10v9h5v-6h2v6h5v-9"/></svg>
+        Tableau de bord
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Opportunités
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+        Candidatures
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        Profil
+        <span class="pill">100%</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>
+        Coaching &amp; Carrière
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M2 8l10-5 10 5-10 5z"/><path d="M6 10.5V16c0 1.5 2.5 3 6 3s6-1.5 6-3v-5.5"/></svg>
+        Formations
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+        Messages
+        <span class="pill blue">12</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        Notifications
+        <span class="pill red">8</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+        Favoris
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.6 1z"/></svg>
+        Paramètres
+      </a>
+    </nav>
+
+    <div class="premium-card">
+      <div class="premium-crown">👑</div>
+      <div class="premium-title">Passez à Premium</div>
+      <div class="premium-text">Débloquez toutes les fonctionnalités et multipliez vos opportunités</div>
+      <button class="premium-btn">Passer Premium ✨</button>
+    </div>
+
+    <div class="help">
+      <div class="help-icon">🎧</div>
+      <div>
+        <div class="help-title">Besoin d'aide ?</div>
+        <div class="help-sub">Chattez avec notre support</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <button class="hamburger" aria-label="Menu">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div class="search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" placeholder="Rechercher un emploi, compétence, entreprise...">
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn">
+          <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span class="badge">8</span>
+        </button>
+        <div class="lang">🌐 FR ⌄</div>
+        <div class="user">
+          <img src="https://i.pravatar.cc/64?img=13" alt="avatar">
+          <div class="user-text">
+            <div>Bonjour, Junior 👋</div>
+            <div class="verified">Profil vérifié ✓</div>
+          </div>
+          <span class="chev">⌄</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT GRID -->
+    <div class="content">
+
+      <!-- LEFT COLUMN -->
+      <div class="col-left">
+
+        <!-- HERO -->
+        <section class="hero">
+          <div class="hero-text">
+            <h1>VERA travaille pour toi 24h/24 🚀</h1>
+            <p>Nous analysons ton profil et te connectons aux meilleures opportunités.</p>
+
+            <div class="hero-stats">
+              <div class="stat">
+                <div class="stat-icon blue">💼</div>
+                <div>
+                  <div class="stat-label">Opportunités trouvées</div>
+                  <div class="stat-value">128 <span class="up">↗ 23%</span></div>
+                  <div class="stat-period">Cette semaine</div>
+                </div>
+              </div>
+              <div class="stat">
+                <div class="stat-icon teal">📨</div>
+                <div>
+                  <div class="stat-label">Candidatures envoyées</div>
+                  <div class="stat-value">16 <span class="up">↗ 40%</span></div>
+                  <div class="stat-period">Cette semaine</div>
+                </div>
+              </div>
+              <div class="stat">
+                <div class="stat-icon purple">👁</div>
+                <div>
+                  <div class="stat-label">Vues de ton profil</div>
+                  <div class="stat-value">342 <span class="up">↗ 18%</span></div>
+                  <div class="stat-period">Cette semaine</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hero-robot" aria-hidden="true">
+            <div class="robot">
+              <div class="robot-head">
+                <div class="robot-eye"></div>
+                <div class="robot-eye"></div>
+              </div>
+              <div class="robot-body">
+                <div class="robot-chest"></div>
+              </div>
+              <div class="robot-arm left"></div>
+              <div class="robot-arm right"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RECOMMENDATIONS -->
+        <section class="reco">
+          <div class="reco-head">
+            <h2>Opportunités recommandées pour toi ✨</h2>
+            <a href="#" class="see-all">Voir toutes les offres →</a>
+          </div>
+
+          <div class="filters">
+            <button class="chip active">☰ Tout</button>
+            <button class="chip">✉ Remote</button>
+            <button class="chip">📄 CDI</button>
+            <button class="chip">👤 Freelance</button>
+            <button class="chip">📍 Tous pays ⌄</button>
+            <button class="chip">🔧 Filtres ⌄</button>
+          </div>
+
+          <div class="jobs">
+
+            <article class="job">
+              <div class="job-logo meta">∞</div>
+              <div class="job-info">
+                <div class="job-compat">98% Compatible</div>
+                <div class="job-title">Développeur Full Stack (Remote) <span class="verified-dot">✓</span></div>
+                <div class="job-sub">Meta · <span>🌍 Partout dans le monde</span> <span class="tag">Remote</span></div>
+                <div class="job-tags">
+                  <span>React</span><span>Node.js</span><span>TypeScript</span><span>+3</span>
+                </div>
+              </div>
+              <div class="job-side">
+                <div class="job-price">2 500 – 4 000 $<span>par mois</span></div>
+                <div class="job-actions">
+                  <button class="btn-primary">Voir détails</button>
+                  <button class="btn-icon">🔖</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="job">
+              <div class="job-logo shopify">🛍</div>
+              <div class="job-info">
+                <div class="job-compat">92% Compatible</div>
+                <div class="job-title">Product Designer UI/UX <span class="verified-dot">✓</span></div>
+                <div class="job-sub">Shopify · <span>Canada</span> <span class="tag">Remote</span></div>
+                <div class="job-tags">
+                  <span>Figma</span><span>Adobe XD</span><span>UI/UX</span><span>+2</span>
+                </div>
+              </div>
+              <div class="job-side">
+                <div class="job-price">3 000 – 5 000 $<span>par mois</span></div>
+                <div class="job-actions">
+                  <button class="btn-primary">Voir détails</button>
+                  <button class="btn-icon">🔖</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="job">
+              <div class="job-logo decathlon">D</div>
+              <div class="job-info">
+                <div class="job-compat">89% Compatible</div>
+                <div class="job-title">Digital Marketing Specialist <span class="verified-dot">✓</span></div>
+                <div class="job-sub">Decathlon · <span>France</span> <span class="tag">Hybrid</span></div>
+                <div class="job-tags">
+                  <span>SEO</span><span>Google Ads</span><span>Analytics</span><span>+2</span>
+                </div>
+              </div>
+              <div class="job-side">
+                <div class="job-price">45 000 – 60 000 €<span>par an</span></div>
+                <div class="job-actions">
+                  <button class="btn-primary">Voir détails</button>
+                  <button class="btn-icon">🔖</button>
+                </div>
+              </div>
+            </article>
+
+          </div>
+
+          <div class="more">
+            <button class="btn-outline">Voir plus d'opportunités ⌄</button>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="col-right">
+
+        <div class="card score-card">
+          <div class="score-head">Score VERA <span class="info">ⓘ</span></div>
+          <div class="score-ring">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" class="ring-bg"></circle>
+              <circle cx="60" cy="60" r="52" class="ring-fg"></circle>
+            </svg>
+            <div class="score-num">86<span>/100</span></div>
+          </div>
+          <div class="score-badge">★ Excellent</div>
+          <div class="score-text">Ton profil est très attractif !</div>
+          <button class="btn-primary full">↗ Améliorer encore</button>
+        </div>
+
+        <div class="card actions-card">
+          <div class="card-head">🎯 Actions prioritaires</div>
+          <div class="action-item">
+            <div class="action-icon blue">📝</div>
+            <div class="action-text">
+              <div>Ajoute une nouvelle compétence clé</div>
+              <div class="action-sub">+12% sur ton score</div>
+            </div>
+            <span class="chev">›</span>
+          </div>
+          <div class="action-item">
+            <div class="action-icon orange">🏅</div>
+            <div class="action-text">
+              <div>Valide ton expérience actuelle</div>
+              <div class="action-sub">+8% sur ton score</div>
+            </div>
+            <span class="chev">›</span>
+          </div>
+          <div class="action-item">
+            <div class="action-icon green">🎓</div>
+            <div class="action-text">
+              <div>Suis une formation recommandée</div>
+              <div class="action-sub">+15% sur ton score</div>
+            </div>
+            <span class="chev">›</span>
+          </div>
+        </div>
+
+        <div class="card coach-card">
+          <div class="coach-head">
+            <span>🤖 Coach IA VERA</span>
+          </div>
+          <p>Voici ce que je te recommande aujourd'hui :</p>
+          <ul>
+            <li>✔ Améliorer ton profil Linkedin</li>
+            <li>✔ Développer la compétence Docker</li>
+            <li>✔ Postuler à 5 nouvelles offres</li>
+          </ul>
+          <div class="coach-logo">V</div>
+          <button class="btn-white full">Discuter avec VERA →</button>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+</div>
+
+</body>
+</html>
