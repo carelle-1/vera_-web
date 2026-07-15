@@ -1,3 +1,12 @@
+// ============== GARDE DE SESSION (CONNEXION) ==============
+// Si l'utilisateur est déjà connecté, on le renvoie au tableau de bord
+// (empêche de revenir sur la connexion tant qu'il n'a pas cliqué sur Déconnexion).
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    window.location.replace("/tableau-de-bord");
+  }
+});
+
 // ============== TABS SWITCH ==============
 const tabs = document.querySelectorAll(".auth-tab");
 const forms = document.querySelectorAll(".auth-form");
@@ -365,6 +374,7 @@ function signInWithGoogle() {
               lastName: parts.slice(1).join(" ") || "",
               fullName: fullName,
               email: user.email,
+              photoURL: user.photoURL || "",
               role: "chercheur_emploi",
               createdAt: firebase.database.ServerValue.TIMESTAMP
             });

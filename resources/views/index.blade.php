@@ -16,7 +16,7 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-logo">V</div>
+        <div class="brand-logo"><img src="/image/veras1.png" alt="VERA" style="width:100%;height:100%;object-fit:contain;border-radius:8px;"></div>
       <div>
         <div class="brand-name">VERA</div>
         <div class="brand-tag">Real Opportunities, Smart Jobs</div>
@@ -98,20 +98,21 @@
         <input type="text" placeholder="Rechercher un emploi, compétence, entreprise...">
       </div>
       <div class="top-actions">
-        <button class="icon-btn">
-          <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-          <span class="badge">8</span>
-        </button>
-        <div class="lang">🌐 FR ⌄</div>
-        <div class="user">
-          <img src="https://i.pravatar.cc/64?img=13" alt="avatar">
-          <div class="user-text">
-            <div>Bonjour, Junior 👋</div>
-            <div class="verified">Profil vérifié ✓</div>
+          <button class="icon-btn">
+            <img src="/image/3917270.png" alt="" style="width:20px;height:20px;object-fit:contain;">
+            <span class="badge">8</span>
+          </button>
+          <div class="lang"><img src="/image/3917561.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;"> FR ⌄</div>
+          <div class="user">
+            <img id="userAvatar" src="https://i.pravatar.cc/64?img=13" alt="avatar">
+            <div class="user-text">
+              <div>Bonjour, Junior </div>
+              <!-- <div class="verified">Profil vérifié ✓</div> -->
+            </div>
+            <span class="chev">⌄</span>
           </div>
-          <span class="chev">⌄</span>
+          <button id="logoutBtn" style="margin-left:12px;background:none;border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;">Déconnexion</button>
         </div>
-      </div>
     </header>
 
     <!-- CONTENT GRID -->
@@ -154,17 +155,7 @@
             </div>
           </div>
           <div class="hero-robot" aria-hidden="true">
-            <div class="robot">
-              <div class="robot-head">
-                <div class="robot-eye"></div>
-                <div class="robot-eye"></div>
-              </div>
-              <div class="robot-body">
-                <div class="robot-chest"></div>
-              </div>
-              <div class="robot-arm left"></div>
-              <div class="robot-arm right"></div>
-            </div>
+            <img src="/image/1.png" alt="" style="width:100%;height:100%;object-fit:contain;">
           </div>
         </section>
 
@@ -317,5 +308,11 @@
   </main>
 </div>
 
+<!-- ============== FIREBASE JS SDK + GARDE DE SESSION ============== -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-init.js"></script>
+<script src="scriptI.js"></script>
 </body>
 </html>
