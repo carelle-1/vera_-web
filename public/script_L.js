@@ -348,3 +348,39 @@ document.getElementById("successBtn").addEventListener("click", () => {
   strengthFill.style.width = "0%";
   strengthLabel.textContent = "Force du mot de passe";
 });
+
+// ============== CONNEXION GOOGLE ==============
+function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      const fullName = user.displayName || "";
+      firebase.database().ref("users/" + user.uid).once("value")
+        .then((snapshot) => {
+          if (!snapshot.exists()) {
+            const parts = (user.displayName || "").trim().split(/\s+/);
+            return firebase.database().ref("users/" + user.uid).set({
+              firstName: parts[0] || "",
+              lastName: parts.slice(1).join(" ") || "",
+              fullName: fullName,
+              email: user.email,
+              role: "chercheur_emploi",
+              createdAt: firebase.database.ServerValue.TIMESTAMP
+            });
+          }
+        })
+        .then(() => {
+          window.location.href = "/tableau-de-bord";
+        });
+    })
+    .catch((error) => {
+      alert("Connexion Google impossible : " + (error.message || error.code));
+    });
+}
+
+document.querySelectorAll(".social-btn").forEach((btn) => {
+  if (btn.textContent.trim() === "Google") {
+    btn.addEventListener("click", signInWithGoogle);
+  }
+});
