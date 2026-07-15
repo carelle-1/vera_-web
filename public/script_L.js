@@ -12,6 +12,14 @@ function switchTo(formName) {
   forms.forEach(f => { if (f.id === formName + "Form") f.style.display = "flex"; });
 }
 
+function showForm(formId) {
+  tabs.forEach(t => t.classList.remove("active"));
+  forms.forEach(f => { f.classList.remove("active"); f.style.display = "none"; });
+  successBox.classList.remove("active");
+  const f = document.getElementById(formId);
+  if (f) { f.classList.add("active"); f.style.display = "flex"; }
+}
+
 tabs.forEach(tab => {
   tab.addEventListener("click", () => switchTo(tab.dataset.form));
 });
@@ -257,6 +265,71 @@ signupForm.addEventListener("submit", (e) => {
       setError("signupEmail", "signupEmailError", firebaseAuthError(error));
     });
 });
+
+// ============== FORGOT PASSWORD ==============
+const forgotLink = document.getElementById("forgotLink");
+if (forgotLink) {
+  forgotLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    showForm("forgotForm");
+  });
+}
+
+const forgotForm = document.getElementById("forgotForm");
+if (forgotForm) {
+  forgotForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    let valid = true;
+    const email = document.getElementById("forgotEmail").value.trim();
+
+    if (!email) {
+      setError("forgotEmail", "forgotEmailError", "L'adresse email est requise.");
+      valid = false;
+    } else if (!isValidEmail(email)) {
+      setError("forgotEmail", "forgotEmailError", "Adresse email invalide.");
+      valid = false;
+    } else {
+      setError("forgotEmail", "forgotEmailError", "");
+    }
+
+    if (!valid) return;
+
+    const btn = forgotForm.querySelector(".btn-submit");
+    const original = btn.textContent;
+    btn.textContent = "Envoi...";
+    btn.classList.add("loading");
+
+    firebase.auth().sendPasswordResetEmail(email)
+      .then(() => {
+        btn.textContent = original;
+        btn.classList.remove("loading");
+        document.getElementById("forgotEmailShown").textContent = email;
+        document.getElementById("forgotFields").style.display = "none";
+        document.getElementById("forgotDone").style.display = "block";
+      })
+      .catch((error) => {
+        btn.textContent = original;
+        btn.classList.remove("loading");
+        const map = {
+          "auth/invalid-email": "Adresse email invalide.",
+          "auth/user-not-found": "Aucun compte ne correspond à cet email.",
+          "auth/missing-email": "L'adresse email est requise.",
+          "auth/network-request-failed": "Problème de connexion réseau."
+        };
+        setError("forgotEmail", "forgotEmailError", map[error.code] || (error.message || "Une erreur est survenue."));
+      });
+  });
+}
+
+const forgotBackBtn = document.getElementById("forgotBackBtn");
+if (forgotBackBtn) {
+  forgotBackBtn.addEventListener("click", () => {
+    document.getElementById("forgotFields").style.display = "block";
+    document.getElementById("forgotDone").style.display = "none";
+    forgotForm.reset();
+    switchTo("login");
+  });
+}
 
 // ============== SUCCESS BOX ==============
 function showSuccess(title, text) {
