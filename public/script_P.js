@@ -28,13 +28,12 @@ function renderSkills() {
 }
 
 // ============== SCORE RING ==============
-function renderScoreRing() {
+function renderScoreRing(score = 92) {
   const ring = document.getElementById("scoreRing");
-  const score = 92;
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
   ring.style.strokeDasharray = circumference;
-  ring.style.strokeDashoffset = circumference; // start empty
+  ring.style.strokeDashoffset = circumference;
 
   requestAnimationFrame(() => {
     setTimeout(() => {
@@ -66,12 +65,20 @@ document.querySelectorAll(".tab").forEach(tab => {
     const infoLayout = document.getElementById("infoLayout");
     const expLayout = document.getElementById("expLayout");
     const skillsLayout = document.getElementById("skillsLayout");
+    const formLayout = document.getElementById("formLayout");
+    const certifLayout = document.getElementById("certifLayout");
+    const langLayout = document.getElementById("langLayout");
+    const prefLayout = document.getElementById("prefLayout");
 
     overview.style.display = "none";
     placeholder.style.display = "none";
     if (infoLayout) infoLayout.style.display = "none";
     if (expLayout) expLayout.style.display = "none";
     if (skillsLayout) skillsLayout.style.display = "none";
+    if (formLayout) formLayout.style.display = "none";
+    if (certifLayout) certifLayout.style.display = "none";
+    if (langLayout) langLayout.style.display = "none";
+    if (prefLayout) prefLayout.style.display = "none";
 
     if (key === "overview") {
       overview.style.display = "grid";
@@ -83,6 +90,18 @@ document.querySelectorAll(".tab").forEach(tab => {
     } else if (key === "skills") {
       if (skillsLayout) skillsLayout.style.display = "block";
       if (typeof renderSkillsManage === "function") renderSkillsManage();
+    } else if (key === "formations") {
+      if (formLayout) formLayout.style.display = "block";
+      if (typeof renderFormations === "function") renderFormations();
+    } else if (key === "certifs") {
+      if (certifLayout) certifLayout.style.display = "block";
+      if (typeof renderCertifications === "function") renderCertifications();
+    } else if (key === "langues") {
+      if (langLayout) langLayout.style.display = "block";
+      if (typeof renderLanguages === "function") renderLanguages();
+    } else if (key === "prefs") {
+      if (prefLayout) prefLayout.style.display = "block";
+      if (typeof renderPreferences === "function") renderPreferences();
     } else {
       placeholder.style.display = "block";
       placeholder.textContent = `Section "${tabLabels[key]}" — contenu à compléter prochainement.`;
@@ -131,6 +150,101 @@ function parseSalary(text) {
   const per = text.match(/\/\s*(\w+)/);
   if (per) result.period = per[1];
   return result;
+}
+
+function formatLastUpdated(timestamp) {
+  if (!timestamp) return "—";
+  const d = new Date(timestamp);
+  if (isNaN(d.getTime())) return "—";
+  const months = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+  const h = d.getHours().toString().padStart(2, "0");
+  const m = d.getMinutes().toString().padStart(2, "0");
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()} à ${h}:${m}`;
+}
+
+function updateLastModified() {
+  const user = firebase.auth().currentUser;
+  if (!user) return Promise.resolve();
+  return firebase.database().ref("users/" + user.uid + "/lastUpdated").set(firebase.database.ServerValue.TIMESTAMP);
+}
+
+function renderLastUpdated() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  firebase.database().ref("users/" + user.uid + "/lastUpdated").once("value").then((snap) => {
+    const el = document.getElementById("lastUpdatedDate");
+    if (!el) return;
+    const ts = snap.val();
+    const text = ts ? formatLastUpdated(ts) : "—";
+    el.textContent = `Dernière mise à jour : ${text}`;
+  }).catch(() => {});
+}
+
+function renderCompletion() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  firebase.database().ref("users/" + user.uid).once("value").then((snap) => {
+    const data = snap.val() || {};
+    const valueEl = document.getElementById("completionValue");
+    const fillEl = document.getElementById("completionFill");
+    const textEl = document.getElementById("completionText");
+    if (!valueEl || !fillEl || !textEl) return;
+
+    let score = 0;
+    const maxScore = 100;
+
+    const required = [
+      "firstName", "lastName", "email", "birthDate", "residence", "whatsapp"
+    ];
+    const optional = [
+      "nationality", "maritalStatus", "mainLanguage", "linkedin",
+      "jobTitle", "availability", "contractType", "workLocation", "salary", "about"
+    ];
+    const stats = ["experienceYears", "projectsCount", "clientsCount"];
+
+    const reqFilled = required.filter(f => (data[f] || "").toString().trim() !== "").length;
+    score += (reqFilled / required.length) * 40;
+
+    const optFilled = optional.filter(f => (data[f] || "").toString().trim() !== "").length;
+    score += (optFilled / optional.length) * 25;
+
+    const statsFilled = stats.filter(f => data[f] !== undefined && data[f] !== null && data[f] !== "" && data[f] > 0).length;
+    score += (statsFilled / stats.length) * 10;
+
+    const sections = ["experiences", "skills", "formations", "certifications", "languages", "preferences"];
+    const sectionsFilled = sections.filter(s => {
+      const sec = data[s];
+      if (!sec || typeof sec !== "object") return false;
+      const keys = Object.keys(sec);
+      return keys.length > 0;
+    }).length;
+    score += (sectionsFilled / sections.length) * 25;
+
+    const pct = Math.min(100, Math.max(0, Math.round(score)));
+    valueEl.textContent = pct + "%";
+    fillEl.style.width = pct + "%";
+
+    const scoreNum = document.getElementById("scoreNum");
+    const scoreBadge = document.getElementById("scoreBadge");
+    const scoreText = document.getElementById("scoreText");
+    if (scoreNum) scoreNum.innerHTML = `${pct}<span>/100</span>`;
+    if (scoreBadge) {
+      if (pct >= 90) scoreBadge.textContent = "🏆 Excellent";
+      else if (pct >= 75) scoreBadge.textContent = "🌟 Très bon";
+      else if (pct >= 50) scoreBadge.textContent = "👍 Bon début";
+      else if (pct > 0) scoreBadge.textContent = "📝 À compléter";
+      else scoreBadge.textContent = "😶 Vide";
+    }
+    if (scoreText) {
+      if (pct >= 90) scoreText.textContent = "Ton profil est très attractif pour les recruteurs !";
+      else if (pct >= 75) scoreText.textContent = "Continuez comme ça, vous êtes sur la bonne voie.";
+      else if (pct >= 50) scoreText.textContent = "Ajoutez encore quelques informations pour améliorer votre score.";
+      else if (pct > 0) scoreText.textContent = "Votre profil manque de détails pour être mis en avant.";
+      else scoreText.textContent = "Commencez par remplir vos informations pour obtenir un score.";
+    }
+
+    renderScoreRing(pct);
+  }).catch(() => {});
 }
 
 function displayValue(el, value) {
@@ -366,6 +480,8 @@ document.querySelectorAll(".btn-edit-section").forEach((btn) => {
           btn.dataset.editing = "false";
           btn.disabled = false;
           setTimeout(() => { btn.textContent = "Modifier"; }, 1500);
+          updateLastModified();
+          renderCompletion();
         })
         .catch((error) => {
           btn.textContent = "Modifier";
@@ -403,6 +519,8 @@ if (aboutBtn && aboutEl) {
           aboutBtn.dataset.editing = "false";
           aboutBtn.disabled = false;
           setTimeout(() => { aboutBtn.textContent = "Modifier"; }, 1500);
+          updateLastModified();
+          renderCompletion();
         })
         .catch((err) => {
           aboutBtn.textContent = "Modifier";
@@ -441,6 +559,7 @@ document.querySelectorAll(".stat-input").forEach((input) => {
     const clean = isNaN(value) || value < 0 ? 0 : value;
     input.value = clean;
     firebase.database().ref("users/" + user.uid).update({ [field]: clean })
+      .then(() => updateLastModified())
       .catch((err) => console.warn("Sauvegarde stat échouée:", field, err && (err.message || err.code)));
   });
 });
@@ -574,6 +693,9 @@ function loadProfile(user) {
     } else {
       showInitial(firstName, lastName);
     }
+
+    renderLastUpdated();
+    renderCompletion();
   });
 }
 
@@ -628,7 +750,8 @@ avatarInput.addEventListener("change", (e) => {
       showAvatar(data.photoURL);
       avatarSpinner.classList.remove("active");
       avatarInput.value = "";
-      // Notifie le header (même page) que la photo a changé
+      updateLastModified();
+          renderCompletion();
       window.dispatchEvent(new CustomEvent("profile-avatar-updated", { detail: data.photoURL }));
     })
     .catch((error) => {
@@ -795,7 +918,8 @@ function buildExpModal() {
     const ref = expRef();
     if (!ref) return;
     const task = expEditId ? ref.child(expEditId).update(payload) : ref.push(payload);
-    task.then(() => { closeExpModal(); renderExperiences(); })
+    task.then(() => { updateLastModified();
+          renderCompletion(); closeExpModal(); renderExperiences(); })
         .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
   });
 }
@@ -881,23 +1005,34 @@ function renderSkillsManage() {
     }
     empty.style.display = "none";
 
+    let rows = "";
     items.forEach((sk) => {
-      const row = document.createElement("div");
-      row.className = "skill-manage-row";
-      row.innerHTML = `
-        <div class="skill-manage-info">
-          <span class="skill-manage-name">${escapeHtml(sk.name || "Compétence")}</span>
-          <span class="skill-manage-level">${escapeHtml(sk.level || "")}</span>
-        </div>
-        <div class="skill-manage-actions">
-          <button class="exp-btn skill-edit" data-id="${sk.id}">✏ Modifier</button>
-          <button class="exp-btn exp-delete skill-delete" data-id="${sk.id}">🗑 Supprimer</button>
-        </div>`;
-      list.appendChild(row);
+      rows += `
+        <tr>
+          <td><button class="exp-cell-title skill-name-edit" data-id="${sk.id}" title="Cliquer pour modifier">${escapeHtml(sk.name || "Compétence")}</button></td>
+          <td>${escapeHtml(sk.level || "—")}</td>
+          <td class="exp-action-cell">
+            <button class="exp-delete-btn" data-id="${sk.id}" title="Supprimer">
+              <img src="/image/delete.png" alt="Supprimer">
+            </button>
+          </td>
+        </tr>`;
     });
 
-    list.querySelectorAll(".skill-edit").forEach((b) => b.addEventListener("click", () => openSkillModal(b.dataset.id)));
-    list.querySelectorAll(".skill-delete").forEach((b) => b.addEventListener("click", () => deleteSkill(b.dataset.id)));
+    list.innerHTML = `
+      <table class="exp-table">
+        <thead>
+          <tr>
+            <th>Compétence</th>
+            <th>Niveau</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+
+    list.querySelectorAll(".skill-name-edit").forEach((b) => b.addEventListener("click", () => openSkillModal(b.dataset.id)));
+    list.querySelectorAll(".exp-delete-btn").forEach((b) => b.addEventListener("click", () => deleteSkill(b.dataset.id)));
   }).catch((err) => {
     if (list) list.innerHTML = `<div class="exp-empty"><p>Impossible de charger les compétences.</p><span>${(err && (err.message || err.code)) || ""}</span></div>`;
   });
@@ -965,7 +1100,8 @@ function buildSkillModal() {
     const ref = skillsRef();
     if (!ref) return;
     const task = skillEditId ? ref.child(skillEditId).update(payload) : ref.push(payload);
-    task.then(() => { closeSkillModal(); renderSkillsManage(); })
+    task.then(() => { updateLastModified();
+          renderCompletion(); closeSkillModal(); renderSkillsManage(); })
         .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
   });
 }
@@ -1012,6 +1148,779 @@ if (skillSearchToggle && skillSearchWrap) {
     } else {
       skillSearchWrap.style.display = "flex";
       if (skillSearchEl) skillSearchEl.focus();
+    }
+  });
+}
+
+// ============== FORMATIONS (CRUD, même structure qu'Expérience) ==============
+function formRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("users/" + user.uid + "/formations") : null;
+}
+
+function formMatches(f, q) {
+  if (!q) return true;
+  const hay = [f.diploma, f.school, f.location, f.description].join(" ").toLowerCase();
+  return hay.includes(q.toLowerCase());
+}
+
+function renderFormations() {
+  const list = document.getElementById("formList");
+  const empty = document.getElementById("formEmpty");
+  const search = document.getElementById("formSearch");
+  if (!list) return;
+  const ref = formRef();
+  if (!ref) return;
+
+  const q = search ? search.value.trim() : "";
+
+  ref.once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const items = Object.keys(data).map((id) => ({ id, ...data[id] }))
+      .sort((a, b) => (b.startYear || 0) - (a.startYear || 0));
+
+    const filtered = items.filter((f) => formMatches(f, q));
+
+    list.innerHTML = "";
+    if (filtered.length === 0) {
+      empty.style.display = "block";
+      empty.querySelector("p").textContent = q
+        ? "Aucune formation ne correspond à votre recherche."
+        : "Aucune formation pour le moment.";
+      return;
+    }
+    empty.style.display = "none";
+
+    let rows = "";
+    filtered.forEach((f) => {
+      const start = f.startYear || "—";
+      const end = (f.endYear && f.endYear !== "Présent") ? f.endYear : (f.endYear === "Présent" ? "Présent" : "—");
+      rows += `
+        <tr>
+          <td><button class="exp-cell-title form-title-edit" data-id="${f.id}" title="Cliquer pour modifier">${escapeHtml(f.diploma || "Diplôme")}</button></td>
+          <td>${escapeHtml(f.school || "—")}</td>
+          <td>${escapeHtml(f.location || "—")}</td>
+          <td>${escapeHtml(start)}</td>
+          <td>${escapeHtml(end)}</td>
+          <td class="exp-desc-cell">${escapeHtml(f.description || "—")}</td>
+          <td class="exp-action-cell">
+            <button class="exp-delete-btn" data-id="${f.id}" title="Supprimer">
+              <img src="/image/delete.png" alt="Supprimer">
+            </button>
+          </td>
+        </tr>`;
+    });
+
+    list.innerHTML = `
+      <table class="exp-table">
+        <thead>
+          <tr>
+            <th>Diplôme</th>
+            <th>Établissement</th>
+            <th>Lieu</th>
+            <th>Année de début</th>
+            <th>Année de fin</th>
+            <th>Description</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+
+    list.querySelectorAll(".form-title-edit").forEach((b) => b.addEventListener("click", () => openFormModal(b.dataset.id)));
+    list.querySelectorAll(".exp-delete-btn").forEach((b) => b.addEventListener("click", () => deleteFormation(b.dataset.id)));
+  }).catch((err) => {
+    if (list) list.innerHTML = `<div class="exp-empty"><p>Impossible de charger les formations.</p><span>${(err && (err.message || err.code)) || ""}</span></div>`;
+  });
+}
+
+function deleteFormation(id) {
+  if (!confirm("Supprimer cette formation ?")) return;
+  const ref = formRef();
+  if (!ref) return;
+  ref.child(id).remove()
+    .then(() => renderFormations())
+    .catch((err) => alert("Échec de la suppression : " + (err.message || err.code)));
+}
+
+let formModal, formFormEl, formModalTitle, formEditId;
+
+function buildFormModal() {
+  if (document.getElementById("formModal")) return;
+  const overlay = document.createElement("div");
+  overlay.className = "exp-modal-overlay";
+  overlay.id = "formModal";
+  overlay.innerHTML = `
+    <div class="exp-modal">
+      <div class="exp-modal-head">
+        <h3 id="formModalTitle">Ajouter une formation</h3>
+        <button class="exp-modal-close" id="formModalClose" type="button">×</button>
+      </div>
+      <form id="formForm" class="exp-form">
+        <label>Diplôme / Intitulé<input type="text" name="diploma" required placeholder="Ex. Licence en Informatique"></label>
+        <label>Établissement<input type="text" name="school" placeholder="Ex. Université de Yaoundé"></label>
+        <label>Lieu<input type="text" name="location" placeholder="Ex. Yaoundé, Cameroun"></label>
+        <div class="exp-form-row">
+          <label>Année de début<input type="number" name="startYear" min="1950" max="2100" required placeholder="2018"></label>
+          <label>Année de fin
+            <input type="text" name="endYear" placeholder="Présent">
+            <small>Laissez vide ou « Présent » si en cours</small>
+          </label>
+        </div>
+        <label>Description<input type="text" name="description" placeholder="Votre spécialité en quelques mots..."></label>
+        <div class="exp-form-actions">
+          <button type="button" class="btn-outline-sm" id="formCancel">Annuler</button>
+          <button type="submit" class="btn-primary-sm">Enregistrer</button>
+        </div>
+      </form>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  formModal = overlay;
+  formFormEl = overlay.querySelector("#formForm");
+  formModalTitle = overlay.querySelector("#formModalTitle");
+  formEditId = null;
+
+  overlay.querySelector("#formModalClose").addEventListener("click", closeFormModal);
+  overlay.querySelector("#formCancel").addEventListener("click", closeFormModal);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeFormModal(); });
+
+  formFormEl.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    const fd = new FormData(formFormEl);
+    const endRaw = (fd.get("endYear") || "").toString().trim();
+    const payload = {
+      diploma: (fd.get("diploma") || "").toString().trim(),
+      school: (fd.get("school") || "").toString().trim(),
+      location: (fd.get("location") || "").toString().trim(),
+      startYear: parseInt(fd.get("startYear"), 10) || new Date().getFullYear(),
+      endYear: endRaw === "" ? "Présent" : endRaw,
+      description: (fd.get("description") || "").toString().trim()
+    };
+    const ref = formRef();
+    if (!ref) return;
+    const task = formEditId ? ref.child(formEditId).update(payload) : ref.push(payload);
+    task.then(() => { updateLastModified();
+          renderCompletion(); closeFormModal(); renderFormations(); })
+        .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
+  });
+}
+
+function openFormModal(id) {
+  buildFormModal();
+  const ref = formRef();
+  if (!ref) return;
+  formFormEl.reset();
+  if (id) {
+    formEditId = id;
+    formModalTitle.textContent = "Modifier la formation";
+    ref.child(id).once("value").then((snap) => {
+      const d = snap.val() || {};
+      formFormEl.diploma.value = d.diploma || "";
+      formFormEl.school.value = d.school || "";
+      formFormEl.location.value = d.location || "";
+      formFormEl.startYear.value = d.startYear || "";
+      formFormEl.endYear.value = (d.endYear === "Présent" ? "" : d.endYear) || "";
+      formFormEl.description.value = d.description || "";
+    });
+  } else {
+    formEditId = null;
+    formModalTitle.textContent = "Ajouter une formation";
+  }
+  formModal.classList.add("active");
+}
+
+function closeFormModal() {
+  if (formModal) formModal.classList.remove("active");
+  formEditId = null;
+}
+
+const formAddBtn = document.getElementById("formAddBtn");
+if (formAddBtn) formAddBtn.addEventListener("click", () => openFormModal(null));
+
+const formSearchEl = document.getElementById("formSearch");
+if (formSearchEl) formSearchEl.addEventListener("input", renderFormations);
+
+const formSearchToggle = document.getElementById("formSearchToggle");
+const formSearchWrap = document.getElementById("formSearchWrap");
+if (formSearchToggle && formSearchWrap) {
+  formSearchToggle.addEventListener("click", () => {
+    const visible = formSearchWrap.style.display !== "none";
+    if (visible) {
+      formSearchWrap.style.display = "none";
+      if (formSearchEl) { formSearchEl.value = ""; renderFormations(); }
+    } else {
+      formSearchWrap.style.display = "flex";
+      if (formSearchEl) formSearchEl.focus();
+    }
+  });
+}
+
+// ============== CERTIFICATIONS (CRUD, même structure qu'Expérience) ==============
+function certifRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("users/" + user.uid + "/certifications") : null;
+}
+
+function certifMatches(cert, q) {
+  if (!q) return true;
+  const hay = [cert.name, cert.issuer, cert.date, cert.expiryDate, cert.description].join(" ").toLowerCase();
+  return hay.includes(q.toLowerCase());
+}
+
+function renderCertifications() {
+  const list = document.getElementById("certifList");
+  const empty = document.getElementById("certifEmpty");
+  const search = document.getElementById("certifSearch");
+  if (!list) return;
+  const ref = certifRef();
+  if (!ref) return;
+
+  const q = search ? search.value.trim() : "";
+
+  ref.once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const items = Object.keys(data).map((id) => ({ id, ...data[id] }))
+      .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+    const filtered = items.filter((cert) => certifMatches(cert, q));
+
+    list.innerHTML = "";
+    if (filtered.length === 0) {
+      empty.style.display = "block";
+      empty.querySelector("p").textContent = q
+        ? "Aucune certification ne correspond à votre recherche."
+        : "Aucune certification pour le moment.";
+      return;
+    }
+    empty.style.display = "none";
+
+    let rows = "";
+    filtered.forEach((cert) => {
+      rows += `
+        <tr>
+          <td><button class="exp-cell-title certif-title-edit" data-id="${cert.id}" title="Cliquer pour modifier">${escapeHtml(cert.name || "Certification")}</button></td>
+          <td>${escapeHtml(cert.issuer || "—")}</td>
+          <td>${escapeHtml(cert.date || "—")}</td>
+          <td>${escapeHtml(cert.expiryDate || "—")}</td>
+          <td class="exp-desc-cell">${escapeHtml(cert.description || "—")}</td>
+          <td class="exp-action-cell">
+            <button class="exp-delete-btn" data-id="${cert.id}" title="Supprimer">
+              <img src="/image/delete.png" alt="Supprimer">
+            </button>
+          </td>
+        </tr>`;
+    });
+
+    list.innerHTML = `
+      <table class="exp-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Organisme</th>
+            <th>Date d'obtention</th>
+            <th>Date d'expiration</th>
+            <th>Description</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+
+    list.querySelectorAll(".certif-title-edit").forEach((b) => b.addEventListener("click", () => openCertifModal(b.dataset.id)));
+    list.querySelectorAll(".exp-delete-btn").forEach((b) => b.addEventListener("click", () => deleteCertification(b.dataset.id)));
+  }).catch((err) => {
+    if (list) list.innerHTML = `<div class="exp-empty"><p>Impossible de charger les certifications.</p><span>${(err && (err.message || err.code)) || ""}</span></div>`;
+  });
+}
+
+function deleteCertification(id) {
+  if (!confirm("Supprimer cette certification ?")) return;
+  const ref = certifRef();
+  if (!ref) return;
+  ref.child(id).remove()
+    .then(() => renderCertifications())
+    .catch((err) => alert("Échec de la suppression : " + (err.message || err.code)));
+}
+
+let certifModal, certifFormEl, certifModalTitle, certifEditId;
+
+function buildCertifModal() {
+  if (document.getElementById("certifModal")) return;
+  const overlay = document.createElement("div");
+  overlay.className = "exp-modal-overlay";
+  overlay.id = "certifModal";
+  overlay.innerHTML = `
+    <div class="exp-modal">
+      <div class="exp-modal-head">
+        <h3 id="certifModalTitle">Ajouter une certification</h3>
+        <button class="exp-modal-close" id="certifModalClose" type="button">×</button>
+      </div>
+      <form id="certifForm" class="exp-form">
+        <label>Nom de la certification<input type="text" name="name" required placeholder="Ex. AWS Certified Solutions Architect"></label>
+        <label>Organisme<input type="text" name="issuer" placeholder="Ex. Amazon Web Services"></label>
+        <div class="exp-form-row">
+          <label>Date d'obtention<input type="date" name="date" required placeholder="YYYY-MM-DD"></label>
+          <label>Date d'expiration<input type="date" name="expiryDate" placeholder="YYYY-MM-DD"></label>
+        </div>
+        <label>Description<input type="text" name="description" placeholder="Détails sur la certification..."></label>
+        <div class="exp-form-actions">
+          <button type="button" class="btn-outline-sm" id="certifCancel">Annuler</button>
+          <button type="submit" class="btn-primary-sm">Enregistrer</button>
+        </div>
+      </form>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  certifModal = overlay;
+  certifFormEl = overlay.querySelector("#certifForm");
+  certifModalTitle = overlay.querySelector("#certifModalTitle");
+  certifEditId = null;
+
+  overlay.querySelector("#certifModalClose").addEventListener("click", closeCertifModal);
+  overlay.querySelector("#certifCancel").addEventListener("click", closeCertifModal);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeCertifModal(); });
+
+  certifFormEl.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    const fd = new FormData(certifFormEl);
+    const payload = {
+      name: (fd.get("name") || "").toString().trim(),
+      issuer: (fd.get("issuer") || "").toString().trim(),
+      date: (fd.get("date") || "").toString().trim(),
+      expiryDate: (fd.get("expiryDate") || "").toString().trim(),
+      description: (fd.get("description") || "").toString().trim()
+    };
+    const ref = certifRef();
+    if (!ref) return;
+    const task = certifEditId ? ref.child(certifEditId).update(payload) : ref.push(payload);
+    task.then(() => { updateLastModified();
+          renderCompletion(); closeCertifModal(); renderCertifications(); })
+        .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
+  });
+}
+
+function openCertifModal(id) {
+  buildCertifModal();
+  const ref = certifRef();
+  if (!ref) return;
+  certifFormEl.reset();
+  if (id) {
+    certifEditId = id;
+    certifModalTitle.textContent = "Modifier la certification";
+    ref.child(id).once("value").then((snap) => {
+      const d = snap.val() || {};
+      certifFormEl.name.value = d.name || "";
+      certifFormEl.issuer.value = d.issuer || "";
+      certifFormEl.date.value = d.date || "";
+      certifFormEl.expiryDate.value = d.expiryDate || "";
+      certifFormEl.description.value = d.description || "";
+    });
+  } else {
+    certifEditId = null;
+    certifModalTitle.textContent = "Ajouter une certification";
+  }
+  certifModal.classList.add("active");
+}
+
+function closeCertifModal() {
+  if (certifModal) certifModal.classList.remove("active");
+  certifEditId = null;
+}
+
+const certifAddBtn = document.getElementById("certifAddBtn");
+if (certifAddBtn) certifAddBtn.addEventListener("click", () => openCertifModal(null));
+
+const certifSearchEl = document.getElementById("certifSearch");
+if (certifSearchEl) certifSearchEl.addEventListener("input", renderCertifications);
+
+const certifSearchToggle = document.getElementById("certifSearchToggle");
+const certifSearchWrap = document.getElementById("certifSearchWrap");
+if (certifSearchToggle && certifSearchWrap) {
+  certifSearchToggle.addEventListener("click", () => {
+    const visible = certifSearchWrap.style.display !== "none";
+    if (visible) {
+      certifSearchWrap.style.display = "none";
+      if (certifSearchEl) { certifSearchEl.value = ""; renderCertifications(); }
+    } else {
+      certifSearchWrap.style.display = "flex";
+      if (certifSearchEl) certifSearchEl.focus();
+    }
+  });
+}
+
+// ============== LANGUES (CRUD, même structure qu'Expérience) ==============
+function langRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("users/" + user.uid + "/languages") : null;
+}
+
+function langMatches(lang, q) {
+  if (!q) return true;
+  const hay = [lang.name, lang.level, lang.description].join(" ").toLowerCase();
+  return hay.includes(q.toLowerCase());
+}
+
+function renderLanguages() {
+  const list = document.getElementById("langList");
+  const empty = document.getElementById("langEmpty");
+  const search = document.getElementById("langSearch");
+  if (!list) return;
+  const ref = langRef();
+  if (!ref) return;
+
+  const q = search ? search.value.trim() : "";
+
+  ref.once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const items = Object.keys(data).map((id) => ({ id, ...data[id] }));
+
+    const filtered = items.filter((lang) => langMatches(lang, q));
+
+    list.innerHTML = "";
+    if (filtered.length === 0) {
+      empty.style.display = "block";
+      empty.querySelector("p").textContent = q
+        ? "Aucune langue ne correspond à votre recherche."
+        : "Aucune langue pour le moment.";
+      return;
+    }
+    empty.style.display = "none";
+
+    let rows = "";
+    filtered.forEach((lang) => {
+      rows += `
+        <tr>
+          <td><button class="exp-cell-title lang-title-edit" data-id="${lang.id}" title="Cliquer pour modifier">${escapeHtml(lang.name || "Langue")}</button></td>
+          <td>${escapeHtml(lang.level || "—")}</td>
+          <td class="exp-desc-cell">${escapeHtml(lang.description || "—")}</td>
+          <td class="exp-action-cell">
+            <button class="exp-delete-btn" data-id="${lang.id}" title="Supprimer">
+              <img src="/image/delete.png" alt="Supprimer">
+            </button>
+          </td>
+        </tr>`;
+    });
+
+    list.innerHTML = `
+      <table class="exp-table">
+        <thead>
+          <tr>
+            <th>Langue</th>
+            <th>Niveau</th>
+            <th>Description</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+
+    list.querySelectorAll(".lang-title-edit").forEach((b) => b.addEventListener("click", () => openLangModal(b.dataset.id)));
+    list.querySelectorAll(".exp-delete-btn").forEach((b) => b.addEventListener("click", () => deleteLanguage(b.dataset.id)));
+  }).catch((err) => {
+    if (list) list.innerHTML = `<div class="exp-empty"><p>Impossible de charger les langues.</p><span>${(err && (err.message || err.code)) || ""}</span></div>`;
+  });
+}
+
+function deleteLanguage(id) {
+  if (!confirm("Supprimer cette langue ?")) return;
+  const ref = langRef();
+  if (!ref) return;
+  ref.child(id).remove()
+    .then(() => renderLanguages())
+    .catch((err) => alert("Échec de la suppression : " + (err.message || err.code)));
+}
+
+let langModal, langFormEl, langModalTitle, langEditId;
+
+function buildLangModal() {
+  if (document.getElementById("langModal")) return;
+  const overlay = document.createElement("div");
+  overlay.className = "exp-modal-overlay";
+  overlay.id = "langModal";
+  overlay.innerHTML = `
+    <div class="exp-modal">
+      <div class="exp-modal-head">
+        <h3 id="langModalTitle">Ajouter une langue</h3>
+        <button class="exp-modal-close" id="langModalClose" type="button">×</button>
+      </div>
+      <form id="langForm" class="exp-form">
+        <label>Langue<input type="text" name="name" required placeholder="Ex. Anglais"></label>
+        <label>Niveau
+          <select name="level">
+            <option value="Débutant">Débutant</option>
+            <option value="Intermédiaire">Intermédiaire</option>
+            <option value="Avancé">Avancé</option>
+            <option value="Bilingue">Bilingue</option>
+            <option value="Langue maternelle">Langue maternelle</option>
+          </select>
+        </label>
+        <label>Description<input type="text" name="description" placeholder="Ex. Parlé couramment, lu et écrit..."></label>
+        <div class="exp-form-actions">
+          <button type="button" class="btn-outline-sm" id="langCancel">Annuler</button>
+          <button type="submit" class="btn-primary-sm">Enregistrer</button>
+        </div>
+      </form>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  langModal = overlay;
+  langFormEl = overlay.querySelector("#langForm");
+  langModalTitle = overlay.querySelector("#langModalTitle");
+  langEditId = null;
+
+  overlay.querySelector("#langModalClose").addEventListener("click", closeLangModal);
+  overlay.querySelector("#langCancel").addEventListener("click", closeLangModal);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeLangModal(); });
+
+  langFormEl.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    const fd = new FormData(langFormEl);
+    const payload = {
+      name: (fd.get("name") || "").toString().trim(),
+      level: (fd.get("level") || "").toString().trim(),
+      description: (fd.get("description") || "").toString().trim()
+    };
+    const ref = langRef();
+    if (!ref) return;
+    const task = langEditId ? ref.child(langEditId).update(payload) : ref.push(payload);
+    task.then(() => { updateLastModified();
+          renderCompletion(); closeLangModal(); renderLanguages(); })
+        .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
+  });
+}
+
+function openLangModal(id) {
+  buildLangModal();
+  const ref = langRef();
+  if (!ref) return;
+  langFormEl.reset();
+  if (id) {
+    langEditId = id;
+    langModalTitle.textContent = "Modifier la langue";
+    ref.child(id).once("value").then((snap) => {
+      const d = snap.val() || {};
+      langFormEl.name.value = d.name || "";
+      langFormEl.level.value = d.level || "";
+      langFormEl.description.value = d.description || "";
+    });
+  } else {
+    langEditId = null;
+    langModalTitle.textContent = "Ajouter une langue";
+  }
+  langModal.classList.add("active");
+}
+
+function closeLangModal() {
+  if (langModal) langModal.classList.remove("active");
+  langEditId = null;
+}
+
+const langAddBtn = document.getElementById("langAddBtn");
+if (langAddBtn) langAddBtn.addEventListener("click", () => openLangModal(null));
+
+const langSearchEl = document.getElementById("langSearch");
+if (langSearchEl) langSearchEl.addEventListener("input", renderLanguages);
+
+const langSearchToggle = document.getElementById("langSearchToggle");
+const langSearchWrap = document.getElementById("langSearchWrap");
+if (langSearchToggle && langSearchWrap) {
+  langSearchToggle.addEventListener("click", () => {
+    const visible = langSearchWrap.style.display !== "none";
+    if (visible) {
+      langSearchWrap.style.display = "none";
+      if (langSearchEl) { langSearchEl.value = ""; renderLanguages(); }
+    } else {
+      langSearchWrap.style.display = "flex";
+      if (langSearchEl) langSearchEl.focus();
+    }
+  });
+}
+
+// ============== PRÉFÉRENCES (CRUD, même structure qu'Expérience) ==============
+function prefRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("users/" + user.uid + "/preferences") : null;
+}
+
+function prefMatches(pref, q) {
+  if (!q) return true;
+  const hay = [pref.type, pref.value, pref.description].join(" ").toLowerCase();
+  return hay.includes(q.toLowerCase());
+}
+
+function renderPreferences() {
+  const list = document.getElementById("prefList");
+  const empty = document.getElementById("prefEmpty");
+  const search = document.getElementById("prefSearch");
+  if (!list) return;
+  const ref = prefRef();
+  if (!ref) return;
+
+  const q = search ? search.value.trim() : "";
+
+  ref.once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const items = Object.keys(data).map((id) => ({ id, ...data[id] }));
+
+    const filtered = items.filter((pref) => prefMatches(pref, q));
+
+    list.innerHTML = "";
+    if (filtered.length === 0) {
+      empty.style.display = "block";
+      empty.querySelector("p").textContent = q
+        ? "Aucune préférence ne correspond à votre recherche."
+        : "Aucune préférence pour le moment.";
+      return;
+    }
+    empty.style.display = "none";
+
+    let rows = "";
+    filtered.forEach((pref) => {
+      rows += `
+        <tr>
+          <td><button class="exp-cell-title pref-title-edit" data-id="${pref.id}" title="Cliquer pour modifier">${escapeHtml(pref.type || "Préférence")}</button></td>
+          <td>${escapeHtml(pref.value || "—")}</td>
+          <td class="exp-desc-cell">${escapeHtml(pref.description || "—")}</td>
+          <td class="exp-action-cell">
+            <button class="exp-delete-btn" data-id="${pref.id}" title="Supprimer">
+              <img src="/image/delete.png" alt="Supprimer">
+            </button>
+          </td>
+        </tr>`;
+    });
+
+    list.innerHTML = `
+      <table class="exp-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Valeur</th>
+            <th>Description</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+
+    list.querySelectorAll(".pref-title-edit").forEach((b) => b.addEventListener("click", () => openPrefModal(b.dataset.id)));
+    list.querySelectorAll(".exp-delete-btn").forEach((b) => b.addEventListener("click", () => deletePreference(b.dataset.id)));
+  }).catch((err) => {
+    if (list) list.innerHTML = `<div class="exp-empty"><p>Impossible de charger les préférences.</p><span>${(err && (err.message || err.code)) || ""}</span></div>`;
+  });
+}
+
+function deletePreference(id) {
+  if (!confirm("Supprimer cette préférence ?")) return;
+  const ref = prefRef();
+  if (!ref) return;
+  ref.child(id).remove()
+    .then(() => renderPreferences())
+    .catch((err) => alert("Échec de la suppression : " + (err.message || err.code)));
+}
+
+let prefModal, prefFormEl, prefModalTitle, prefEditId;
+
+function buildPrefModal() {
+  if (document.getElementById("prefModal")) return;
+  const overlay = document.createElement("div");
+  overlay.className = "exp-modal-overlay";
+  overlay.id = "prefModal";
+  overlay.innerHTML = `
+    <div class="exp-modal">
+      <div class="exp-modal-head">
+        <h3 id="prefModalTitle">Ajouter une préférence</h3>
+        <button class="exp-modal-close" id="prefModalClose" type="button">×</button>
+      </div>
+      <form id="prefForm" class="exp-form">
+        <label>Type de préférence<input type="text" name="type" required placeholder="Ex. Environnement de travail"></label>
+        <label>Valeur<input type="text" name="value" placeholder="Ex. Open space, calme..."></label>
+        <label>Description<input type="text" name="description" placeholder="Détails supplémentaires..."></label>
+        <div class="exp-form-actions">
+          <button type="button" class="btn-outline-sm" id="prefCancel">Annuler</button>
+          <button type="submit" class="btn-primary-sm">Enregistrer</button>
+        </div>
+      </form>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  prefModal = overlay;
+  prefFormEl = overlay.querySelector("#prefForm");
+  prefModalTitle = overlay.querySelector("#prefModalTitle");
+  prefEditId = null;
+
+  overlay.querySelector("#prefModalClose").addEventListener("click", closePrefModal);
+  overlay.querySelector("#prefCancel").addEventListener("click", closePrefModal);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closePrefModal(); });
+
+  prefFormEl.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    const fd = new FormData(prefFormEl);
+    const payload = {
+      type: (fd.get("type") || "").toString().trim(),
+      value: (fd.get("value") || "").toString().trim(),
+      description: (fd.get("description") || "").toString().trim()
+    };
+    const ref = prefRef();
+    if (!ref) return;
+    const task = prefEditId ? ref.child(prefEditId).update(payload) : ref.push(payload);
+    task.then(() => { updateLastModified();
+          renderCompletion(); closePrefModal(); renderPreferences(); })
+        .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
+  });
+}
+
+function openPrefModal(id) {
+  buildPrefModal();
+  const ref = prefRef();
+  if (!ref) return;
+  prefFormEl.reset();
+  if (id) {
+    prefEditId = id;
+    prefModalTitle.textContent = "Modifier la préférence";
+    ref.child(id).once("value").then((snap) => {
+      const d = snap.val() || {};
+      prefFormEl.type.value = d.type || "";
+      prefFormEl.value.value = d.value || "";
+      prefFormEl.description.value = d.description || "";
+    });
+  } else {
+    prefEditId = null;
+    prefModalTitle.textContent = "Ajouter une préférence";
+  }
+  prefModal.classList.add("active");
+}
+
+function closePrefModal() {
+  if (prefModal) prefModal.classList.remove("active");
+  prefEditId = null;
+}
+
+const prefAddBtn = document.getElementById("prefAddBtn");
+if (prefAddBtn) prefAddBtn.addEventListener("click", () => openPrefModal(null));
+
+const prefSearchEl = document.getElementById("prefSearch");
+if (prefSearchEl) prefSearchEl.addEventListener("input", renderPreferences);
+
+const prefSearchToggle = document.getElementById("prefSearchToggle");
+const prefSearchWrap = document.getElementById("prefSearchWrap");
+if (prefSearchToggle && prefSearchWrap) {
+  prefSearchToggle.addEventListener("click", () => {
+    const visible = prefSearchWrap.style.display !== "none";
+    if (visible) {
+      prefSearchWrap.style.display = "none";
+      if (prefSearchEl) { prefSearchEl.value = ""; renderPreferences(); }
+    } else {
+      prefSearchWrap.style.display = "flex";
+      if (prefSearchEl) prefSearchEl.focus();
     }
   });
 }

@@ -46,10 +46,10 @@
         </div>
         <div class="profile-completion">
           <div class="completion-label">Complétude du profil</div>
-          <div class="completion-value">100%</div>
-          <div class="completion-bar"><div ²class="completion-fill" style="width:100%"></div></div>
-          <div class="completion-text">Excellent ! Votre profil est complet</div>
-          <div class="completion-date">Dernière mise à jour : 20 Mai 2024</div>
+          <div class="completion-value" id="completionValue">0%</div>
+          <div class="completion-bar"><div class="completion-fill" id="completionFill" style="width:0%"></div></div>
+          <div class="completion-text" id="completionText">Profil incomplet</div>
+          <div class="completion-date" id="lastUpdatedDate">Dernière mise à jour : —</div>
         </div>
       </section>
 
@@ -82,10 +82,10 @@
                 <circle cx="60" cy="60" r="52" class="ring-bg"></circle>
                 <circle cx="60" cy="60" r="52" class="ring-fg" id="scoreRing"></circle>
               </svg>
-              <div class="score-num">92<span>/100</span></div>
+              <div class="score-num" id="scoreNum">0<span>/100</span></div>
             </div>
-            <div class="score-badge">🏆 Excellent</div>
-            <div class="score-text">Ton profil est très attractif pour les recruteurs !</div>
+            <div class="score-badge" id="scoreBadge">🏆 —</div>
+            <div class="score-text" id="scoreText">—</div>
             <button class="btn-primary full">↗ Améliorer encore</button>
           </div>
 
@@ -356,6 +356,102 @@
               <div class="exp-empty-icon">🛠</div>
               <p>Aucune compétence pour le moment.</p>
               <span>Cliquez sur « + Ajouter une compétence » pour commencer.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYOUT: FORMATIONS -->
+      <div class="profile-layout form-layout" id="formLayout" style="display:none;">
+        <div class="col-full">
+          <div class="exp-toolbar">
+            <button class="exp-search-toggle" id="formSearchToggle" type="button" title="Rechercher">
+              <img src="/image/3917754.png" alt="Rechercher">
+            </button>
+            <div class="exp-search" id="formSearchWrap" style="display:none;">
+              <span>🔎</span>
+              <input type="text" id="formSearch" placeholder="Rechercher une formation (diplôme, établissement...)">
+            </div>
+            <button class="btn-primary-sm" id="formAddBtn" type="button">+ Ajouter une formation</button>
+          </div>
+          <div class="card exp-card">
+            <div id="formList" class="exp-list"></div>
+            <div id="formEmpty" class="exp-empty" style="display:none;">
+              <div class="exp-empty-icon">🎓</div>
+              <p>Aucune formation pour le moment.</p>
+              <span>Cliquez sur « + Ajouter une formation » pour commencer.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYOUT: CERTIFICATIONS -->
+      <div class="profile-layout certif-layout" id="certifLayout" style="display:none;">
+        <div class="col-full">
+          <div class="exp-toolbar">
+            <button class="exp-search-toggle" id="certifSearchToggle" type="button" title="Rechercher">
+              <img src="/image/3917754.png" alt="Rechercher">
+            </button>
+            <div class="exp-search" id="certifSearchWrap" style="display:none;">
+              <span>🔎</span>
+              <input type="text" id="certifSearch" placeholder="Rechercher une certification (nom, organisme...)">
+            </div>
+            <button class="btn-primary-sm" id="certifAddBtn" type="button">+ Ajouter une certification</button>
+          </div>
+          <div class="card exp-card">
+            <div id="certifList" class="exp-list"></div>
+            <div id="certifEmpty" class="exp-empty" style="display:none;">
+              <div class="exp-empty-icon">🏆</div>
+              <p>Aucune certification pour le moment.</p>
+              <span>Cliquez sur « + Ajouter une certification » pour commencer.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYOUT: LANGUES -->
+      <div class="profile-layout lang-layout" id="langLayout" style="display:none;">
+        <div class="col-full">
+          <div class="exp-toolbar">
+            <button class="exp-search-toggle" id="langSearchToggle" type="button" title="Rechercher">
+              <img src="/image/3917754.png" alt="Rechercher">
+            </button>
+            <div class="exp-search" id="langSearchWrap" style="display:none;">
+              <span>🔎</span>
+              <input type="text" id="langSearch" placeholder="Rechercher une langue...">
+            </div>
+            <button class="btn-primary-sm" id="langAddBtn" type="button">+ Ajouter une langue</button>
+          </div>
+          <div class="card exp-card">
+            <div id="langList" class="exp-list"></div>
+            <div id="langEmpty" class="exp-empty" style="display:none;">
+              <div class="exp-empty-icon">🗣</div>
+              <p>Aucune langue pour le moment.</p>
+              <span>Cliquez sur « + Ajouter une langue » pour commencer.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYOUT: PRÉFÉRENCES -->
+      <div class="profile-layout pref-layout" id="prefLayout" style="display:none;">
+        <div class="col-full">
+          <div class="exp-toolbar">
+            <button class="exp-search-toggle" id="prefSearchToggle" type="button" title="Rechercher">
+              <img src="/image/3917754.png" alt="Rechercher">
+            </button>
+            <div class="exp-search" id="prefSearchWrap" style="display:none;">
+              <span>🔎</span>
+              <input type="text" id="prefSearch" placeholder="Rechercher une préférence...">
+            </div>
+            <button class="btn-primary-sm" id="prefAddBtn" type="button">+ Ajouter une préférence</button>
+          </div>
+          <div class="card exp-card">
+            <div id="prefList" class="exp-list"></div>
+            <div id="prefEmpty" class="exp-empty" style="display:none;">
+              <div class="exp-empty-icon">⚙️</div>
+              <p>Aucune préférence pour le moment.</p>
+              <span>Cliquez sur « + Ajouter une préférence » pour commencer.</span>
             </div>
           </div>
         </div>
