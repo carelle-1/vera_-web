@@ -9,3 +9,7 @@ Route::get('/', function () {
 Route::get('/tableau-de-bord', function () {
     return view('index');
 });
+
+Route::get('/profil', function () {
+    return view('profil');
+});

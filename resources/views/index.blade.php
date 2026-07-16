@@ -36,7 +36,7 @@
         <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
         Candidatures
       </a>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="/profil">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
         Profil
         <span class="pill">100%</span>
@@ -90,8 +90,8 @@
 
     <!-- TOP BAR -->
     <header class="topbar">
-      <button class="hamburger" aria-label="Menu">
-        <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('collapsed')" aria-label="Menu">
+        <img src="/image/list2.png" alt="Menu" style="width:22px;height:22px;object-fit:contain;">
       </button>
       <div class="search">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -106,7 +106,7 @@
           <div class="user">
             <img id="userAvatar" src="https://i.pravatar.cc/64?img=13" alt="avatar">
             <div class="user-text">
-              <div>Bonjour, Junior </div>
+              <div id="userGreeting"></div>
               <!-- <div class="verified">Profil vérifié ✓</div> -->
             </div>
             <span class="chev">⌄</span>
@@ -124,7 +124,7 @@
         <!-- HERO -->
         <section class="hero">
           <div class="hero-text">
-            <h1>VERA travaille pour toi 24h/24 🚀</h1>
+            <h1>VERA travaille pour toi 24h/24</h1>
             <p>Nous analysons ton profil et te connectons aux meilleures opportunités.</p>
 
             <div class="hero-stats">
@@ -313,6 +313,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="firebase-init.js"></script>
+<script src="salutation.js"></script>
 <script src="scriptI.js"></script>
 </body>
 </html>

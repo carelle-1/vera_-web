@@ -25,14 +25,6 @@ firebase.auth().onAuthStateChanged((user) => {
         avatar.replaceWith(div);
       }
     }
-
-    // Salutation selon l'heure + prénom
-    const h = new Date().getHours();
-    const greeting = h < 12 ? "Bonjour" : (h < 18 ? "Bon après-midi" : "Bonsoir");
-    const nameEl = document.querySelector(".user-text div");
-    if (nameEl && firstName) {
-      nameEl.textContent = greeting + ", " + firstName + " 👋";
-    }
   });
 });
 
@@ -50,5 +42,14 @@ if (logoutBtn) {
     firebase.auth().signOut()
       .then(() => { window.location.replace("/"); })
       .catch(() => { window.location.replace("/"); });
+  });
+}
+
+// ============== PLI / DÉPLI DE LA SIDEBAR ==============
+const hamburger = document.querySelector(".hamburger");
+const sidebar = document.querySelector(".sidebar");
+if (hamburger && sidebar) {
+  hamburger.addEventListener("click", () => {
+    sidebar.classList.toggle("collapsed");
   });
 }
