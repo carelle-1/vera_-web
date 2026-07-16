@@ -151,15 +151,15 @@
             </div>
           </div>
 
-          <!-- COMPETENCES -->
-          <div class="card skills-card">
-            <div class="card-head-row">
-              <span>Mes compétences clés</span>
-              <button class="btn-outline-sm">Gérer mes compétences</button>
-            </div>
-            <div class="skills-grid" id="skillsGrid"></div>
-            <a href="#" class="see-more">Voir toutes mes compétences (18) →</a>
-          </div>
+           <!-- COMPETENCES -->
+           <div class="card skills-card">
+             <div class="card-head-row">
+               <span>Mes compétences clés</span>
+               <button class="btn-outline-sm" id="goToSkillsBtn" type="button">Gérer mes compétences</button>
+             </div>
+             <div class="skills-grid" id="skillsGrid"></div>
+             <a href="#" class="see-more" id="seeAllSkillsLink">Voir toutes mes compétences (0) →</a>
+           </div>
 
         </div>
 

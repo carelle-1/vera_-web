@@ -17,13 +17,55 @@ function renderSkills() {
     </div>
   `).join("");
 
-  // Animation après le rendu
   requestAnimationFrame(() => {
     setTimeout(() => {
       skills.forEach((s, i) => {
         document.getElementById(`skillFill${i}`).style.width = s.value + "%";
       });
     }, 100);
+  });
+}
+
+function renderKeySkills() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  const grid = document.getElementById("skillsGrid");
+  const seeAllLink = document.getElementById("seeAllSkillsLink");
+  if (!grid) return;
+
+  firebase.database().ref("users/" + user.uid + "/skills").once("value").then((snap) => {
+    const data = snap.val() || {};
+    const items = Object.keys(data).map((id) => ({ id, ...data[id] }));
+    const total = items.length;
+
+    if (seeAllLink) {
+      seeAllLink.textContent = `Voir toutes mes compétences (${total}) →`;
+    }
+
+    const latest = items.slice(-6).reverse();
+    if (latest.length === 0) {
+      grid.innerHTML = `<div class="exp-empty" style="padding:20px;"><p>Aucune compétence pour le moment.</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = latest.map((s) => `
+      <div class="skill-row">
+        <div class="skill-label"><span>${escapeHtml(s.name || "Compétence")}</span><span>${escapeHtml(s.level || "—")}</span></div>
+        <div class="skill-bar"><div class="skill-bar-fill" style="width:0%"></div></div>
+      </div>
+    `).join("");
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        grid.querySelectorAll(".skill-bar-fill").forEach((fill, i) => {
+          const level = latest[i] && latest[i].level;
+          const width = level === "Expert" ? "100%" : level === "Avancé" ? "80%" : level === "Intermédiaire" ? "60%" : level === "Débutant" ? "40%" : "20%";
+          fill.style.width = width;
+        });
+      }, 100);
+    });
+  }).catch(() => {
+    if (grid) grid.innerHTML = `<div class="exp-empty" style="padding:20px;"><p>Impossible de charger les compétences.</p></div>`;
   });
 }
 
@@ -90,6 +132,7 @@ document.querySelectorAll(".tab").forEach(tab => {
     } else if (key === "skills") {
       if (skillsLayout) skillsLayout.style.display = "block";
       if (typeof renderSkillsManage === "function") renderSkillsManage();
+      if (typeof renderKeySkills === "function") renderKeySkills();
     } else if (key === "formations") {
       if (formLayout) formLayout.style.display = "block";
       if (typeof renderFormations === "function") renderFormations();
@@ -244,6 +287,9 @@ function renderCompletion() {
     }
 
     renderScoreRing(pct);
+
+    const profilePill = document.getElementById("profilePill");
+    if (profilePill) profilePill.textContent = pct + "%";
   }).catch(() => {});
 }
 
@@ -566,7 +612,24 @@ document.querySelectorAll(".stat-input").forEach((input) => {
 
 // ============== INIT ==============
 renderSkills();
+renderKeySkills();
 renderScoreRing();
+
+const goToSkillsBtn = document.getElementById("goToSkillsBtn");
+const seeAllSkillsLink = document.getElementById("seeAllSkillsLink");
+const skillsTabBtn = document.querySelector('.tab[data-tab="skills"]');
+
+function navigateToSkills() {
+  if (skillsTabBtn) skillsTabBtn.click();
+}
+
+if (goToSkillsBtn) goToSkillsBtn.addEventListener("click", navigateToSkills);
+if (seeAllSkillsLink) {
+  seeAllSkillsLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    navigateToSkills();
+  });
+}
 
 // ============== PHOTO DE PROFIL (Firebase Storage + Realtime DB) ==============
 const avatarImg = document.getElementById("profileAvatar");
@@ -696,6 +759,7 @@ function loadProfile(user) {
 
     renderLastUpdated();
     renderCompletion();
+    renderKeySkills();
   });
 }
 
@@ -1043,7 +1107,7 @@ function deleteSkill(id) {
   const ref = skillsRef();
   if (!ref) return;
   ref.child(id).remove()
-    .then(() => renderSkillsManage())
+    .then(() => { renderSkillsManage(); renderKeySkills(); })
     .catch((err) => alert("Échec de la suppression : " + (err.message || err.code)));
 }
 
@@ -1101,7 +1165,7 @@ function buildSkillModal() {
     if (!ref) return;
     const task = skillEditId ? ref.child(skillEditId).update(payload) : ref.push(payload);
     task.then(() => { updateLastModified();
-          renderCompletion(); closeSkillModal(); renderSkillsManage(); })
+          renderCompletion(); closeSkillModal(); renderSkillsManage(); renderKeySkills(); })
         .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
   });
 }
@@ -1144,7 +1208,7 @@ if (skillSearchToggle && skillSearchWrap) {
     const visible = skillSearchWrap.style.display !== "none";
     if (visible) {
       skillSearchWrap.style.display = "none";
-      if (skillSearchEl) { skillSearchEl.value = ""; renderSkillsManage(); }
+      if (skillSearchEl) { skillSearchEl.value = ""; renderSkillsManage(); renderKeySkills(); }
     } else {
       skillSearchWrap.style.display = "flex";
       if (skillSearchEl) skillSearchEl.focus();
