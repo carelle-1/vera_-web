@@ -31,17 +31,17 @@
             <h2 id="profileFullName">...</h2>
             <!-- <button class="btn-primary-sm">Modifier le  profil</button> -->
           </div>
-          <div class="profile-role">Product Designer UI/UX</div>
+          <div class="profile-role" id="profileRole">Non renseigné</div>
           <div class="profile-meta">
-            <span>📍 Douala, Cameroun</span>
+            <span>📍 <span id="profileResidence">Non renseigné</span></span>
             <span class="dot-sep">•</span>
             <span class="avail-dot"></span>
-            <span>Disponible immédiatement</span>
+            <span id="profileAvailability">Non renseigné</span>
           </div>
           <div class="profile-contacts">
-            <span>💬 +237 6 12 34 56 78</span>
-            <span>✉ junior.tchouaka@gmail.com</span>
-            <span>🔗 linkedin.com/in/juniortchouaka</span>
+            <span>💬 <span id="profileWhatsapp">Non renseigné</span></span>
+            <span>✉ <span id="profileEmail">Non renseigné</span></span>
+            <span>💻 <span id="profileLinkedin">Non renseigné</span></span>
           </div>
         </div>
         <div class="profile-completion">
@@ -141,13 +141,13 @@
           <div class="card about-card">
             <div class="card-head-row">
               <span>À propos de moi</span>
-              <button class="btn-outline-sm">Modifier</button>
+              <button class="btn-outline-sm btn-edit-about" type="button">Modifier</button>
             </div>
-            <p class="about-text">Designer passionné avec 4 ans d'expérience en création d'interfaces intuitives et centrées utilisateur. J'aime résoudre des problèmes complexes et créer des expériences qui font la différence.</p>
+            <p class="about-text" data-field="about">Non renseigné</p>
             <div class="about-stats">
-              <div><strong>4+</strong><span>Années d'expérience</span></div>
-              <div><strong>25+</strong><span>Projets réalisés</span></div>
-              <div><strong>15+</strong><span>Clients satisfaits</span></div>
+              <div><input type="number" min="0" class="stat-input" data-stat="experienceYears" value="4"><span>Années d'expérience</span></div>
+              <div><input type="number" min="0" class="stat-input" data-stat="projectsCount" value="25"><span>Projets réalisés</span></div>
+              <div><input type="number" min="0" class="stat-input" data-stat="clientsCount" value="15"><span>Clients satisfaits</span></div>
             </div>
           </div>
 
@@ -178,12 +178,14 @@
               <li><span class="info-icon">📍</span><span class="info-label">Lieu de résidence</span><span class="info-value" data-field="residence">Douala, Cameroun</span></li>
               <li><span class="info-icon">📱</span><span class="info-label">Numéro WhatsApp</span><span class="info-value" data-field="whatsapp">+237 6 12 34 56 78</span></li>
               <li><span class="info-icon">🗣</span><span class="info-label">Langue principale</span><span class="info-value" data-field="mainLanguage" data-input="tags">Français</span></li>
+              <li><span class="info-icon">💻</span><span class="info-label">Profil GitHub</span><span class="info-value" data-field="linkedin">github.com/...</span></li>
             </ul>
           </div>
 
           <div class="card" data-section="availability">
             <div class="card-head-row"><span>Disponibilité &amp; Préférences</span><button class="btn-outline-sm btn-edit-section" type="button">Modifier</button></div>
             <ul class="info-list">
+              <li><span class="info-icon">💼</span><span class="info-label">Fonction de l'utilisateur</span><span class="info-value" data-field="jobTitle">Non renseigné</span></li>
               <li><span class="info-icon">🕐</span><span class="info-label">Disponibilité</span><span class="info-value" data-field="availability" data-input="select" data-options="Immédiatement|Dans 1 mois|Dans 3 mois|Dans 6 mois|Pas disponible">Immédiatement</span></li>
               <li><span class="info-icon">📄</span><span class="info-label">Type de contrat souhaité</span><span class="info-value" data-field="contractType" data-input="select" data-options="CDI|CDD|Freelance|Stage|Intérim|Remote|CDI, Remote">CDI, Remote</span></li>
               <li><span class="info-icon">🌐</span><span class="info-label">Lieu de travail préféré</span><span class="info-value" data-field="workLocation">Remote / Monde entier</span></li>
@@ -214,6 +216,148 @@
             <a href="#" class="see-more">✨ Générer un nouveau CV avec l'IA</a>
           </div>
 
+        </div>
+      </div>
+
+      <!-- LAYOUT: INFORMATIONS -->
+      <div class="profile-layout info-layout" id="infoLayout" style="display:none;">
+        <div class="col-full">
+
+          <div class="info-hero">
+            <img id="infoAvatar" src="" alt="avatar" style="display:none;">
+            <div id="infoInitial" class="info-hero-initial">?</div>
+            <div class="info-hero-text">
+              <h3 id="infoFullName">Carelle Djeuwou</h3>
+              <span class="info-hero-role" id="infoJob">Non renseigné</span>
+            </div>
+            <button class="btn-outline-sm btn-edit-section" type="button" data-target="info-personal">Modifier</button>
+          </div>
+
+          <div class="card info-card" data-section="info-personal">
+            <div class="card-head-row"><span>Informations personnelles</span></div>
+            <ul class="info-grid">
+              <li class="info-item">
+                <span class="info-icon">👤</span>
+                <div class="info-item-body">
+                  <span class="info-label">Prénom</span>
+                  <span class="info-value" data-field="firstName">Carelle</span>
+                </div>
+              </li>
+              <li class="info-item">
+                <span class="info-icon">👤</span>
+                <div class="info-item-body">
+                  <span class="info-label">Nom</span>
+                  <span class="info-value" data-field="lastName">Djeuwou</span>
+                </div>
+              </li>
+              <li class="info-item">
+                <span class="info-icon">✉</span>
+                <div class="info-item-body">
+                  <span class="info-label">Adresse email</span>
+                  <span class="info-value" data-field="email" data-input="email">carelledjeuwou@gmail.com</span>
+                </div>
+              </li>
+              <li class="info-item">
+                <span class="info-icon">🎂</span>
+                <div class="info-item-body">
+                  <span class="info-label">Date de naissance</span>
+                  <span class="info-value" data-field="birthDate" data-input="date">10 Août 1999</span>
+                </div>
+              </li>
+              <li class="info-item">
+                <span class="info-icon">💍</span>
+                <div class="info-item-body">
+                  <span class="info-label">Situation matrimoniale</span>
+                  <span class="info-value" data-field="maritalStatus" data-input="select" data-options="Célibataire|Marié(e)|Divorcé(e)|Veuf(ve)|En concubinage">Célibataire</span>
+                </div>
+              </li>
+              <li class="info-item">
+                <span class="info-icon">🌍</span>
+                <div class="info-item-body">
+                  <span class="info-label">Nationalité</span>
+                  <span class="info-value" data-field="nationality">Camerounaise</span>
+                </div>
+              </li>
+              <li class="info-item">
+                <span class="info-icon">📍</span>
+                <div class="info-item-body">
+                  <span class="info-label">Lieu de résidence</span>
+                  <span class="info-value" data-field="residence">yaoundé, Cameroun</span>
+                </div>
+              </li>
+              <li class="info-item">
+                <span class="info-icon">📱</span>
+                <div class="info-item-body">
+                  <span class="info-label">Numéro WhatsApp</span>
+                  <span class="info-value" data-field="whatsapp">+237 6 93929597</span>
+                </div>
+              </li>
+              <li class="info-item">
+                <span class="info-icon">🗣</span>
+                <div class="info-item-body">
+                  <span class="info-label">Langue principale</span>
+                  <span class="info-value" data-field="mainLanguage" data-input="tags">français, anglais, italie</span>
+                </div>
+              </li>
+              <li class="info-item">
+                <span class="info-icon">💻</span>
+                <div class="info-item-body">
+                  <span class="info-label">Profil GitHub</span>
+                  <span class="info-value" data-field="linkedin">linkedin.com/in/...</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- LAYOUT: EXPÉRIENCE -->
+      <div class="profile-layout exp-layout" id="expLayout" style="display:none;">
+        <div class="col-full">
+          <div class="exp-toolbar">
+            <button class="exp-search-toggle" id="expSearchToggle" type="button" title="Rechercher">
+              <img src="/image/3917754.png" alt="Rechercher">
+            </button>
+            <div class="exp-search" id="expSearchWrap" style="display:none;">
+              <span>🔎</span>
+              <input type="text" id="expSearch" placeholder="Rechercher une expérience (poste, entreprise...)">
+            </div>
+            <button class="btn-primary-sm" id="expAddBtn" type="button">+ Ajouter une expérience</button>
+          </div>
+
+          <div class="card exp-card">
+            <div id="expList" class="exp-list"></div>
+            <div id="expEmpty" class="exp-empty" style="display:none;">
+              <div class="exp-empty-icon">💼</div>
+              <p>Aucune expérience pour le moment.</p>
+              <span>Cliquez sur « + Ajouter une expérience » pour commencer.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYOUT: COMPÉTENCES -->
+      <div class="profile-layout skills-layout" id="skillsLayout" style="display:none;">
+        <div class="col-full">
+          <div class="exp-toolbar">
+            <button class="exp-search-toggle" id="skillSearchToggle" type="button" title="Rechercher">
+              <img src="/image/3917754.png" alt="Rechercher">
+            </button>
+            <div class="exp-search" id="skillSearchWrap" style="display:none;">
+              <span>🔎</span>
+              <input type="text" id="skillSearch" placeholder="Rechercher une compétence...">
+            </div>
+            <button class="btn-primary-sm" id="skillAddBtn" type="button">+ Ajouter une compétence</button>
+          </div>
+          <div class="card exp-card">
+            <div id="skillsList" class="skills-manage-list"></div>
+            <div id="skillsEmpty" class="exp-empty" style="display:none;">
+              <div class="exp-empty-icon">🛠</div>
+              <p>Aucune compétence pour le moment.</p>
+              <span>Cliquez sur « + Ajouter une compétence » pour commencer.</span>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -196,6 +196,52 @@ a{color:inherit;}
   padding:20px 26px 40px;align-items:start;
 }
 .col-left,.col-right{display:flex;flex-direction:column;gap:18px;min-width:0;}
+.info-layout{display:block;}
+.col-full{min-width:0;}
+
+/* HERO ONGLET INFORMATIONS */
+.info-hero{
+  display:flex;align-items:center;gap:16px;
+  background:linear-gradient(135deg,#eef2ff,#f7f9ff);
+  border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:22px 24px;margin-bottom:18px;
+}
+.info-hero img,.info-hero-initial{
+  width:76px;height:76px;border-radius:18px;object-fit:cover;flex-shrink:0;
+}
+.info-hero-initial{
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--blue),#7c3aed);color:#fff;
+  font-size:30px;font-weight:800;text-transform:uppercase;user-select:none;
+}
+.info-hero-text{flex:1;min-width:0;}
+.info-hero-text h3{font-size:20px;font-weight:800;margin-bottom:4px;}
+.info-hero-role{
+  display:inline-block;font-size:12.5px;font-weight:600;color:var(--blue);
+  background:#fff;border:1px solid #e0e7ff;border-radius:20px;padding:3px 12px;
+}
+.info-hero .btn-outline-sm{margin-left:auto;}
+
+/* GRILLE CHAMPS INFORMATIONS */
+.info-card .card-head-row{margin-bottom:6px;}
+.info-grid{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.info-item{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 12px;border-bottom:1px solid #f1f3f9;
+}
+.info-item:nth-child(odd){border-right:1px solid #f1f3f9;}
+.info-item:nth-last-child(-n+2){border-bottom:none;}
+.info-icon{
+  width:42px;height:42px;flex-shrink:0;border-radius:12px;
+  background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.info-item-body{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;}
+.info-label{font-size:11.5px;color:var(--muted);font-weight:600;}
+.info-value{font-size:13.5px;font-weight:700;color:var(--text);word-break:break-word;}
+.info-value input.info-input,.info-value select.info-input{text-align:left;width:100%;}
+.info-value .tags-edit{align-items:flex-start;}
+.info-value .tags-list{justify-content:flex-start;}
+.salary-edit{justify-content:flex-start;}
 
 .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;}
 .card-head-row{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;margin-bottom:16px;}
@@ -244,10 +290,16 @@ a{color:inherit;}
 
 /* ABOUT CARD */
 .about-text{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:16px;}
+.about-input{width:100%;font-size:12.5px;color:var(--text);line-height:1.6;font-family:inherit;
+  border:1px solid var(--blue);border-radius:9px;padding:10px;resize:vertical;outline:none;margin-bottom:16px;}
+.about-input:focus{border-color:var(--blue-dark);box-shadow:0 0 0 2px rgba(59,130,246,.15);}
 .about-stats{display:flex;gap:28px;flex-wrap:wrap;}
 .about-stats div{display:flex;flex-direction:column;gap:2px;}
 .about-stats strong{font-size:18px;font-weight:800;}
 .about-stats span{font-size:11px;color:var(--muted);}
+.stat-input{width:64px;font-size:18px;font-weight:800;font-family:inherit;color:var(--text);
+  border:1px solid var(--border);border-radius:8px;padding:4px 8px;outline:none;}
+.stat-input:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(59,130,246,.15);}
 
 /* SKILLS */
 .skills-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;margin-bottom:14px;}
@@ -298,6 +350,77 @@ a{color:inherit;}
 .cv-date{font-size:11px;color:var(--muted);}
 .cv-download{background:#fff;border:1px solid var(--border);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:13px;}
 
+/* EXPÉRIENCE */
+.exp-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.exp-search-toggle{
+  background:#fff;border:1px solid var(--border);border-radius:12px;
+  width:44px;height:44px;flex-shrink:0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;padding:0;
+}
+.exp-search-toggle img{width:22px;height:22px;object-fit:contain;}
+.exp-search-toggle:hover{border-color:var(--blue);}
+.exp-search{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 14px;}
+.exp-search span{opacity:.6;}
+.exp-search input{border:none;outline:none;flex:1;font-size:13px;font-family:inherit;background:transparent;color:var(--text);}
+.exp-card{padding:8px;}
+.exp-table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;}
+.exp-table thead th{
+  text-align:left;font-size:11.5px;font-weight:700;color:var(--muted);
+  background:#f5f7fc;padding:12px 14px;border-bottom:1px solid var(--border);white-space:nowrap;
+}
+.exp-table tbody td{
+  font-size:12.5px;color:var(--text);padding:13px 14px;border-bottom:1px solid #f1f3f9;vertical-align:top;
+}
+.exp-table tbody tr:last-child td{border-bottom:none;}
+.exp-table tbody tr:hover{background:#fafbff;}
+.exp-cell-title{
+  font-family:inherit;font-size:13px;font-weight:800;color:var(--text);
+  background:none;border:none;padding:0;cursor:pointer;text-align:left;
+  text-decoration:underline dotted transparent;text-underline-offset:3px;
+}
+.exp-cell-title:hover{color:var(--blue);text-decoration-color:var(--blue);}
+.exp-desc-cell{max-width:240px;color:var(--muted);line-height:1.5;}
+.exp-action-cell{text-align:center;width:80px;}
+.exp-delete-btn{
+  background:#fff;border:1px solid var(--border);border-radius:8px;
+  width:34px;height:34px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;
+}
+.exp-delete-btn img{width:16px;height:16px;object-fit:contain;}
+.exp-delete-btn:hover{border-color:#ef4444;background:#fef2f2;}
+.exp-item-desc{font-size:12.5px;color:var(--muted);line-height:1.5;margin:10px 0 0;}
+.exp-btn{background:#fff;border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--text);}
+.exp-btn:hover{border-color:var(--blue);color:var(--blue);}
+.exp-delete:hover{border-color:#ef4444;color:#ef4444;}
+.exp-empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.exp-empty-icon{font-size:38px;margin-bottom:10px;}
+.exp-empty p{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.exp-empty span{font-size:12px;}
+
+/* MODALE EXPÉRIENCE */
+.exp-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.exp-modal-overlay.active{display:flex;}
+.exp-modal{background:#fff;border-radius:18px;width:100%;max-width:520px;padding:22px;box-shadow:0 20px 60px rgba(15,23,42,.25);max-height:90vh;overflow:auto;}
+.exp-modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.exp-modal-head h3{font-size:17px;font-weight:800;}
+.exp-modal-close{background:none;border:none;font-size:24px;line-height:1;cursor:pointer;color:var(--muted);}
+.exp-form{display:flex;flex-direction:column;gap:12px;}
+.exp-form label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;color:var(--muted);}
+.exp-form input{font-family:inherit;font-size:13px;font-weight:500;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:9px 11px;outline:none;}
+.exp-form input:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(59,130,246,.15);}
+.exp-form small{font-size:10.5px;color:var(--muted);font-weight:500;}
+.exp-form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.exp-form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;}
+.exp-form select{font-family:inherit;font-size:13px;font-weight:500;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:9px 11px;outline:none;background:#fff;}
+
+/* COMPÉTENCES (CRUD) */
+.skills-manage-list{display:flex;flex-direction:column;gap:8px;}
+.skill-manage-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:14px;background:#fff;transition:box-shadow .15s,border-color .15s;}
+.skill-manage-row:hover{box-shadow:0 6px 20px rgba(30,41,59,.07);border-color:#dbe2f1;}
+.skill-manage-info{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.skill-manage-name{font-size:14px;font-weight:700;color:var(--text);}
+.skill-manage-level{font-size:11.5px;font-weight:600;color:var(--blue);background:#eef2ff;border-radius:20px;padding:3px 10px;align-self:flex-start;}
+.skill-manage-actions{display:flex;gap:8px;flex-shrink:0;}
+
 /* RESPONSIVE */
 @media (max-width:1150px){
   .profile-layout{grid-template-columns:1fr;}
@@ -310,4 +433,11 @@ a{color:inherit;}
   .profile-card{flex-direction:column;}
   .profile-completion{text-align:left;}
   .skills-grid{grid-template-columns:1fr;}
+  .info-grid{grid-template-columns:1fr;}
+  .info-item:nth-child(odd){border-right:none;}
+  .info-hero{flex-wrap:wrap;}
+  .info-hero .btn-outline-sm{margin-left:0;}
+  .exp-form-row{grid-template-columns:1fr;}
+  .exp-card{overflow-x:auto;}
+  .exp-table{min-width:760px;}
 }
