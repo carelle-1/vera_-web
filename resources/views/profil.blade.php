@@ -213,7 +213,7 @@
               </div>
               <button class="cv-download">⬇</button>
             </div>
-            <a href="#" class="see-more">✨ Générer un nouveau CV avec l'IA</a>
+            <a href="#" class="see-more" id="generateCvBtn">✨ Générer un nouveau CV avec l'IA</a>
           </div>
 
         </div>

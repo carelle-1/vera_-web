@@ -251,18 +251,18 @@
           <div class="score-ring">
             <svg viewBox="0 0 120 120">
               <circle cx="60" cy="60" r="52" class="ring-bg"></circle>
-              <circle cx="60" cy="60" r="52" class="ring-fg"></circle>
+              <circle cx="60" cy="60" r="52" class="ring-fg" id="scoreRingIndex"></circle>
             </svg>
-            <div class="score-num">86<span>/100</span></div>
+            <div class="score-num" id="scoreNumIndex">0<span>/100</span></div>
           </div>
-          <div class="score-badge">★ Excellent</div>
-          <div class="score-text">Ton profil est très attractif !</div>
-          <button class="btn-primary full">↗ Améliorer encore</button>
+          <div class="score-badge" id="scoreBadgeIndex">★ —</div>
+          <div class="score-text" id="scoreTextIndex">—</div>
+          <button class="btn-primary full" id="improveScoreBtn">↗ Améliorer encore</button>
         </div>
 
         <div class="card actions-card">
           <div class="card-head">🎯 Actions prioritaires</div>
-          <div class="action-item">
+          <div class="action-item" id="actionAddSkill">
             <div class="action-icon blue">📝</div>
             <div class="action-text">
               <div>Ajoute une nouvelle compétence clé</div>
@@ -270,7 +270,7 @@
             </div>
             <span class="chev">›</span>
           </div>
-          <div class="action-item">
+          <div class="action-item" id="actionValidateExp">
             <div class="action-icon orange">🏅</div>
             <div class="action-text">
               <div>Valide ton expérience actuelle</div>
@@ -278,7 +278,7 @@
             </div>
             <span class="chev">›</span>
           </div>
-          <div class="action-item">
+          <div class="action-item" id="actionFollowTraining">
             <div class="action-icon green">🎓</div>
             <div class="action-text">
               <div>Suis une formation recommandée</div>

@@ -311,6 +311,20 @@ function fillProfileFields(data) {
   });
 }
 
+function fillInfoLayout(data) {
+  const infoLayout = document.getElementById("infoLayout");
+  if (!infoLayout) return;
+  profileFields.forEach((field) => {
+    const el = infoLayout.querySelector(`[data-field="${field}"]`);
+    if (!el) return;
+    const value = data[field];
+    if (value !== undefined && value !== null && value !== "") {
+      el.dataset.value = value;
+      el.textContent = displayValue(el, value);
+    }
+  });
+}
+
 // Construit le contrôle d'édition selon le type (text, date, select, tags)
 function buildEditor(el) {
   const type = el.dataset.input || "text";
@@ -686,6 +700,7 @@ function loadProfile(user) {
     });
 
     fillProfileFields(data);
+    fillInfoLayout(data);
 
     // Fonction de l'utilisateur : affiche la valeur DB si présente, sinon "Non renseigné"
     const jobTitleEl = document.querySelector('[data-field="jobTitle"]');
@@ -760,6 +775,164 @@ function loadProfile(user) {
     renderLastUpdated();
     renderCompletion();
     renderKeySkills();
+
+    const veraOpenTab = localStorage.getItem("veraOpenTab");
+    if (veraOpenTab) {
+      localStorage.removeItem("veraOpenTab");
+      const targetTab = document.querySelector(`.tab[data-tab="${veraOpenTab}"]`);
+      if (targetTab) {
+        targetTab.click();
+      }
+    }
+  });
+}
+
+function generateCV() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  firebase.database().ref("users/" + user.uid + "/experiences").once("value").then((expSnap) => {
+    const experiences = expSnap.val() || {};
+    return firebase.database().ref("users/" + user.uid + "/formations").once("value").then((formSnap) => {
+      const formations = formSnap.val() || {};
+      return firebase.database().ref("users/" + user.uid + "/certifications").once("value").then((certSnap) => {
+        const certifications = certSnap.val() || {};
+        return firebase.database().ref("users/" + user.uid + "/skills").once("value").then((skillsSnap) => {
+          const skills = skillsSnap.val() || {};
+          return firebase.database().ref("users/" + user.uid + "/languages").once("value").then((langSnap) => {
+            const languages = langSnap.val() || {};
+            return firebase.database().ref("users/" + user.uid).once("value").then((snap) => {
+              const data = snap.val() || {};
+              return { data, experiences, formations, certifications, skills, languages };
+            });
+          });
+        });
+      });
+    });
+  }).then(({ data, experiences, formations, certifications, skills, languages }) => {
+    const photoURL = data.photoURL || user.photoURL || "";
+    const fullName = (data.fullName || ((data.firstName || "") + " " + (data.lastName || "")).trim() || user.displayName || "Utilisateur").trim();
+    const firstName = data.firstName || "";
+    const lastName = data.lastName || "";
+    const email = data.email || "";
+    const whatsapp = data.whatsapp || "";
+    const linkedin = data.linkedin || "";
+    const residence = data.residence || "";
+    const birthDate = data.birthDate || "";
+    const nationality = data.nationality || "";
+    const maritalStatus = data.maritalStatus || "";
+    const mainLanguage = data.mainLanguage || "";
+    const jobTitle = data.jobTitle || "";
+    const availability = data.availability || "";
+    const contractType = data.contractType || "";
+    const workLocation = data.workLocation || "";
+    const salary = data.salary || "";
+    const about = data.about || "";
+
+    const expItems = Object.keys(experiences).map(id => ({ id, ...experiences[id] })).sort((a, b) => (b.startYear || 0) - (a.startYear || 0));
+    const formItems = Object.keys(formations).map(id => ({ id, ...formations[id] })).sort((a, b) => (b.startYear || 0) - (a.startYear || 0));
+    const certItems = Object.keys(certifications).map(id => ({ id, ...certifications[id] }));
+    const skillItems = Object.keys(skills).map(id => ({ id, ...skills[id] }));
+    const langItems = Object.keys(languages).map(id => ({ id, ...languages[id] }));
+
+    const cvContent = document.createElement("div");
+    cvContent.style.cssText = "font-family: Arial, sans-serif; color: #0f1730; max-width: 900px; margin: 0 auto;";
+
+    let html = `<table style="width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(15,23,42,0.15);"><tr>`;
+
+    if (photoURL) {
+      html += `<td style="width: 32%; background: #dbeafe; padding: 30px 20px; text-align: center; vertical-align: top;"><img src="${photoURL}" style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid #3b6bf5; margin-bottom: 12px;"></td>`;
+    } else {
+      html += `<td style="width: 32%; background: #dbeafe; padding: 30px 20px; vertical-align: top;"></td>`;
+    }
+
+    html += `<td style="width: 68%; background: #dbeafe; padding: 30px 24px; text-align: center; vertical-align: top;"><h1 style="font-size: 24px; font-weight: 800; color: #0b1130; margin: 0 0 6px;">${escapeHtml(fullName)}</h1>`;
+    if (jobTitle) html += `<p style="font-size: 13px; color: #1e40c9; font-weight: 600; margin: 0;">${escapeHtml(jobTitle)}</p>`;
+    html += `</td></tr>`;
+
+    html += `<tr><td colspan="2" style="background: #dbeafe; padding: 0 24px 18px; text-align: center; font-size: 11px; color: #1e3a8a; line-height: 1.7;">`;
+
+    const contacts = [];
+    if (email) contacts.push(`✉ ${escapeHtml(email)}`);
+    if (whatsapp) contacts.push(`📱 ${escapeHtml(whatsapp)}`);
+    if (linkedin) contacts.push(`💻 ${escapeHtml(linkedin)}`);
+    if (residence) contacts.push(`📍 ${escapeHtml(residence)}`);
+    if (contacts.length > 0) {
+      html += contacts.join("<br>");
+    }
+
+    html += `</td></tr>`;
+
+    if (about) {
+      html += `<tr><td colspan="2" style="background: #dbeafe; padding: 0 24px 20px;"><div style="background: rgba(255,255,255,0.6); border-radius: 10px; padding: 12px; font-size: 12px; line-height: 1.6; color: #0f1730; text-align: left;"><strong style="color: #1e40c9;">À propos</strong><br>${escapeHtml(about)}</div></td></tr>`;
+    }
+
+    html += `</table>`;
+
+    html += `<table style="width: 100%; border-collapse: collapse; margin-top: 0; box-shadow: 0 10px 30px rgba(15,23,42,0.15); border-radius: 12px; overflow: hidden;"><tr><td style="padding: 30px; background: #fff; vertical-align: top;">`;
+
+    if (expItems.length > 0) {
+      html += `<div style="margin-bottom: 22px;"><h2 style="font-size: 15px; font-weight: 800; color: #3b6bf5; border-bottom: 2px solid #3b6bf5; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Expérience professionnelle</h2>`;
+      expItems.forEach(exp => {
+        html += `<div style="margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #3b6bf5;"><div style="font-weight: 700; font-size: 13px; color: #0f1730;">${escapeHtml(exp.title || "Poste")}</div><div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${escapeHtml(exp.company || "")}${exp.location ? " | " + escapeHtml(exp.location) : ""}</div><div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${exp.startYear || ""}${exp.endYear && exp.endYear !== "Présent" ? " - " + exp.endYear : exp.endYear === "Présent" ? " - Présent" : ""}</div>${exp.description ? `<p style="font-size: 12px; margin-top: 4px; line-height: 1.5; color: #374151;">${escapeHtml(exp.description)}</p>` : ""}</div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (formItems.length > 0) {
+      html += `<div style="margin-bottom: 22px;"><h2 style="font-size: 15px; font-weight: 800; color: #3b6bf5; border-bottom: 2px solid #3b6bf5; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Formation</h2>`;
+      formItems.forEach(form => {
+        html += `<div style="margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #3b6bf5;"><div style="font-weight: 700; font-size: 13px; color: #0f1730;">${escapeHtml(form.diploma || "Diplôme")}</div><div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${escapeHtml(form.school || "")}${form.location ? " | " + escapeHtml(form.location) : ""}</div><div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${form.startYear || ""}${form.endYear && form.endYear !== "Présent" ? " - " + form.endYear : form.endYear === "Présent" ? " - Présent" : ""}</div>${form.description ? `<p style="font-size: 12px; margin-top: 4px; line-height: 1.5; color: #374151;">${escapeHtml(form.description)}</p>` : ""}</div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (certItems.length > 0) {
+      html += `<div style="margin-bottom: 22px;"><h2 style="font-size: 15px; font-weight: 800; color: #3b6bf5; border-bottom: 2px solid #3b6bf5; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Certifications</h2>`;
+      certItems.forEach(cert => {
+        html += `<div style="margin-bottom: 10px; padding-left: 10px; border-left: 3px solid #3b6bf5;"><div style="font-weight: 700; font-size: 13px; color: #0f1730;">${escapeHtml(cert.name || "Certification")}</div><div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${escapeHtml(cert.issuer || "")}${cert.date ? " | " + escapeHtml(cert.date) : ""}${cert.expiryDate ? " - " + escapeHtml(cert.expiryDate) : ""}</div>${cert.description ? `<p style="font-size: 12px; margin-top: 4px; line-height: 1.5; color: #374151;">${escapeHtml(cert.description)}</p>` : ""}</div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (skillItems.length > 0) {
+      html += `<div style="margin-bottom: 22px;"><h2 style="font-size: 15px; font-weight: 800; color: #3b6bf5; border-bottom: 2px solid #3b6bf5; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Compétences</h2>`;
+      html += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
+      skillItems.forEach(skill => {
+        html += `<span style="background: #eef2ff; color: #1e40c9; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;">${escapeHtml(skill.name || "")}${skill.level ? " (" + escapeHtml(skill.level) + ")" : ""}</span>`;
+      });
+      html += `</div></div>`;
+    }
+
+    if (langItems.length > 0) {
+      html += `<div style="margin-bottom: 10px;"><h2 style="font-size: 15px; font-weight: 800; color: #3b6bf5; border-bottom: 2px solid #3b6bf5; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Langues</h2>`;
+      langItems.forEach(lang => {
+        html += `<div style="margin-bottom: 6px; font-size: 12px; color: #374151;"><strong style="color: #0f1730;">${escapeHtml(lang.name || "")}</strong>${lang.level ? " - " + escapeHtml(lang.level) : ""}${lang.description ? " : " + escapeHtml(lang.description) : ""}</div>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `</td></tr></table>`;
+
+    cvContent.innerHTML = html;
+
+    const opt = {
+      margin: 10,
+      filename: (fullName.replace(/\s+/g, "_") || "CV") + ".pdf",
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+    };
+
+    html2pdf().set(opt).from(cvContent).save().catch(err => alert("Échec de la génération du PDF : " + (err.message || err.code)));
+  }).catch(err => alert("Échec de la génération du CV : " + (err.message || err.code)));
+}
+
+const generateCvBtn = document.getElementById("generateCvBtn");
+if (generateCvBtn) {
+  generateCvBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    generateCV();
   });
 }
 
@@ -1988,3 +2161,4 @@ if (prefSearchToggle && prefSearchWrap) {
     }
   });
 }
+

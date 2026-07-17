@@ -36,7 +36,7 @@
         <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
         Candidatures
       </a>
-      <a class="nav-item" href="/profil">
+      <a class="nav-item {{ request()->is('profil') ? 'active' : '' }}" href="/profil">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
         Profil
         <span class="pill" id="profilePill">0%</span>
@@ -128,6 +128,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="firebase-init.js"></script>
 <script src="salutation.js"></script>
 <script src="avatar.js"></script>
