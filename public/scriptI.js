@@ -42,8 +42,77 @@ firebase.auth().onAuthStateChanged((user) => {
 
     renderIndexScore(data);
     renderRecommendedJobs();
+    loadUserFavorites().then(() => {
+      updateFavoriteButtons();
+    }).catch((err) => {
+      console.error("[FAV] erreur chargement favoris:", err);
+    });
   });
 });
+
+// ============== FAVORIS ==============
+let userFavorites = new Set();
+
+function getFavoritesRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("favorites/" + user.uid) : null;
+}
+
+function loadUserFavorites() {
+  const user = firebase.auth().currentUser;
+  if (!user) return Promise.resolve();
+  
+  return firebase.database().ref("favorites/" + user.uid).once("value").then((snap) => {
+    const data = snap.val() || {};
+    userFavorites = new Set(Object.keys(data));
+  }).catch((err) => {
+    console.error("[FAV] erreur chargement favoris:", err);
+    userFavorites = new Set();
+  });
+}
+
+function updateFavoriteButtons() {
+  document.querySelectorAll("[data-job-save]").forEach(btn => {
+    const jobId = btn.getAttribute("data-job-save");
+    if (!jobId) return;
+    
+    if (userFavorites.has(jobId)) {
+      btn.classList.add("saved");
+      btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--blue);"><path d="M5 3h14a2 2 0 0 1 2 2v16l-7-3-7 3V5a2 2 0 0 1 2-2z"/></svg>`;
+    } else {
+      btn.classList.remove("saved");
+      btn.innerHTML = `<img src="/image/3916600.png" alt="Sauvegarder" style="width:18px;height:18px;object-fit:contain;">`;
+    }
+  });
+}
+
+function toggleFavorite(jobId) {
+  const ref = getFavoritesRef();
+  if (!ref) {
+    alert("Vous devez être connecté pour sauvegarder des favoris.");
+    return;
+  }
+
+  const favRef = ref.child(jobId);
+  favRef.once("value").then((snap) => {
+    const isFav = snap.exists();
+    if (isFav) {
+      return favRef.remove().then(() => {
+        userFavorites.delete(jobId);
+        return false;
+      });
+    } else {
+      return favRef.set({ createdAt: Date.now() }).then(() => {
+        userFavorites.add(jobId);
+        return true;
+      });
+    }
+  }).then(() => {
+    updateFavoriteButtons();
+  }).catch((err) => {
+    console.error("[FAV] erreur:", err);
+  });
+}
 
 function renderRecommendedJobs() {
   const container = document.getElementById("jobsContainer");
@@ -86,8 +155,8 @@ function renderRecommendedJobs() {
           <div class="job-side">
             <div class="job-price">${escapeHtml(job.salary || "—")}<span>par mois</span></div>
             <div class="job-actions">
-              <button class="btn-primary">Voir détails</button>
-              <button class="btn-icon">🔖</button>
+              <button class="btn-primary" data-job-detail="${escapeHtml(job.id)}">Voir détails</button>
+              <button class="btn-icon" data-job-save="${escapeHtml(job.id)}"></button>
             </div>
           </div>
         </article>
@@ -97,6 +166,7 @@ function renderRecommendedJobs() {
     if (topJobs.length === 0) {
       container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">Aucune opportunité pour le moment.</div>`;
     }
+    updateFavoriteButtons();
   }).catch((err) => {
     container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red);">Erreur de chargement des offres.</div>`;
     console.error("[JOBS] erreur chargement:", err);
@@ -219,3 +289,130 @@ if (actionFollowTraining) {
     window.location.href = "/profil";
   });
 }
+
+// ============== FAVORIS ==============
+function getFavoritesRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("favorites/" + user.uid) : null;
+}
+
+function loadUserFavorites() {
+  const user = firebase.auth().currentUser;
+  if (!user) return Promise.resolve();
+  
+  return firebase.database().ref("favorites/" + user.uid).once("value").then((snap) => {
+    const data = snap.val() || {};
+    userFavorites = new Set(Object.keys(data));
+  }).catch((err) => {
+    console.error("[FAV] erreur chargement favoris:", err);
+    userFavorites = new Set();
+  });
+}
+
+function toggleFavorite(jobId) {
+  const ref = getFavoritesRef();
+  if (!ref) {
+    alert("Vous devez être connecté pour sauvegarder des favoris.");
+    return;
+  }
+
+  const favRef = ref.child(jobId);
+  favRef.once("value").then((snap) => {
+    const isFav = snap.exists();
+    if (isFav) {
+      return favRef.remove().then(() => {
+        userFavorites.delete(jobId);
+        return false;
+      });
+    } else {
+      return favRef.set({ createdAt: Date.now() }).then(() => {
+        userFavorites.add(jobId);
+        return true;
+      });
+    }
+  }).then(() => {
+    updateFavoriteButtons();
+  }).catch((err) => {
+    console.error("[FAV] erreur:", err);
+  });
+}
+
+// ============== MODAL DÉTAILS OFFRE ==============
+const jobDetailOverlay = document.getElementById("jobDetailOverlay");
+const jobDetailModal = document.getElementById("jobDetailModal");
+const jobDetailTitle = document.getElementById("jobDetailTitle");
+const jobDetailBody = document.getElementById("jobDetailBody");
+const jobDetailClose = document.getElementById("jobDetailClose");
+
+function openJobDetailModal(job) {
+  if (!jobDetailOverlay || !jobDetailBody || !jobDetailTitle) return;
+
+  const logoUrl = job.logoURL || "";
+  const logoHtml = logoUrl
+    ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(job.company || 'logo')}" class="detail-logo">`
+    : `<div class="detail-logo" style="display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;background:linear-gradient(90deg,var(--mint-light),var(--sky));color:#052a2f;">${escapeHtml((job.company || "?").charAt(0).toUpperCase())}</div>`;
+
+  const tags = (job.skills || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 6);
+  const tagsHtml = tags.map((t) => `<span style="display:inline-block;padding:4px 10px;border-radius:20px;background:var(--bg);color:var(--text);font-size:12px;font-weight:600;margin:2px;">${escapeHtml(t)}</span>`).join("");
+
+  jobDetailBody.innerHTML = `
+    ${logoHtml}
+    <div class="detail-company">${escapeHtml(job.company || "—")}</div>
+    <div class="detail-sub">${escapeHtml(job.title || "Sans titre")} · ${escapeHtml(job.location || "—")} ${job.country ? "· " + escapeHtml(job.country) : ""}</div>
+    <div class="detail-row"><span class="detail-label">Type de contrat</span><span class="detail-value">${escapeHtml(job.contractType || job.status || "—")}</span></div>
+    <div class="detail-row"><span class="detail-label">Salaire</span><span class="detail-value">${escapeHtml(job.salary || "—")}</span></div>
+    <div class="detail-row"><span class="detail-label">Description</span><span class="detail-value">${escapeHtml(job.description || "Aucune description.")}</span></div>
+    <div class="detail-row"><span class="detail-label">Compétences</span><span class="detail-value">${tagsHtml || "—"}</span></div>
+    <div class="detail-row"><span class="detail-label">Date limite</span><span class="detail-value">${escapeHtml(job.deadline || "—")}</span></div>
+    <div class="detail-row"><span class="detail-label">Email de candidature</span><span class="detail-value">${escapeHtml(job.applyEmail || "—")}</span></div>
+    <div class="detail-row"><span class="detail-label">Compatibilité</span><span class="detail-value">${escapeHtml(job.compatibility || "85%")}</span></div>
+    ${job.verified ? '<div class="detail-row"><span class="detail-label">Vérifié</span><span class="detail-value">✓ Oui</span></div>' : ''}
+  `;
+
+  jobDetailTitle.textContent = "Détails de l'offre";
+  jobDetailOverlay.classList.add("active");
+}
+
+function closeJobDetailModal() {
+  if (jobDetailOverlay) jobDetailOverlay.classList.remove("active");
+}
+
+if (jobDetailClose) {
+  jobDetailClose.addEventListener("click", closeJobDetailModal);
+}
+
+if (jobDetailOverlay) {
+  jobDetailOverlay.addEventListener("click", (e) => {
+    if (e.target === jobDetailOverlay) closeJobDetailModal();
+  });
+}
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-job-detail]");
+  if (!btn) return;
+  const jobId = btn.getAttribute("data-job-detail");
+  if (!jobId) return;
+
+  firebase.database().ref("jobs/" + jobId).once("value").then((snap) => {
+    const job = snap.val();
+    if (job) {
+      job.id = jobId;
+      openJobDetailModal(job);
+    }
+  }).catch((err) => {
+    console.error("[JOBS] erreur chargement détail:", err);
+  });
+});
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-job-save]");
+  if (!btn) return;
+  const jobId = btn.getAttribute("data-job-save");
+  if (!jobId) return;
+  e.preventDefault();
+  toggleFavorite(jobId);
+});

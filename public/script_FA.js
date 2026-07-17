@@ -1,78 +1,119 @@
-// ============== DONNÉES ==============
-const jobs = [
-  {
-    id: 1, logo: "N", logoBg: "#000000", tag: "new", tagLabel: "Nouveau",
-    title: "Product Designer UI/UX", verified: true,
-    company: "Notion Labs", location: "Remote (Monde entier)",
-    tags: ["Design", "Figma", "UI/UX", "Prototyping", "+2"],
-    posted: "Publié il y a 2h",
-    match: 92, salaryMin: 4000, salaryMax: 6000, currency: "$", period: "par mois",
-    fav: true
-  },
-  {
-    id: 2, logo: "🚗", logoBg: "#0a0a0a", tag: "new", tagLabel: "Nouveau",
-    title: "Développeur Full Stack", verified: true,
-    company: "BMW Group", location: "Munich, Allemagne · Remote",
-    tags: ["React", "Node.js", "TypeScript", "MongoDB", "+2"],
-    posted: "Publié il y a 4h",
-    match: 88, salaryMin: 5500, salaryMax: 8000, currency: "€", period: "par mois",
-    fav: true
-  },
-  {
-    id: 3, logo: "🛍", logoBg: "#95c341", tag: "popular", tagLabel: "Populaire",
-    title: "Chef de Projet Digital", verified: false,
-    company: "Shopify", location: "Toronto, Canada · Hybride",
-    tags: ["Gestion de projet", "Agile", "Scrum", "Jira", "+2"],
-    posted: "Publié il y a 6h",
-    match: 85, salaryMin: 3800, salaryMax: 6000, currency: "$", period: "par mois",
-    fav: true
-  },
-  {
-    id: 4, logo: "🧡", logoBg: "#ff7a59", tag: "new", tagLabel: "Nouveau",
-    title: "Digital Marketing Specialist", verified: false,
-    company: "HubSpot", location: "Dublin, Irlande · Remote",
-    tags: ["SEO", "Google Ads", "Analytics", "Content Marketing", "+2"],
-    posted: "Publié il y a 7h",
-    match: 82, salaryMin: 3000, salaryMax: 4500, currency: "€", period: "par mois",
-    fav: true
-  },
-  {
-    id: 5, logo: "≡", logoBg: "#0ea5a4", tag: "", tagLabel: "",
-    title: "Ingénieur Backend", verified: false,
-    company: "Paystack", location: "Lagos, Nigeria · Hybride",
-    tags: ["Python", "Django", "PostgreSQL", "AWS", "+2"],
-    posted: "Publié il y a 1 jour",
-    match: 78, salaryMin: 2500000, salaryMax: 3500000, currency: "₦", period: "par mois",
-    fav: true
+// ============== GARDE DE SESSION ==============
+firebase.auth().onAuthStateChanged((user) => {
+  if (!user) {
+    window.location.replace("/");
+    return;
   }
-];
+  loadFavorites(user.uid);
+});
 
-let currentSort = "recentes";
+function escapeHtml(text) {
+  if (text === null || text === undefined) return "";
+  const str = String(text);
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return str.replace(/[&<>"']/g, (m) => map[m]);
+}
 
-// ============== RENDU LISTE ==============
-function renderJobs() {
+// ============== CHARGEMENT FAVORIS ==============
+function loadFavorites(uid) {
   const list = document.getElementById("jobList");
+  const resultCount = document.getElementById("resultCount");
+  const tabSpan = document.querySelector('.tab[data-tab="offres"] span');
 
+  if (!list) return;
+
+  list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">Chargement de vos favoris...</div>`;
+
+  const favRef = firebase.database().ref("favorites/" + uid);
+  favRef.once("value").then((snap) => {
+    const favData = snap.val() || {};
+    const favIds = Object.keys(favData);
+
+    if (favIds.length === 0) {
+      list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">Aucun favori pour le moment. Retournez au tableau de bord pour en ajouter.</div>`;
+      if (resultCount) resultCount.textContent = "0 offre d'emploi";
+      if (tabSpan) tabSpan.textContent = "0";
+      return;
+    }
+
+    const jobsRef = firebase.database().ref("jobs");
+    const promises = favIds.map(id => jobsRef.child(id).once("value"));
+    return Promise.all(promises).then((snapshots) => {
+      const jobs = [];
+      snapshots.forEach((snap) => {
+        if (snap.exists()) {
+          const data = snap.val();
+          jobs.push({ id: snap.key, ...data });
+        }
+      });
+
+      jobs.sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0);
+        const dateB = new Date(b.createdAt || 0);
+        return dateB - dateA;
+      });
+
+      renderFavorites(jobs);
+
+      if (resultCount) resultCount.textContent = `${jobs.length} offre${jobs.length > 1 ? 's' : ''} d'emploi`;
+      if (tabSpan) tabSpan.textContent = jobs.length;
+    });
+  }).catch((err) => {
+    console.error("[FAV] erreur chargement:", err);
+    list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red);">Erreur de chargement des favoris.</div>`;
+  });
+}
+
+// ============== RENDU FAVORIS ==============
+function renderFavorites(jobs) {
+  const list = document.getElementById("jobList");
+  if (!list) return;
+
+  const currentSort = document.getElementById("sortSelect")?.value || "recentes";
   let sorted = [...jobs];
+
   if (currentSort === "compat") {
-    sorted.sort((a, b) => b.match - a.match);
+    sorted.sort((a, b) => (b.compatibility || 0) - (a.compatibility || 0));
   } else if (currentSort === "salaire") {
-    sorted.sort((a, b) => b.salaryMax - a.salaryMax);
+    sorted.sort((a, b) => {
+      const salaryA = extractSalary(a.salary);
+      const salaryB = extractSalary(b.salary);
+      return salaryB - salaryA;
+    });
   }
 
-  list.innerHTML = sorted.map(job => {
+  list.innerHTML = sorted.map((job) => {
+    const logoUrl = job.logoURL || "";
+    const logoHtml = logoUrl
+      ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(job.company || 'logo')}" style="width:100%;height:100%;object-fit:contain;">`
+      : `<div class="job-logo-text">${escapeHtml((job.company || "?").charAt(0).toUpperCase())}</div>`;
+
+    const tags = (job.skills || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 5);
+    const tagsHtml = tags.map((t) => `<span>${escapeHtml(t)}</span>`).join("");
+
+    const match = job.compatibility ? parseInt(job.compatibility) : 0;
     const circumference = 2 * Math.PI * 18;
-    const offset = circumference - (job.match / 100) * circumference;
+    const offset = circumference - (match / 100) * circumference;
+
+    const salaryText = job.salary || "—";
 
     return `
-      <div class="job" data-id="${job.id}">
-        <div class="job-logo" style="background:${job.logoBg}">${job.logo}</div>
+      <div class="job" data-id="${escapeHtml(job.id)}">
+        <div class="job-logo">${logoHtml}</div>
         <div class="job-info">
-          ${job.tag ? `<span class="job-tag ${job.tag}">${job.tagLabel}</span>` : ""}
-          <div class="job-title">${job.title} ${job.verified ? '<span class="verified-dot">✓</span>' : ""}</div>
-          <div class="job-sub">${job.company} · 📍 ${job.location}</div>
-          <div class="job-tags">${job.tags.map(t => `<span>${t}</span>`).join("")}</div>
-          <div class="job-posted">🕐 ${job.posted}</div>
+          <div class="job-title">${escapeHtml(job.title || "Sans titre")} ${job.verified ? '<span class="verified-dot">✓</span>' : ""}</div>
+          <div class="job-sub">${escapeHtml(job.company || "—")} · 📍 ${escapeHtml(job.location || "—")} ${job.country ? "· " + escapeHtml(job.country) : ""}</div>
+          <div class="job-tags">${tagsHtml}</div>
         </div>
         <div class="job-metrics">
           <div>
@@ -82,13 +123,13 @@ function renderJobs() {
                 <circle class="job-match-fg" cx="22" cy="22" r="18"
                   stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"></circle>
               </svg>
-              <div class="job-match-num">${job.match}%</div>
+              <div class="job-match-num">${match}%</div>
             </div>
             <div class="job-match-label">Compatibilité</div>
           </div>
-          <div class="job-price">${job.salaryMin.toLocaleString("fr-FR")} – ${job.salaryMax.toLocaleString("fr-FR")} ${job.currency}<span>${job.period}</span></div>
+          <div class="job-price">${escapeHtml(salaryText)}</div>
           <div class="job-actions">
-            <button class="fav-heart ${job.fav ? "" : "unfav"}" data-id="${job.id}">${job.fav ? "♥" : "♡"}</button>
+            <button class="fav-heart saved" data-fav-id="${escapeHtml(job.id)}">♥</button>
             <button class="job-menu">⋮</button>
           </div>
         </div>
@@ -96,91 +137,49 @@ function renderJobs() {
     `;
   }).join("");
 
-  document.querySelectorAll(".fav-heart").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const id = parseInt(btn.dataset.id);
-      const job = jobs.find(j => j.id === id);
-      job.fav = !job.fav;
-      if (!job.fav) {
-        // Retirer visuellement après un court délai
-        const card = btn.closest(".job");
-        card.style.opacity = "0.4";
-        setTimeout(() => {
-          jobs.splice(jobs.findIndex(j => j.id === id), 1);
-          renderJobs();
-          updateCount();
-        }, 300);
-      } else {
-        renderJobs();
-      }
-    });
-  });
+  if (sorted.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">Aucun favori pour le moment.</div>`;
+  }
 }
 
-function updateCount() {
-  document.getElementById("resultCount").textContent = `${jobs.length} offres d'emploi`;
-  const tabSpan = document.querySelector('.tab[data-tab="offres"] span');
-  if (tabSpan) tabSpan.textContent = jobs.length;
+function extractSalary(salary) {
+  if (!salary) return 0;
+  const numbers = salary.match(/[\d]+/g);
+  if (!numbers || numbers.length === 0) return 0;
+  const max = Math.max(...numbers.map(Number));
+  return max;
 }
 
 // ============== TRI ==============
-document.getElementById("sortSelect").addEventListener("change", (e) => {
-  currentSort = e.target.value;
-  renderJobs();
+document.getElementById("sortSelect")?.addEventListener("change", () => {
+  const user = firebase.auth().currentUser;
+  if (user) loadFavorites(user.uid);
 });
 
-// ============== TABS ==============
-document.querySelectorAll(".tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
+// ============== RETIRER FAVORI ==============
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-fav-id]");
+  if (!btn) return;
+  e.stopPropagation();
+  const jobId = btn.getAttribute("data-fav-id");
+  if (!jobId) return;
+
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const favRef = firebase.database().ref("favorites/" + user.uid + "/" + jobId);
+  favRef.remove().then(() => {
+    console.log("[FAV] retiré:", jobId);
+    const card = btn.closest(".job");
+    if (card) {
+      card.style.opacity = "0.4";
+      setTimeout(() => loadFavorites(user.uid), 300);
+    }
+  }).catch((err) => {
+    console.error("[FAV] erreur suppression:", err);
   });
 });
-
-// ============== EXPORT ==============
-document.getElementById("exportBtn").addEventListener("click", () => {
-  const btn = document.getElementById("exportBtn");
-  const original = btn.textContent;
-  btn.textContent = "⬆ Génération...";
-  setTimeout(() => {
-    btn.textContent = "✓ Exporté";
-    setTimeout(() => { btn.textContent = original; }, 1200);
-  }, 700);
-});
-
-// ============== CREER UNE LISTE ==============
-document.getElementById("createListBtn").addEventListener("click", () => {
-  const btn = document.getElementById("createListBtn");
-  const original = btn.textContent;
-  btn.textContent = "✓ Liste créée";
-  setTimeout(() => { btn.textContent = original; }, 1200);
-});
-
-// ============== PAGINATION ==============
-document.querySelectorAll(".page-num").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".page-num").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-  });
-});
-
-// ============== BOOST RING ==============
-function renderBoostRing() {
-  const ring = document.getElementById("boostRing");
-  const value = 60;
-  const radius = 34;
-  const circumference = 2 * Math.PI * radius;
-  ring.style.strokeDasharray = circumference;
-  ring.style.strokeDashoffset = circumference;
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      ring.style.transition = "stroke-dashoffset 1s ease";
-      ring.style.strokeDashoffset = circumference - (value / 100) * circumference;
-    }, 150);
-  });
-}
 
 // ============== INIT ==============
-renderJobs();
-renderBoostRing();
+const resultCount = document.getElementById("resultCount");
+if (resultCount) resultCount.textContent = "Chargement...";

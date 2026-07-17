@@ -22,4 +22,8 @@ Route::get('/admin', function () {
     return view('admin');
 });
 
+Route::get('/favoris', function () {
+    return view('favoris');
+});
+
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');

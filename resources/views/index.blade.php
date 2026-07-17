@@ -59,7 +59,7 @@
         Notifications
         <span class="pill red">8</span>
       </a>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="/favoris">
         <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
         Favoris
       </a>
@@ -249,6 +249,17 @@
 
     </div>
   </main>
+</div>
+
+<!-- ============== MODAL DÉTAILS OFFRE ============== -->
+<div class="modal-overlay" id="jobDetailOverlay">
+  <div class="modal-card" id="jobDetailModal">
+    <div class="modal-head">
+      <div class="modal-title" id="jobDetailTitle">Détails de l'offre</div>
+      <button class="modal-close" id="jobDetailClose" type="button">×</button>
+    </div>
+    <div class="modal-body" id="jobDetailBody"></div>
+  </div>
 </div>
 
 <!-- ============== FIREBASE JS SDK + GARDE DE SESSION ============== -->

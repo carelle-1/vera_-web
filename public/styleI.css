@@ -17,6 +17,8 @@
   --radius-lg:20px;
   --radius-md:14px;
   --radius-sm:10px;
+  --mint-light:#e6f7ec;
+  --sky:#e7effe;
 }
 
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -270,6 +272,12 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke
 .btn-icon{
   width:34px;height:34px;border-radius:10px;border:1px solid var(--border);
   background:#fff;cursor:pointer;font-size:13px;
+  display:flex;align-items:center;justify-content:center;padding:0;
+  transition:background .15s ease, border-color .15s ease;
+}
+.btn-icon.saved{
+  background:#e7effe;
+  border-color:var(--blue);
 }
 
 .more{display:flex;justify-content:center;margin-top:6px;}
@@ -356,3 +364,27 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke
   .job-side{align-items:flex-start;flex-direction:row;justify-content:space-between;width:100%;}
   .col-right{flex-direction:column;}
 }
+
+/* ================= MODAL DÉTAILS OFFRE ================= */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(15,23,48,0.55);backdrop-filter:blur(4px);z-index:1000;
+  align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.active{display:flex;}
+.modal-card{
+  background:#fff;border-radius:20px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:modalIn .2s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);}
+.modal-title{font-size:16px;font-weight:800;color:var(--text);}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:4px 8px;border-radius:8px;}
+.modal-close:hover{background:var(--bg);color:var(--text);}
+.modal-body{padding:20px 24px;}
+.modal-body .detail-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+.modal-body .detail-row:last-child{border-bottom:none;}
+.modal-body .detail-label{font-weight:700;color:var(--muted);min-width:140px;flex-shrink:0;}
+.modal-body .detail-value{color:var(--text);word-break:break-word;}
+.modal-body .detail-logo{width:64px;height:64px;border-radius:14px;object-fit:contain;background:var(--bg);margin-bottom:12px;}
+.modal-body .detail-company{font-size:18px;font-weight:800;margin-bottom:4px;}
+.modal-body .detail-sub{font-size:12.5px;color:var(--muted);margin-bottom:16px;}
