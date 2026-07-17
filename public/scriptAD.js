@@ -378,30 +378,64 @@ function handleJobSubmit(e) {
   const saveRef = jobEditId ? ref.child(jobEditId) : ref.push();
   console.log("[JOBS] sauvegarde dans Firebase:", jobEditId ? "update" : "create", "key:", saveRef.key, "payload:", payload);
 
-  saveRef.set(payload).then(() => {
-    console.log("[JOBS] enregistrement OK");
-
-    if (logoFile) {
-      const user = firebase.auth().currentUser;
-      if (user) {
-        const storageRef = firebase.storage().ref("job-logos/" + user.uid + "/" + saveRef.key);
-        console.log("[JOBS] upload vers:", storageRef.fullPath);
-        return storageRef.put(logoFile).then((snap) => snap.ref.getDownloadURL()).then((url) => {
-          console.log("[JOBS] logo uploadé:", url);
-          return saveRef.update({ logoURL: url });
-        }).catch((err) => {
-          console.error("[JOBS] erreur upload logo:", err);
-          throw err;
-        });
-      }
-    }
-    return null;
-  }).then(() => {
+  const finish = () => {
     closeJobForm();
     renderJobs();
+  };
+
+  if (jobEditId) {
+    saveRef.update(payload).then(() => {
+      console.log("[JOBS] modification OK");
+      return handleLogoUpload(saveRef, logoFile);
+    }).then(() => {
+      finish();
+    }).catch((err) => {
+      console.error("[JOBS] erreur modification:", err);
+      alert("Échec de la modification : " + (err.message || err.code));
+    });
+  } else {
+    saveRef.set(payload).then(() => {
+      console.log("[JOBS] création OK");
+      return handleLogoUpload(saveRef, logoFile);
+    }).then(() => {
+      finish();
+    }).catch((err) => {
+      console.error("[JOBS] erreur création:", err);
+      alert("Échec de la création : " + (err.message || err.code));
+    });
+  }
+}
+
+function handleLogoUpload(saveRef, logoFile) {
+  if (!logoFile) {
+    return null;
+  }
+
+  const formData = new FormData();
+  formData.append('logo', logoFile);
+
+  console.log("[JOBS] upload local vers /upload-logo.php");
+
+  return fetch('/upload-logo.php', {
+    method: 'POST',
+    body: formData
+  }).then((response) => {
+    if (!response.ok) {
+      return response.json().then((err) => {
+        throw new Error(err.error || 'Erreur upload local');
+      });
+    }
+    return response.json();
+  }).then((data) => {
+    if (!data.success || !data.url) {
+      throw new Error('URL du logo non retournée');
+    }
+    console.log("[JOBS] logo uploadé localement:", data.url);
+    return saveRef.update({ logoURL: data.url });
   }).catch((err) => {
-    console.error("[JOBS] erreur finale:", err);
-    alert("Échec de l'enregistrement : " + (err.message || err.code));
+    console.error("[JOBS] erreur upload local:", err);
+    alert("Échec de l'upload du logo : " + err.message);
+    throw err;
   });
 }
 
