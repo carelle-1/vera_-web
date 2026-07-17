@@ -175,64 +175,7 @@
             <button class="chip">🔧 Filtres ⌄</button>
           </div>
 
-          <div class="jobs">
-
-            <article class="job">
-              <div class="job-logo meta">∞</div>
-              <div class="job-info">
-                <div class="job-compat">98% Compatible</div>
-                <div class="job-title">Développeur Full Stack (Remote) <span class="verified-dot">✓</span></div>
-                <div class="job-sub">Meta · <span>🌍 Partout dans le monde</span> <span class="tag">Remote</span></div>
-                <div class="job-tags">
-                  <span>React</span><span>Node.js</span><span>TypeScript</span><span>+3</span>
-                </div>
-              </div>
-              <div class="job-side">
-                <div class="job-price">2 500 – 4 000 $<span>par mois</span></div>
-                <div class="job-actions">
-                  <button class="btn-primary">Voir détails</button>
-                  <button class="btn-icon">🔖</button>
-                </div>
-              </div>
-            </article>
-
-            <article class="job">
-              <div class="job-logo shopify">🛍</div>
-              <div class="job-info">
-                <div class="job-compat">92% Compatible</div>
-                <div class="job-title">Product Designer UI/UX <span class="verified-dot">✓</span></div>
-                <div class="job-sub">Shopify · <span>Canada</span> <span class="tag">Remote</span></div>
-                <div class="job-tags">
-                  <span>Figma</span><span>Adobe XD</span><span>UI/UX</span><span>+2</span>
-                </div>
-              </div>
-              <div class="job-side">
-                <div class="job-price">3 000 – 5 000 $<span>par mois</span></div>
-                <div class="job-actions">
-                  <button class="btn-primary">Voir détails</button>
-                  <button class="btn-icon">🔖</button>
-                </div>
-              </div>
-            </article>
-
-            <article class="job">
-              <div class="job-logo decathlon">D</div>
-              <div class="job-info">
-                <div class="job-compat">89% Compatible</div>
-                <div class="job-title">Digital Marketing Specialist <span class="verified-dot">✓</span></div>
-                <div class="job-sub">Decathlon · <span>France</span> <span class="tag">Hybrid</span></div>
-                <div class="job-tags">
-                  <span>SEO</span><span>Google Ads</span><span>Analytics</span><span>+2</span>
-                </div>
-              </div>
-              <div class="job-side">
-                <div class="job-price">45 000 – 60 000 €<span>par an</span></div>
-                <div class="job-actions">
-                  <button class="btn-primary">Voir détails</button>
-                  <button class="btn-icon">🔖</button>
-                </div>
-              </div>
-            </article>
+          <div class="jobs" id="jobsContainer">
 
           </div>
 

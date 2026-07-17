@@ -221,7 +221,7 @@ function renderJobs() {
 
   const ref = jobRef();
   if (!ref) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#ef4444;">Vous devez être connecté pour voir les offres.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#ef4444;">Vous devez être connecté pour voir les offres.</td></tr>`;
     return;
   }
 
@@ -233,6 +233,8 @@ function renderJobs() {
     const data = snapshot.val() || {};
     const items = Object.keys(data).map((id) => ({ id, ...data[id] }))
       .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    console.log("[JOBS] items chargés:", items.length, items.map(i => ({ id: i.id, logoURL: i.logoURL })));
 
     let filtered = items;
     if (q) {
@@ -263,7 +265,13 @@ function renderJobs() {
 
     filtered.forEach((job) => {
       const tr = document.createElement("tr");
+      const logoUrl = job.logoURL || "";
+      const logoHtml = logoUrl
+        ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(job.company || 'logo')}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">`
+        : `<div class="job-logo-placeholder">${escapeHtml((job.company || "?").charAt(0).toUpperCase())}</div>`;
+
       tr.innerHTML = `
+        <td style="text-align:center;vertical-align:middle;">${logoHtml}</td>
         <td><button class="job-title-edit" data-id="${job.id}" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;text-align:left;padding:0;font-weight:700;">${escapeHtml(job.title || "Sans titre")}</button></td>
         <td>${escapeHtml(job.company || "—")}</td>
         <td>${escapeHtml(job.location || "—")}${job.country ? ", " + escapeHtml(job.country) : ""}</td>
@@ -285,7 +293,7 @@ function renderJobs() {
       btn.addEventListener("click", () => deleteJob(btn.dataset.id));
     });
   }).catch((err) => {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement: ${err.message || err.code}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement: ${err.message || err.code}</td></tr>`;
   });
 }
 
@@ -359,6 +367,8 @@ function handleJobSubmit(e) {
   };
 
   const logoFile = e.target.querySelector('input[name="logo"]').files[0];
+  console.log("[JOBS] logoFile:", logoFile ? logoFile.name : "aucun");
+
   const ref = jobRef();
   if (!ref) {
     alert("Vous devez être connecté pour enregistrer une offre.");
@@ -368,27 +378,25 @@ function handleJobSubmit(e) {
   const saveRef = jobEditId ? ref.child(jobEditId) : ref.push();
   console.log("[JOBS] sauvegarde dans Firebase:", jobEditId ? "update" : "create", "key:", saveRef.key, "payload:", payload);
 
-  let task = saveRef.set(payload).catch((err) => {
-    console.error("[JOBS] erreur set:", err);
-    alert("Échec de l'enregistrement : " + (err.message || err.code));
-    throw err;
-  });
-
-  if (logoFile) {
-    const user = firebase.auth().currentUser;
-    if (user) {
-      const storageRef = firebase.storage().ref("job-logos/" + user.uid + "/" + saveRef.key);
-      storageRef.put(logoFile).then((snap) => snap.ref.getDownloadURL()).then((url) => {
-        console.log("[JOBS] logo uploadé:", url);
-        return saveRef.update({ logoURL: url });
-      }).catch((err) => {
-        console.warn("[JOBS] upload logo ignoré:", err.message || err.code);
-      });
-    }
-  }
-
   saveRef.set(payload).then(() => {
     console.log("[JOBS] enregistrement OK");
+
+    if (logoFile) {
+      const user = firebase.auth().currentUser;
+      if (user) {
+        const storageRef = firebase.storage().ref("job-logos/" + user.uid + "/" + saveRef.key);
+        console.log("[JOBS] upload vers:", storageRef.fullPath);
+        return storageRef.put(logoFile).then((snap) => snap.ref.getDownloadURL()).then((url) => {
+          console.log("[JOBS] logo uploadé:", url);
+          return saveRef.update({ logoURL: url });
+        }).catch((err) => {
+          console.error("[JOBS] erreur upload logo:", err);
+          throw err;
+        });
+      }
+    }
+    return null;
+  }).then(() => {
     closeJobForm();
     renderJobs();
   }).catch((err) => {

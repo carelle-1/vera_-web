@@ -1,3 +1,17 @@
+// ============== HELPERS ==============
+function escapeHtml(text) {
+  if (text === null || text === undefined) return "";
+  const str = String(text);
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return str.replace(/[&<>"']/g, (m) => map[m]);
+}
+
 // ============== GARDE DE SESSION (TABLEAU DE BORD) ==============
 // Si l'utilisateur n'est pas connecté, on le renvoie à la connexion.
 firebase.auth().onAuthStateChanged((user) => {
@@ -27,8 +41,67 @@ firebase.auth().onAuthStateChanged((user) => {
     }
 
     renderIndexScore(data);
+    renderRecommendedJobs();
   });
 });
+
+function renderRecommendedJobs() {
+  const container = document.getElementById("jobsContainer");
+  if (!container) return;
+
+  firebase.database().ref("jobs").once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const jobs = Object.keys(data).map((id) => ({ id, ...data[id] }));
+
+    jobs.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0);
+      const dateB = new Date(b.createdAt || 0);
+      return dateB - dateA;
+    });
+
+    const topJobs = jobs.slice(0, 6);
+
+    container.innerHTML = topJobs.map((job) => {
+      const logoUrl = job.logoURL || "";
+      const logoHtml = logoUrl
+        ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(job.company || 'logo')}" style="width:100%;height:100%;object-fit:contain;">`
+        : `<div class="job-logo-text">${escapeHtml((job.company || "?").charAt(0).toUpperCase())}</div>`;
+
+      const tags = (job.skills || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 3);
+      const tagsHtml = tags.map((t) => `<span>${escapeHtml(t)}</span>`).join("");
+
+      return `
+        <article class="job">
+          <div class="job-logo">${logoHtml}</div>
+          <div class="job-info">
+            <div class="job-compat">${job.compatibility || "85%"} Compatible</div>
+            <div class="job-title">${escapeHtml(job.title || "Sans titre")} ${job.verified ? '<span class="verified-dot">✓</span>' : ""}</div>
+            <div class="job-sub">${escapeHtml(job.company || "—")} · <span>${escapeHtml(job.location || "—")}</span> <span class="tag">${escapeHtml(job.contractType || job.status || "")}</span></div>
+            <div class="job-tags">${tagsHtml}${tags.length >= 3 && (job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).length > 3 ? `<span>+${(job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).length - 3}</span>` : ""}</div>
+          </div>
+          <div class="job-side">
+            <div class="job-price">${escapeHtml(job.salary || "—")}<span>par mois</span></div>
+            <div class="job-actions">
+              <button class="btn-primary">Voir détails</button>
+              <button class="btn-icon">🔖</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    if (topJobs.length === 0) {
+      container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">Aucune opportunité pour le moment.</div>`;
+    }
+  }).catch((err) => {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red);">Erreur de chargement des offres.</div>`;
+    console.error("[JOBS] erreur chargement:", err);
+  });
+}
 
 function renderIndexScore(data) {
   const scoreNum = document.getElementById("scoreNumIndex");

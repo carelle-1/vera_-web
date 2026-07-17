@@ -188,6 +188,7 @@ table{border-collapse:collapse;width:100%;}
   padding:10px 8px;border-bottom:1px solid var(--border);font-weight:700;
 }
 .admin-table td{padding:12px 8px;border-bottom:1px solid var(--border);font-size:12.5px;vertical-align:middle;}
+.admin-table td img{width:40px;height:40px;border-radius:8px;object-fit:cover;}
 .admin-table tr:last-child td{border-bottom:none;}
 .user-cell{display:flex;align-items:center;gap:10px;}
 .user-cell img{width:32px;height:32px;border-radius:50%;object-fit:cover;}
@@ -306,6 +307,9 @@ table{border-collapse:collapse;width:100%;}
 .job-title-edit:hover{color:var(--sky-dark);background:var(--sky-pale);}
 .exp-delete-btn{background:none;border:none;cursor:pointer;color:var(--red);padding:4px;border-radius:6px;}
 .exp-delete-btn:hover{background:#fef2f2;}
+
+/* Job logo placeholder */
+.job-logo-placeholder{width:40px;height:40px;border-radius:8px;background:linear-gradient(90deg,var(--mint-light),var(--sky));color:#052a2f;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;margin:0 auto;}
 
 /* Close button in inline form */
 .offres-form-wrapper .exp-modal-close{background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;line-height:1;}

@@ -234,6 +234,7 @@
               <table class="admin-table">
                 <thead>
                   <tr>
+                    <th>Logo</th>
                     <th>Offre</th>
                     <th>Entreprise</th>
                     <th>Lieu</th>
