@@ -1,11 +1,7 @@
 // ============== GARDE DE SESSION (CONNEXION) ==============
-// Si l'utilisateur est déjà connecté, on le renvoie au tableau de bord
-// (empêche de revenir sur la connexion tant qu'il n'a pas cliqué sur Déconnexion).
-firebase.auth().onAuthStateChanged((user) => {
-  if (user) {
-    window.location.replace("/tableau-de-bord");
-  }
-});
+// La redirection est déjà gérée dans le handler de login ci-dessous.
+// On ne garde pas de onAuthStateChanged global ici pour éviter
+// une double redirection depuis la page de connexion.
 
 // ============== TABS SWITCH ==============
 const tabs = document.querySelectorAll(".auth-tab");
@@ -126,23 +122,32 @@ loginForm.addEventListener("submit", (e) => {
   firebase.auth().signInWithEmailAndPassword(email, password)
     .then((userCredential) => {
       const user = userCredential.user;
-      firebase.database().ref("users/" + user.uid).once("value")
-        .then((snapshot) => {
-          const data = snapshot.val() || {};
-          const role = data.role || "chercheur_emploi";
-          if (role === "chercheur_emploi") {
-            window.location.href = "/tableau-de-bord";
-          } else {
-            alert("Accès réservé aux chercheurs d'emploi pour le moment.");
-            firebase.auth().signOut();
-            window.location.href = "/";
-          }
-        })
-        .catch(() => {
-          window.location.href = "/tableau-de-bord";
-        });
+      console.log("[LOGIN] connexion réussie, uid:", user.uid);
+      // Récupère le token Firebase pour synchroniser avec Laravel
+      return user.getIdToken();
+    })
+    .then((idToken) => {
+      console.log("[LOGIN] synchronisation avec le serveur...");
+      // Appelle l'endpoint Laravel pour synchroniser Firebase avec Laravel
+      return fetch("/sync-firebase-auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || ""
+        },
+        body: JSON.stringify({ idToken: idToken })
+      }).then(response => response.json());
+    })
+    .then((data) => {
+      if (data.success) {
+        console.log("[LOGIN] synchronisation réussie, redirection vers:", data.redirect);
+        window.location.href = data.redirect;
+      } else {
+        throw new Error(data.error || "Erreur de synchronisation");
+      }
     })
     .catch((error) => {
+      console.log("[LOGIN] erreur après login:", error);
       btn.textContent = original;
       btn.classList.remove("loading");
       setError("loginPassword", "loginPasswordError", firebaseAuthError(error));
@@ -365,27 +370,29 @@ function signInWithGoogle() {
     .then((userCredential) => {
       const user = userCredential.user;
       const fullName = user.displayName || "";
-      firebase.database().ref("users/" + user.uid).once("value")
-        .then((snapshot) => {
-          if (!snapshot.exists()) {
-            const parts = (user.displayName || "").trim().split(/\s+/);
-            return firebase.database().ref("users/" + user.uid).set({
-              firstName: parts[0] || "",
-              lastName: parts.slice(1).join(" ") || "",
-              fullName: fullName,
-              email: user.email,
-              photoURL: user.photoURL || "",
-              role: "chercheur_emploi",
-              createdAt: firebase.database.ServerValue.TIMESTAMP
-            });
-          }
-        })
-        .then(() => {
-          window.location.href = "/tableau-de-bord";
-        });
+      // Récupère le token Firebase
+      return user.getIdToken().then(idToken => ({ user, fullName, idToken }));
+    })
+    .then(({ user, fullName, idToken }) => {
+      // Synchronise avec Laravel
+      return fetch("/sync-firebase-auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || ""
+        },
+        body: JSON.stringify({ idToken: idToken })
+      }).then(response => response.json()).then(data => ({ user, fullName, data }));
+    })
+    .then(({ user, fullName, data }) => {
+      if (data.success) {
+        window.location.href = data.redirect;
+      } else {
+        throw new Error(data.error || "Erreur de synchronisation");
+      }
     })
     .catch((error) => {
-      alert("Connexion Google impossible : " + (error.message || error.code));
+      alert("Connexion impossible : " + (error.message || error.code));
     });
 }
 

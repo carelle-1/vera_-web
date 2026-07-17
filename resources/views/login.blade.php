@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>VERA - Connexion / Inscription</title>
 <link rel="stylesheet" href="style_L.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -220,6 +221,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="firebase-init.js"></script>
 
-<script src="script_L.js"></script>
+<script src="script_L.js?v=2"></script>
 </body>
 </html>

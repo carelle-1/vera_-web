@@ -64,10 +64,14 @@
       <div class="admin-profile">
         <img src="https://i.pravatar.cc/64?img=32" alt="admin">
         <div>
-          <div class="admin-name">Patrice Kouadio</div>
-          <div class="admin-role">Super Admin</div>
+          <div class="admin-name">{{ auth()->user()->name ?? 'Admin' }}</div>
+          <div class="admin-role">{{ auth()->user()->role === 'admin' ? 'Administrateur' : 'Utilisateur' }}</div>
         </div>
       </div>
+      <form action="/logout" method="POST" style="margin-top: 10px;">
+        @csrf
+        <button type="submit" style="width: 100%; padding: 8px; background: #f3f4f6; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Déconnexion</button>
+      </form>
     </div>
   </aside>
 
@@ -200,6 +204,103 @@
 
       </div>
 
+      <!-- OFFEMPLOI PANEL -->
+      <div class="panel" id="panel-offres">
+        <div class="page-head">
+          <div>
+            <h1>Offres d'emploi</h1>
+            <p>Gérer les offres d'emploi publiées sur la plateforme.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn-primary" id="addJobBtn">+ Ajouter une offre</button>
+          </div>
+        </div>
+
+        <div class="offres-layout">
+          <div class="offres-table-wrapper">
+            <div class="card table-card">
+              <div class="card-head-row">
+                <div class="card-title">Liste des offres</div>
+                <div class="table-tools">
+                  <input type="text" id="jobSearch" placeholder="Rechercher une offre...">
+                  <select id="jobFilter">
+                    <option value="all">Tous les statuts</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Offre</th>
+                    <th>Entreprise</th>
+                    <th>Lieu</th>
+                    <th>Statut</th>
+                    <th>Date limite</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="jobTableBody"></tbody>
+              </table>
+              <div class="table-footer">
+                <span id="jobTableCount">Affichage de 0 offre</span>
+                <div class="pagination" id="jobPagination"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="offres-form-wrapper" id="offresFormWrapper">
+            <div class="card">
+              <div class="card-head-row">
+                <div class="card-title" id="jobModalTitle">Ajouter une offre</div>
+                <button class="exp-modal-close" id="jobModalClose" type="button">×</button>
+              </div>
+              <form id="jobForm" class="exp-form">
+                <label>Titre de l'offre<input type="text" name="title" required placeholder="Ex. Développeur Full Stack"></label>
+                <label>Entreprise<input type="text" name="company" required placeholder="Ex. Meta"></label>
+                <label>Email de candidature<input type="email" name="applyEmail" placeholder="Ex. recrutement@meta.com"></label>
+                <div class="exp-form-row">
+                  <label>Ville<input type="text" name="location" placeholder="Ex. Paris"></label>
+                  <label>Pays<input type="text" name="country" placeholder="Ex. France"></label>
+                </div>
+                <label>Description<textarea name="description" rows="4" placeholder="Décrivez le poste, les missions, le profil recherché..."></textarea></label>
+                <div class="exp-form-row">
+                  <label>Salaire<input type="text" name="salary" placeholder="Ex. 2500 - 4000 €/mois"></label>
+                  <label>Type de contrat
+                    <select name="contractType">
+                      <option value="">-- Choisir --</option>
+                      <option value="CDI">CDI</option>
+                      <option value="CDD">CDD</option>
+                      <option value="Freelance">Freelance</option>
+                      <option value="Stage">Stage</option>
+                      <option value="Alternance">Alternance</option>
+                      <option value="Remote">Remote</option>
+                    </select>
+                  </label>
+                </div>
+                <label>Compétences requises<input type="text" name="skills" placeholder="Ex. React, Node.js, TypeScript"></label>
+                <div class="exp-form-row">
+                  <label>Date limite<input type="date" name="deadline" required></label>
+                  <label>Statut
+                    <select name="status">
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </label>
+                </div>
+                <label>Logo de l'entreprise<input type="file" name="logo" accept="image/*"></label>
+                <div class="exp-form-actions">
+                  <button type="button" class="btn-outline-sm" id="jobCancel">Annuler</button>
+                  <button type="submit" class="btn-primary-sm">Enregistrer</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- AUTRES PANELS (placeholder) -->
       <div class="panel" id="panel-placeholder">
         <div class="placeholder-box">
@@ -213,6 +314,12 @@
   </main>
 </div>
 
-<script src="scriptAD.js"></script>
+<!-- ============== FIREBASE JS SDK + GARDE DE SESSION ============== -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="firebase-init.js"></script>
+<script src="scriptAD.js?v=2"></script>
 </body>
 </html>
