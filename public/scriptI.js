@@ -12,6 +12,70 @@ function escapeHtml(text) {
   return str.replace(/[&<>"']/g, (m) => map[m]);
 }
 
+function normalize(text) {
+  return (text || "").toString().trim().toLowerCase();
+}
+
+function userSkillNames(skills) {
+  if (!skills || typeof skills !== "object") return [];
+  return Object.values(skills)
+    .map((s) => normalize(s && s.name ? s.name : ""))
+    .filter(Boolean);
+}
+
+function jobSkillNames(job) {
+  const raw = job && job.skills ? job.skills : "";
+  return raw.split(",").map((s) => normalize(s)).filter(Boolean);
+}
+
+function textContainsAny(text, keywords) {
+  const hay = normalize(text);
+  return keywords.some((k) => hay.includes(k));
+}
+
+function calculateJobCompatibility(userData, job) {
+  const userSkills = userSkillNames(userData.skills);
+  const requiredSkills = jobSkillNames(job);
+  if (!requiredSkills.length) return 100;
+
+  let matchCount = 0;
+  requiredSkills.forEach((req) => {
+    if (userSkills.some((us) => us === req || us.includes(req) || req.includes(us))) {
+      matchCount++;
+    }
+  });
+
+  const skillsPct = Math.round((matchCount / requiredSkills.length) * 100);
+
+  const experiences = Array.isArray(userData.experiences) ? userData.experiences : [];
+  const formations = Array.isArray(userData.formations) ? userData.formations : [];
+  const certifications = Array.isArray(userData.certifications) ? userData.certifications : [];
+
+  const experienceText = [
+    userData.jobTitle,
+    userData.about,
+    ...experiences.map((e) => [e.title, e.company, e.description].join(" "))
+  ].join(" ");
+
+  const formationText = [
+    ...formations.map((f) => [f.diploma, f.school, f.description].join(" "))
+  ].join(" ");
+
+  const certificationText = [
+    ...certifications.map((c) => [c.title, c.issuer, c.description].join(" "))
+  ].join(" ");
+
+  let bonus = 0;
+  if (textContainsAny(experienceText, requiredSkills)) bonus += 5;
+  if (textContainsAny(formationText, requiredSkills)) bonus += 5;
+  if (textContainsAny(certificationText, requiredSkills)) bonus += 5;
+
+  let score = skillsPct + bonus;
+  if (score > 100) score = 100;
+  if (score < 0) score = 0;
+  return score;
+}
+
 // ============== GARDE DE SESSION (TABLEAU DE BORD) ==============
 // Si l'utilisateur n'est pas connecté, on le renvoie à la connexion.
 firebase.auth().onAuthStateChanged((user) => {
@@ -118,6 +182,12 @@ function renderRecommendedJobs() {
   const container = document.getElementById("jobsContainer");
   if (!container) return;
 
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">Connectez-vous pour voir les offres.</div>`;
+    return;
+  }
+
   firebase.database().ref("jobs").once("value").then((snapshot) => {
     const data = snapshot.val() || {};
     const jobs = Object.keys(data).map((id) => ({ id, ...data[id] }));
@@ -128,49 +198,148 @@ function renderRecommendedJobs() {
       return dateB - dateA;
     });
 
-    const topJobs = jobs.slice(0, 6);
+    populateCountryFilter(jobs);
+    populateCompanyFilter(jobs);
 
-    container.innerHTML = topJobs.map((job) => {
-      const logoUrl = job.logoURL || "";
-      const logoHtml = logoUrl
-        ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(job.company || 'logo')}" style="width:100%;height:100%;object-fit:contain;">`
-        : `<div class="job-logo-text">${escapeHtml((job.company || "?").charAt(0).toUpperCase())}</div>`;
+    const contractFilter = document.getElementById("contractFilter") ? document.getElementById("contractFilter").value : "";
+    const countryFilter = document.getElementById("countryFilter") ? document.getElementById("countryFilter").value : "";
+    const companyFilter = document.getElementById("companyFilter") ? document.getElementById("companyFilter").value : "";
 
-      const tags = (job.skills || "")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .slice(0, 3);
-      const tagsHtml = tags.map((t) => `<span>${escapeHtml(t)}</span>`).join("");
-
-      return `
-        <article class="job">
-          <div class="job-logo">${logoHtml}</div>
-          <div class="job-info">
-            <div class="job-compat">${job.compatibility || "85%"} Compatible</div>
-            <div class="job-title">${escapeHtml(job.title || "Sans titre")} ${job.verified ? '<span class="verified-dot">✓</span>' : ""}</div>
-            <div class="job-sub">${escapeHtml(job.company || "—")} · <span>${escapeHtml(job.location || "—")}</span> <span class="tag">${escapeHtml(job.contractType || job.status || "")}</span></div>
-            <div class="job-tags">${tagsHtml}${tags.length >= 3 && (job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).length > 3 ? `<span>+${(job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).length - 3}</span>` : ""}</div>
-          </div>
-          <div class="job-side">
-            <div class="job-price">${escapeHtml(job.salary || "—")}<span>par mois</span></div>
-            <div class="job-actions">
-              <button class="btn-primary" data-job-detail="${escapeHtml(job.id)}">Voir détails</button>
-              <button class="btn-icon" data-job-save="${escapeHtml(job.id)}"></button>
-            </div>
-          </div>
-        </article>
-      `;
-    }).join("");
-
-    if (topJobs.length === 0) {
-      container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">Aucune opportunité pour le moment.</div>`;
+    let filteredJobs = jobs;
+    if (contractFilter) {
+      filteredJobs = filteredJobs.filter((job) => {
+        const contractType = (job.contractType || job.status || "").toString().toLowerCase();
+        return contractType === contractFilter.toLowerCase();
+      });
     }
-    updateFavoriteButtons();
+    if (countryFilter) {
+      filteredJobs = filteredJobs.filter((job) => {
+        const country = (job.country || job.location || "").toString().toLowerCase();
+        return country.includes(countryFilter.toLowerCase());
+      });
+    }
+    if (companyFilter) {
+      filteredJobs = filteredJobs.filter((job) => {
+        const company = (job.company || "").toString().toLowerCase();
+        return company.includes(companyFilter.toLowerCase());
+      });
+    }
+
+    const topJobs = filteredJobs.slice(0, 6);
+
+    const skillsPromise = firebase.database().ref("users/" + user.uid + "/skills").once("value");
+    const expPromise = firebase.database().ref("users/" + user.uid + "/experiences").once("value");
+    const formPromise = firebase.database().ref("users/" + user.uid + "/formations").once("value");
+    const certPromise = firebase.database().ref("users/" + user.uid + "/certifications").once("value");
+    const userPromise = firebase.database().ref("users/" + user.uid).once("value");
+
+    Promise.all([userPromise, skillsPromise, expPromise, formPromise, certPromise]).then(([userSnap, skillsSnap, expSnap, formSnap, certSnap]) => {
+      const userData = userSnap.val() || {};
+      const enrichedUser = {
+        ...userData,
+        skills: skillsSnap.val() || {},
+        experiences: Object.keys(expSnap.val() || {}).map(id => ({ id, ...(expSnap.val() || {})[id] })),
+        formations: Object.keys(formSnap.val() || {}).map(id => ({ id, ...(formSnap.val() || {})[id] })),
+        certifications: Object.keys(certSnap.val() || {}).map(id => ({ id, ...(certSnap.val() || {})[id] }))
+      };
+      renderJobsList(topJobs, enrichedUser);
+      updateFavoriteButtons();
+    }).catch((err) => {
+      console.error("[JOBS] erreur chargement profil:", err);
+      renderJobsList(topJobs, {});
+      updateFavoriteButtons();
+    });
   }).catch((err) => {
     container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red);">Erreur de chargement des offres.</div>`;
     console.error("[JOBS] erreur chargement:", err);
   });
+}
+
+function populateCountryFilter(jobs) {
+  const select = document.getElementById("countryFilter");
+  if (!select) return;
+
+  const countries = new Set();
+  jobs.forEach((job) => {
+    const country = (job.country || "").toString().trim();
+    const location = (job.location || "").toString().trim();
+    if (country) countries.add(country);
+    else if (location) countries.add(location);
+  });
+
+  const currentValue = select.value;
+  select.innerHTML = '<option value="">📍 Tous pays</option>';
+  Array.from(countries).sort().forEach((country) => {
+    const option = document.createElement("option");
+    option.value = country;
+    option.textContent = country;
+    select.appendChild(option);
+  });
+  select.value = currentValue;
+}
+
+function populateCompanyFilter(jobs) {
+  const select = document.getElementById("companyFilter");
+  if (!select) return;
+
+  const companies = new Set();
+  jobs.forEach((job) => {
+    const company = (job.company || "").toString().trim();
+    if (company) companies.add(company);
+  });
+
+  const currentValue = select.value;
+  select.innerHTML = '<option value="">🏢 Entreprise</option>';
+  Array.from(companies).sort().forEach((company) => {
+    const option = document.createElement("option");
+    option.value = company;
+    option.textContent = company;
+    select.appendChild(option);
+  });
+  select.value = currentValue;
+}
+
+function renderJobsList(topJobs, enrichedUser) {
+  const container = document.getElementById("jobsContainer");
+  if (!container) return;
+
+  container.innerHTML = topJobs.map((job) => {
+    const compatibility = calculateJobCompatibility(enrichedUser, job);
+    const logoUrl = job.logoURL || "";
+    const logoHtml = logoUrl
+      ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(job.company || 'logo')}" style="width:100%;height:100%;object-fit:contain;">`
+      : `<div class="job-logo-text">${escapeHtml((job.company || "?").charAt(0).toUpperCase())}</div>`;
+
+    const tags = (job.skills || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 3);
+    const tagsHtml = tags.map((t) => `<span>${escapeHtml(t)}</span>`).join("");
+
+    return `
+      <article class="job">
+        <div class="job-logo">${logoHtml}</div>
+        <div class="job-info">
+          <div class="job-compat">${compatibility}% Compatible</div>
+          <div class="job-title">${escapeHtml(job.title || "Sans titre")} ${job.verified ? '<span class="verified-dot">✓</span>' : ""}</div>
+          <div class="job-sub">${escapeHtml(job.company || "—")} · <span>${escapeHtml(job.location || "—")}</span> <span class="tag">${escapeHtml(job.contractType || job.status || "")}</span></div>
+          <div class="job-tags">${tagsHtml}${tags.length >= 3 && (job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).length > 3 ? `<span>+${(job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).length - 3}</span>` : ""}</div>
+        </div>
+        <div class="job-side">
+          <div class="job-price">${escapeHtml(job.salary || "—")}<span>par mois</span></div>
+          <div class="job-actions">
+            <button class="btn-primary" data-job-detail="${escapeHtml(job.id)}">Voir détails</button>
+            <button class="btn-icon" data-job-save="${escapeHtml(job.id)}"></button>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  if (topJobs.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">Aucune opportunité pour le moment.</div>`;
+  }
 }
 
 function renderIndexScore(data) {
@@ -416,3 +585,34 @@ document.addEventListener("click", (e) => {
   e.preventDefault();
   toggleFavorite(jobId);
 });
+
+const contractFilter = document.getElementById("contractFilter");
+if (contractFilter) {
+  contractFilter.addEventListener("change", () => {
+    renderRecommendedJobs();
+  });
+}
+
+const countryFilterEl = document.getElementById("countryFilter");
+if (countryFilterEl) {
+  countryFilterEl.addEventListener("change", () => {
+    renderRecommendedJobs();
+  });
+}
+
+const companyFilterEl = document.getElementById("companyFilter");
+if (companyFilterEl) {
+  companyFilterEl.addEventListener("change", () => {
+    renderRecommendedJobs();
+  });
+}
+
+const allChip = document.querySelector('.chip[data-filter="all"]');
+if (allChip) {
+  allChip.addEventListener("click", () => {
+    if (contractFilter) contractFilter.value = "";
+    if (countryFilterEl) countryFilterEl.value = "";
+    if (companyFilterEl) companyFilterEl.value = "";
+    renderRecommendedJobs();
+  });
+}

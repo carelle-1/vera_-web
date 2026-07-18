@@ -167,12 +167,22 @@
           </div>
 
           <div class="filters">
-            <button class="chip active">☰ Tout</button>
-            <button class="chip">✉ Remote</button>
-            <button class="chip">📄 CDI</button>
-            <button class="chip">👤 Freelance</button>
-            <button class="chip">📍 Tous pays ⌄</button>
-            <button class="chip">🔧 Filtres ⌄</button>
+            <button class="chip active" data-filter="all">☰ Tout</button>
+            <select class="chip contract-filter" id="contractFilter">
+              <option value="">📄 Type de contrat</option>
+              <option value="CDI">CDI</option>
+              <option value="CDD">CDD</option>
+              <option value="Freelance">Freelance</option>
+              <option value="Stage">Stage</option>
+              <option value="Alternance">Alternance</option>
+              <option value="Remote">Remote</option>
+            </select>
+            <select class="chip country-filter" id="countryFilter">
+              <option value="">📍 Tous pays</option>
+            </select>
+            <select class="chip company-filter" id="companyFilter">
+              <option value="">🏢 Entreprise</option>
+            </select>
           </div>
 
           <div class="jobs" id="jobsContainer">
