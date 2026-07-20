@@ -28,7 +28,7 @@
         <svg viewBox="0 0 24 24"><path d="M4 11L12 4l8 7"/><path d="M6 10v9h5v-6h2v6h5v-9"/></svg>
         Tableau de bord
       </a>
-      <a class="nav-item" href="/opportunites">
+      <a class="nav-item {{ request()->is('oppotunite') ? 'active' : '' }}" href="/oppotunite">
         <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         Opportunités
       </a>
@@ -136,6 +136,7 @@
 <script src="firebase-init.js"></script>
 <script src="salutation.js"></script>
 <script src="avatar.js"></script>
+<script src="scriptI.js"></script>
 <script>
   firebase.auth().onAuthStateChanged((user) => {
     if (!user) return;

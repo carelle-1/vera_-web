@@ -3,6 +3,8 @@ let jobs = [];
 let filteredJobs = [];
 let selectedJobId = null;
 let currentSort = "pertinence";
+let oppCurrentPage = 1;
+const OPP_JOBS_PER_PAGE = 5;
 
 function getDaysSince(timestamp) {
   const now = new Date();
@@ -87,13 +89,116 @@ function loadJobsFromFirebase() {
     if (jobs.length > 0 && !selectedJobId) {
       selectedJobId = jobs[0].id;
     }
+    if (jobs.length === 0) {
+      jobs = getDemoJobs();
+      filteredJobs = [...jobs];
+      if (!selectedJobId && jobs.length > 0) {
+        selectedJobId = jobs[0].id;
+      }
+    }
     return jobs;
   }).catch((err) => {
     console.error("[OPPO] erreur chargement jobs:", err);
-    jobs = [];
-    filteredJobs = [];
-    return [];
+    jobs = getDemoJobs();
+    filteredJobs = [...jobs];
+    if (!selectedJobId && jobs.length > 0) {
+      selectedJobId = jobs[0].id;
+    }
+    return jobs;
   });
+}
+
+function getDemoJobs() {
+  return [
+    {
+      id: "demo1",
+      logo: "N",
+      logoBg: "#000000",
+      title: "Product Designer UI/UX",
+      company: "Notion Labs",
+      location: "Remote",
+      country: "Remote",
+      contractType: "CDI",
+      salary: "4 000 – 6 000 $",
+      salaryMin: 4000,
+      salaryMax: 6000,
+      period: "par mois",
+      skills: "Figma,Design System,Prototypage",
+      createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
+      match: 96,
+      matchReasons: [
+        "Tes compétences Figma correspondent à 95% aux besoins",
+        "Ton expérience en Design System est directement recherchée",
+        "Ta disponibilité correspond au mode de travail Remote"
+      ]
+    },
+    {
+      id: "demo2",
+      logo: "∞",
+      logoBg: "#0866ff",
+      title: "Développeur Full Stack",
+      company: "Meta",
+      location: "Remote",
+      country: "Remote",
+      contractType: "CDI",
+      salary: "5 500 – 8 000 $",
+      salaryMin: 5500,
+      salaryMax: 8000,
+      period: "par mois",
+      skills: "React,Node.js,TypeScript",
+      createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
+      match: 92,
+      matchReasons: [
+        "Ta stack React / Node.js correspond exactement à l'offre",
+        "Ton niveau d'expérience correspond au poste",
+        "Le mode Remote correspond à ta préférence"
+      ]
+    },
+    {
+      id: "demo3",
+      logo: "S",
+      logoBg: "#22c55e",
+      title: "Chef de Projet Digital",
+      company: "ShopMax",
+      location: "Hybride",
+      country: "Hybride",
+      contractType: "CDD",
+      salary: "3 500 – 5 000 $",
+      salaryMin: 3500,
+      salaryMax: 5000,
+      period: "par mois",
+      skills: "Agile,Scrum,Gestion de projet",
+      createdAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
+      match: 88,
+      matchReasons: [
+        "Ton expérience en gestion Agile correspond au besoin",
+        "Ta localisation permet le mode Hybride",
+        "Ton profil correspond au niveau intermédiaire requis"
+      ]
+    },
+    {
+      id: "demo4",
+      logo: "H",
+      logoBg: "#ff7a59",
+      title: "Digital Marketing Specialist",
+      company: "HubSpot",
+      location: "Sur site",
+      country: "Sur site",
+      contractType: "Stage",
+      salary: "3 000 – 4 500 $",
+      salaryMin: 3000,
+      salaryMax: 4500,
+      period: "par mois",
+      skills: "SEO,Google Ads,Analytics",
+      createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
+      match: 81,
+      matchReasons: [
+        "Tes compétences SEO correspondent à la mission",
+        "Ton expérience en Google Ads est un atout apprécié",
+        "Le salaire correspond à tes attentes"
+      ]
+    }
+  ];
 }
 
 // ============== RENDU LISTE ==============
@@ -108,6 +213,7 @@ function renderJobs() {
     list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">Aucune offre pour le moment.</div>`;
     const resultCount = document.getElementById("resultCount");
     if (resultCount) resultCount.textContent = "0 offre trouvée";
+    updatePagination(0);
     return;
   }
 
@@ -124,7 +230,12 @@ function renderJobs() {
     sorted.sort((a, b) => (b.compatibility || b.match || 0) - (a.compatibility || a.match || 0));
   }
 
-  sorted.forEach(job => {
+  const totalPages = Math.max(1, Math.ceil(sorted.length / OPP_JOBS_PER_PAGE));
+  if (oppCurrentPage > totalPages) oppCurrentPage = totalPages;
+  const start = (oppCurrentPage - 1) * OPP_JOBS_PER_PAGE;
+  const pageJobs = sorted.slice(start, start + OPP_JOBS_PER_PAGE);
+
+  pageJobs.forEach(job => {
     const el = document.createElement("article");
     el.className = "job" + (job.id === selectedJobId ? " selected" : "");
     el.dataset.id = job.id;
@@ -145,7 +256,6 @@ function renderJobs() {
     const period = job.period || "par mois";
     const tags = (job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 3);
     const posted = job.createdAt ? getDaysSince(job.createdAt) : "—";
-    console.log("[OPPO] job id:", job.id, "createdAt:", job.createdAt, "posted:", posted);
 
     const logoUrl = job.logoURL || "";
     const logoHtml = logoUrl
@@ -183,6 +293,8 @@ function renderJobs() {
 
   const resultCount = document.getElementById("resultCount");
   if (resultCount) resultCount.textContent = `${sorted.length} offre${sorted.length > 1 ? 's' : ''} trouvée${sorted.length > 1 ? 's' : ''}`;
+
+  updatePagination(totalPages);
 }
 
 function extractSalaryNumber(salaryText) {
@@ -255,44 +367,10 @@ function renderDetail() {
 }
 
 // ============== TABS ==============
-const switchablePanels = {
-  filtres: document.getElementById("panelFiltres"),
-  toutes: document.getElementById("panelToutes"),
-  entreprises: document.getElementById("panelEntreprises"),
-  reco: document.getElementById("panelReco")
-};
-const oppLayout = document.querySelector(".opp-layout");
-
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
-    const key = tab.dataset.tab;
-    if (!key || !switchablePanels[key]) return;
-
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
-
-    Object.keys(switchablePanels).forEach(k => {
-      if (switchablePanels[k]) {
-        if (k === key) {
-          switchablePanels[k].classList.add("active");
-        } else {
-          switchablePanels[k].classList.remove("active");
-        }
-      }
-    });
-
-    if (oppLayout) {
-      if (key === "filtres") {
-        oppLayout.classList.add("with-filters");
-      } else {
-        oppLayout.classList.remove("with-filters");
-      }
-    }
-
-    if (key === "reco") {
-      console.log("[OPPO] onglet Recommandées cliqué, jobs.length:", jobs.length);
-      renderRecommendedJobs();
-    }
   });
 });
 
@@ -357,10 +435,17 @@ function renderRecommendedJobs() {
 }
 
 // ============== TRI ==============
-document.getElementById("sortSelect").addEventListener("change", (e) => {
-  currentSort = e.target.value;
-  renderJobs();
-});
+const sortSelect = document.getElementById("sortSelect");
+if (sortSelect) {
+  sortSelect.addEventListener("change", (e) => {
+    console.log("[OPPO] sort changed:", e.target.value);
+    currentSort = e.target.value;
+    oppCurrentPage = 1;
+    renderJobs();
+  });
+} else {
+  console.warn("[OPPO] sortSelect introuvable");
+}
 
 // ============== FILTRES ==============
 function getFilters() {
@@ -413,6 +498,7 @@ function applyFilters() {
   console.log("[OPPO] applyFilters", filters);
   filteredJobs = jobs.filter(job => matchesFilters(job, filters));
   console.log("[OPPO] filteredJobs.length:", filteredJobs.length);
+  oppCurrentPage = 1;
 
   const list = document.getElementById("jobList");
   if (!list) return;
@@ -421,6 +507,7 @@ function applyFilters() {
     list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">Aucune offre ne correspond à vos critères.</div>`;
     const resultCount = document.getElementById("resultCount");
     if (resultCount) resultCount.textContent = "0 offre trouvée";
+    updatePagination(0);
     return;
   }
 
@@ -457,15 +544,45 @@ document.getElementById("resetFilters")?.addEventListener("click", () => {
 });
 
 // ============== PAGINATION ==============
-document.getElementById("pagination").addEventListener("click", (e) => {
-  const btn = e.target.closest("button");
-  if (!btn) return;
-  if (btn.classList.contains("page-num")) {
-    document.querySelectorAll(".page-num").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelector(".job-list-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+function updatePagination(totalPages) {
+  const paginationEl = document.getElementById("pagination");
+  if (!paginationEl) return;
+
+  if (totalPages <= 1) {
+    paginationEl.innerHTML = "";
+    return;
   }
-});
+
+  let html = "";
+  html += `<button class="page-arrow" data-page="prev" ${oppCurrentPage === 1 ? 'disabled' : ''}>‹</button>`;
+  
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= oppCurrentPage - 1 && i <= oppCurrentPage + 1)) {
+      html += `<button class="page-num ${i === oppCurrentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    } else if (i === oppCurrentPage - 2 || i === oppCurrentPage + 2) {
+      html += `<span class="page-dots">...</span>`;
+    }
+  }
+  
+  html += `<button class="page-arrow" data-page="next" ${oppCurrentPage === totalPages ? 'disabled' : ''}>›</button>`;
+  
+  paginationEl.innerHTML = html;
+
+  paginationEl.querySelectorAll(".page-num, .page-arrow").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const page = btn.getAttribute("data-page");
+      if (page === "prev" && oppCurrentPage > 1) {
+        oppCurrentPage--;
+      } else if (page === "next" && oppCurrentPage < totalPages) {
+        oppCurrentPage++;
+      } else if (page !== "prev" && page !== "next") {
+        oppCurrentPage = parseInt(page);
+      }
+      renderJobs();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+}
 
 // ============== RAFRAÎCHIR ==============
 document.getElementById("refreshBtn").addEventListener("click", () => {
@@ -509,13 +626,6 @@ document.getElementById("refreshBtn").addEventListener("click", () => {
 });
 
 // ============== INIT ==============
-if (oppLayout) {
-  const activeTab = document.querySelector(".tab.active");
-  if (activeTab && activeTab.dataset.tab === "filtres") {
-    oppLayout.classList.add("with-filters");
-  }
-}
-
 loadJobsFromFirebase().then(() => {
   const user = firebase.auth().currentUser;
   if (user) {
@@ -547,7 +657,8 @@ loadJobsFromFirebase().then(() => {
       filteredJobs = [...jobs];
     });
   }
-}).then(() => {
+  }).then(() => {
   renderJobs();
   renderDetail();
+  renderRecommendedJobs();
 });

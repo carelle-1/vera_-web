@@ -140,47 +140,29 @@ button{font-family:inherit;}
 /* LAYOUT */
 .opp-layout{
   display:grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns:240px 1fr 320px;
   gap:20px;
   padding:18px 28px 40px;
   align-items:start;
 }
 
-.opp-layout .detail-panel{
-  grid-column: 2;
-  display: block !important;
-}
-
 .opp-layout .filters-panel{
-  display: none;
-  grid-column: 1;
-}
-.opp-layout .filters-panel.active{
-  display: block;
+  grid-column:1;
 }
 .opp-layout .job-list-panel{
-  display: none;
-  grid-column: 1;
-}
-.opp-layout .job-list-panel.active{
-  display: block;
+  grid-column:2;
 }
 .opp-layout .detail-panel{
-  grid-column: 2;
-  display: block !important;
+  grid-column:3;
 }
 
-.opp-layout.with-filters{
-  grid-template-columns: 240px 1fr 320px;
+#panelEntreprises {
+  display: none;
 }
-.opp-layout.with-filters .filters-panel.active{
-  grid-column: 1;
-}
-.opp-layout.with-filters .job-list-panel.active{
-  grid-column: 2;
-}
-.opp-layout.with-filters .detail-panel{
-  grid-column: 3;
+
+#panelReco {
+  grid-column: 1 / -1;
+  margin-top: 24px;
 }
 
 /* FILTERS PANEL */
@@ -257,6 +239,7 @@ button{font-family:inherit;}
   width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:#fff;
   font-size:13px;font-weight:600;color:var(--text);cursor:pointer;
 }
+.page-arrow[disabled]{opacity:0.4;cursor:not-allowed;}
 .page-num.active{background:#02d8f5;color:#fff;border-color:#02d8f5;}
 .page-dots{color:var(--muted);font-size:13px;padding:0 4px;}
 
@@ -303,9 +286,6 @@ button{font-family:inherit;}
 }
 @media (max-width:900px){
   .sidebar{display:none;}
-  transition:width .2s ease;
-}
-
   .opp-layout{grid-template-columns:1fr;}
   .filters-panel{position:static;}
   .page-head{flex-direction:column;gap:12px;}

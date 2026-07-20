@@ -469,53 +469,6 @@ if (actionFollowTraining) {
   });
 }
 
-// ============== FAVORIS ==============
-function getFavoritesRef() {
-  const user = firebase.auth().currentUser;
-  return user ? firebase.database().ref("favorites/" + user.uid) : null;
-}
-
-function loadUserFavorites() {
-  const user = firebase.auth().currentUser;
-  if (!user) return Promise.resolve();
-  
-  return firebase.database().ref("favorites/" + user.uid).once("value").then((snap) => {
-    const data = snap.val() || {};
-    userFavorites = new Set(Object.keys(data));
-  }).catch((err) => {
-    console.error("[FAV] erreur chargement favoris:", err);
-    userFavorites = new Set();
-  });
-}
-
-function toggleFavorite(jobId) {
-  const ref = getFavoritesRef();
-  if (!ref) {
-    alert("Vous devez être connecté pour sauvegarder des favoris.");
-    return;
-  }
-
-  const favRef = ref.child(jobId);
-  favRef.once("value").then((snap) => {
-    const isFav = snap.exists();
-    if (isFav) {
-      return favRef.remove().then(() => {
-        userFavorites.delete(jobId);
-        return false;
-      });
-    } else {
-      return favRef.set({ createdAt: Date.now() }).then(() => {
-        userFavorites.add(jobId);
-        return true;
-      });
-    }
-  }).then(() => {
-    updateFavoriteButtons();
-  }).catch((err) => {
-    console.error("[FAV] erreur:", err);
-  });
-}
-
 // ============== MODAL DÉTAILS OFFRE ==============
 const jobDetailOverlay = document.getElementById("jobDetailOverlay");
 const jobDetailModal = document.getElementById("jobDetailModal");

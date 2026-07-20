@@ -1,7 +1,7 @@
 ﻿@extends('layouts.app')
 @section('title', 'VERA - Opportunités')
 @section('styles')
-<link rel="stylesheet" href="style_O.css">
+<link rel="stylesheet" href="/style_O.css">
 @endsection
 
 @section('content')
@@ -18,7 +18,7 @@
     <div class="tabs">
       <button class="tab active" data-tab="filtres">Filtres</button>
       <button class="tab" data-tab="toutes">Toutes les offres</button>
-      <button class="tab" data-tab="entreprises">Différentes entreprises</button>
+      <!-- <button class="tab" data-tab="entreprises">Différentes entreprises</button> -->
       <button class="tab" data-tab="reco">Recommandées</button>
     </div>
 
@@ -51,7 +51,7 @@
         <div class="filter-group">
           <div class="filter-title">Salaire</div>
           <input type="range" min="0" max="10000" value="4000" step="500" class="filter-range" id="salaryRange">
-          <div class="range-value"><span id="salaryValue">4 000 $</span> et plus</div>
+          <div class="range-value"><span id="salaryValue">4 000 FCFA</span> et plus</div>
         </div>
 
         <div class="filter-group">
@@ -78,15 +78,7 @@
 
         <div class="jobs" id="jobList"></div>
 
-        <div class="pagination" id="pagination">
-          <button class="page-arrow" data-page="prev">‹</button>
-          <button class="page-num active" data-page="1">1</button>
-          <button class="page-num" data-page="2">2</button>
-          <button class="page-num" data-page="3">3</button>
-          <span class="page-dots">...</span>
-          <button class="page-num" data-page="12">12</button>
-          <button class="page-arrow" data-page="next">›</button>
-        </div>
+        <div class="pagination" id="pagination"></div>
       </section>
 
       <!-- DETAIL PANEL -->
