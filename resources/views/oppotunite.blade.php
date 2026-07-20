@@ -92,15 +92,17 @@
         <div class="jobs" id="entrepriseList"></div>
       </section>
 
-      <section class="job-list-panel" id="panelReco">
-        <div class="list-head">
-          <span id="resultCountReco">Offres recommandées</span>
-        </div>
-        <div class="jobs" id="recoList"></div>
-      </section>
-
     </div>
-@endsection
+
+    <!-- RECOMMENDED JOBS SECTION -->
+    <section class="reco-section" id="panelReco">
+      <div class="list-head">
+        <span id="resultCountReco">Offres recommandées</span>
+      </div>
+      <div class="jobs" id="recoList"></div>
+    </section>
+
+  @endsection
 @section('scripts')
 <script src="script_O.js"></script>
 @endsection

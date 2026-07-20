@@ -160,9 +160,18 @@ button{font-family:inherit;}
   display: none;
 }
 
-#panelReco {
-  grid-column: 1 / -1;
-  margin-top: 24px;
+/* RECOMMENDED SECTION */
+.reco-section {
+  padding: 24px 28px 40px;
+}
+.reco-section .list-head {
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.reco-section .list-head span {
+  font-weight: 700;
+  color: var(--text);
 }
 
 /* FILTERS PANEL */
