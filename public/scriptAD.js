@@ -14,6 +14,11 @@ function escapeHtml(text) {
   return str.replace(/[&<>"']/g, (m) => map[m]);
 }
 
+// ============== PAGINATION OFFRES ==============
+let jobCurrentPage = 1;
+const JOBS_PER_PAGE = 10;
+let allFilteredJobs = [];
+
 firebase.auth().onAuthStateChanged((user) => {
   console.log("[ADMIN] onAuthStateChanged firstCall=", adminAuthFirstCall, "user=", user ? user.uid : "null");
 
@@ -209,7 +214,7 @@ function jobRef() {
   return user ? firebase.database().ref("jobs") : null;
 }
 
-function renderJobs() {
+function renderJobs(resetPage) {
   const tbody = document.getElementById("jobTableBody");
   const countEl = document.getElementById("jobTableCount");
   const search = document.getElementById("jobSearch");
@@ -249,21 +254,31 @@ function renderJobs() {
       filtered = filtered.filter(job => (job.status || "active") === statusFilter);
     }
 
+    allFilteredJobs = filtered;
+    if (resetPage !== false) jobCurrentPage = 1;
+
     tbody.innerHTML = "";
     if (filtered.length === 0) {
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#6b7280;">Aucune offre trouvée.</td></tr>`;
       if (countEl) countEl.textContent = "Affichage de 0 offre";
+      renderJobPagination(0);
       return;
     }
 
-    if (countEl) countEl.textContent = `Affichage de ${filtered.length} offre${filtered.length > 1 ? "s" : ""}`;
+    const totalPages = Math.max(1, Math.ceil(filtered.length / JOBS_PER_PAGE));
+    if (jobCurrentPage > totalPages) jobCurrentPage = totalPages;
+    const start = (jobCurrentPage - 1) * JOBS_PER_PAGE;
+    const end = Math.min(start + JOBS_PER_PAGE, filtered.length);
+    const pageJobs = filtered.slice(start, end);
+
+    if (countEl) countEl.textContent = `Affichage de ${start + 1} à ${end} sur ${filtered.length} offre${filtered.length > 1 ? "s" : ""}`;
 
     const statusMap = {
       active: '<span class="status-badge success">Active</span>',
       inactive: '<span class="status-badge danger">Inactive</span>'
     };
 
-    filtered.forEach((job) => {
+    pageJobs.forEach((job) => {
       const tr = document.createElement("tr");
       const logoUrl = job.logoURL || "";
       const logoHtml = logoUrl
@@ -292,8 +307,52 @@ function renderJobs() {
     tbody.querySelectorAll(".exp-delete-btn").forEach((btn) => {
       btn.addEventListener("click", () => deleteJob(btn.dataset.id));
     });
+
+    renderJobPagination(filtered.length);
   }).catch((err) => {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement: ${err.message || err.code}</td></tr>`;
+  });
+}
+
+function renderJobPagination(totalItems) {
+  const container = document.getElementById("jobPagination");
+  if (!container) return;
+
+  const totalPages = totalItems === 0 ? 0 : Math.max(1, Math.ceil(totalItems / JOBS_PER_PAGE));
+  if (totalPages <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let html = `<button class="page-arrow" data-page="prev" ${jobCurrentPage === 1 ? 'disabled' : ''}>‹</button>`;
+
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= jobCurrentPage - 1 && i <= jobCurrentPage + 1)) {
+      html += `<button class="page-num ${i === jobCurrentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    } else if (i === jobCurrentPage - 2 || i === jobCurrentPage + 2) {
+      html += `<span class="page-dots">...</span>`;
+    }
+  }
+
+  html += `<button class="page-arrow" data-page="next" ${jobCurrentPage === totalPages ? 'disabled' : ''}>›</button>`;
+  container.innerHTML = html;
+
+  container.querySelectorAll(".page-num, .page-arrow").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const page = btn.dataset.page;
+      if (!page) return;
+
+      if (page === "prev" && jobCurrentPage > 1) {
+        jobCurrentPage--;
+      } else if (page === "next" && jobCurrentPage < totalPages) {
+        jobCurrentPage++;
+      } else if (page !== "prev" && page !== "next") {
+        jobCurrentPage = parseInt(page);
+      }
+
+      renderJobs(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
   });
 }
 
