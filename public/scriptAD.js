@@ -524,3 +524,243 @@ if (jobSearchEl) jobSearchEl.addEventListener("input", renderJobs);
 
 const jobFilterEl = document.getElementById("jobFilter");
 if (jobFilterEl) jobFilterEl.addEventListener("change", renderJobs);
+
+// ============== SITES ==============
+let siteCurrentPage = 1;
+const SITES_PER_PAGE = 10;
+
+function siteRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("sites") : null;
+}
+
+function renderSites() {
+  const tbody = document.getElementById("siteTableBody");
+  const countEl = document.getElementById("siteTableCount");
+  const search = document.getElementById("siteSearch");
+  if (!tbody) return;
+
+  const ref = siteRef();
+  if (!ref) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;color:#ef4444;">Vous devez être connecté pour voir les sites.</td></tr>`;
+    return;
+  }
+
+  ref.once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const items = Object.keys(data).map((id) => ({ id, ...data[id] }))
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    let filtered = items;
+    const q = search ? search.value.trim().toLowerCase() : "";
+    if (q) {
+      filtered = filtered.filter(site =>
+        (site.name || "").toLowerCase().includes(q) ||
+        (site.url || "").toLowerCase().includes(q)
+      );
+    }
+
+    tbody.innerHTML = "";
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;color:#6b7280;">Aucun site trouvé.</td></tr>`;
+      if (countEl) countEl.textContent = "Affichage de 0 site";
+      renderSitePagination(0);
+      return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / SITES_PER_PAGE));
+    if (siteCurrentPage > totalPages) siteCurrentPage = totalPages;
+    const start = (siteCurrentPage - 1) * SITES_PER_PAGE;
+    const end = Math.min(start + SITES_PER_PAGE, filtered.length);
+    const pageItems = filtered.slice(start, end);
+
+    if (countEl) countEl.textContent = `Affichage de ${start + 1} à ${end} sur ${filtered.length} site${filtered.length > 1 ? "s" : ""}`;
+
+    const statusMap = {
+      active: '<span class="status-badge success">Active</span>',
+      inactive: '<span class="status-badge danger">Inactive</span>'
+    };
+
+    pageItems.forEach((site) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><button class="site-name-edit" data-id="${site.id}" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;text-align:left;padding:0;font-weight:700;">${escapeHtml(site.name || "—")}</button></td>
+        <td><a href="${escapeHtml(site.url || "#")}" target="_blank" rel="noopener noreferrer">${escapeHtml(site.url || "—")}</a></td>
+        <td>${statusMap[site.status] || site.status || "—"}</td>
+        <td class="exp-action-cell">
+          <button class="exp-delete-btn site-delete-btn" data-id="${site.id}" title="Supprimer">
+            <img src="/image/delete.png" alt="Supprimer" style="width:16px;height:16px;object-fit:contain;">
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll(".site-name-edit").forEach((btn) => {
+      btn.addEventListener("click", () => openSiteForm(btn.dataset.id));
+    });
+    tbody.querySelectorAll(".site-delete-btn").forEach((btn) => {
+      btn.addEventListener("click", () => deleteSite(btn.dataset.id));
+    });
+
+    renderSitePagination(filtered.length);
+  }).catch((err) => {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement: ${err.message || err.code}</td></tr>`;
+  });
+}
+
+function renderSitePagination(totalItems) {
+  const container = document.getElementById("sitePagination");
+  if (!container) return;
+
+  const totalPages = totalItems === 0 ? 0 : Math.max(1, Math.ceil(totalItems / SITES_PER_PAGE));
+  if (totalPages <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let html = `<button class="page-arrow" data-page="prev" ${siteCurrentPage === 1 ? 'disabled' : ''}>‹</button>`;
+
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= siteCurrentPage - 1 && i <= siteCurrentPage + 1)) {
+      html += `<button class="page-num ${i === siteCurrentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    } else if (i === siteCurrentPage - 2 || i === siteCurrentPage + 2) {
+      html += `<span class="page-dots">...</span>`;
+    }
+  }
+
+  html += `<button class="page-arrow" data-page="next" ${siteCurrentPage === totalPages ? 'disabled' : ''}>›</button>`;
+  container.innerHTML = html;
+
+  container.querySelectorAll(".page-num, .page-arrow").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const page = btn.dataset.page;
+      if (!page) return;
+
+      if (page === "prev" && siteCurrentPage > 1) {
+        siteCurrentPage--;
+      } else if (page === "next" && siteCurrentPage < totalPages) {
+        siteCurrentPage++;
+      } else if (page !== "prev" && page !== "next") {
+        siteCurrentPage = parseInt(page);
+      }
+
+      renderSites();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+}
+
+function deleteSite(id) {
+  if (!confirm("Supprimer ce site ?")) return;
+  const ref = siteRef();
+  if (!ref) return;
+  ref.child(id).remove()
+    .then(() => renderSites())
+    .catch((err) => alert("Échec de la suppression : " + (err.message || err.code)));
+}
+
+let siteEditId;
+
+function openSiteForm(id) {
+  const wrapper = document.getElementById("sitesFormWrapper");
+  const titleEl = document.getElementById("siteModalTitle");
+  const form = document.getElementById("siteForm");
+  if (!wrapper || !form || !titleEl) return;
+
+  form.reset();
+  if (id) {
+    siteEditId = id;
+    titleEl.textContent = "Modifier le site";
+    const ref = siteRef();
+    if (ref) {
+      ref.child(id).once("value").then((snap) => {
+        const d = snap.val() || {};
+        form.name.value = d.name || "";
+        form.url.value = d.url || "";
+        form.status.value = d.status || "active";
+      });
+    }
+  } else {
+    siteEditId = null;
+    titleEl.textContent = "Ajouter un site";
+  }
+
+  wrapper.classList.add("active");
+}
+
+function closeSiteForm() {
+  const wrapper = document.getElementById("sitesFormWrapper");
+  if (wrapper) wrapper.classList.remove("active");
+  siteEditId = null;
+}
+
+function handleSiteSubmit(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = {
+    name: (fd.get("name") || "").toString().trim(),
+    url: (fd.get("url") || "").toString().trim(),
+    status: (fd.get("status") || "active").toString().trim(),
+    createdAt: Date.now()
+  };
+
+  const ref = siteRef();
+  if (!ref) {
+    alert("Vous devez être connecté pour enregistrer un site.");
+    return;
+  }
+
+  const saveRef = siteEditId ? ref.child(siteEditId) : ref.push();
+  const finish = () => {
+    closeSiteForm();
+    renderSites();
+  };
+
+  if (siteEditId) {
+    saveRef.update(payload).then(() => {
+      finish();
+    }).catch((err) => {
+      alert("Échec de la modification : " + (err.message || err.code));
+    });
+  } else {
+    saveRef.set(payload).then(() => {
+      finish();
+    }).catch((err) => {
+      alert("Échec de la création : " + (err.message || err.code));
+    });
+  }
+}
+
+const addSiteBtn = document.getElementById("addSiteBtn");
+if (addSiteBtn) {
+  addSiteBtn.addEventListener("click", () => openSiteForm(null));
+}
+
+const siteCloseBtn = document.getElementById("siteModalClose");
+if (siteCloseBtn) {
+  siteCloseBtn.addEventListener("click", closeSiteForm);
+}
+
+const siteCancelBtn = document.getElementById("siteCancel");
+if (siteCancelBtn) {
+  siteCancelBtn.addEventListener("click", closeSiteForm);
+}
+
+const siteForm = document.getElementById("siteForm");
+if (siteForm) {
+  siteForm.addEventListener("submit", handleSiteSubmit);
+}
+
+const siteSearchEl = document.getElementById("siteSearch");
+if (siteSearchEl) siteSearchEl.addEventListener("input", renderSites);
+
+// Load sites when panel becomes active
+document.querySelectorAll(".nav-item").forEach(item => {
+  item.addEventListener("click", () => {
+    const panel = item.getAttribute("data-panel");
+    if (panel === "sites") {
+      setTimeout(() => renderSites(), 50);
+    }
+  });
+});

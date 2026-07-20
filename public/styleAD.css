@@ -309,6 +309,8 @@ table{border-collapse:collapse;width:100%;}
 .exp-edit-btn:hover{background:var(--sky-pale);}
 .job-title-edit{background:none;border:none;color:var(--sky);cursor:pointer;padding:2px 0;border-radius:4px;transition:color .15s ease, background .15s ease;}
 .job-title-edit:hover{color:var(--sky-dark);background:var(--sky-pale);}
+.site-name-edit{background:none;border:none;color:var(--sky);cursor:pointer;padding:2px 0;border-radius:4px;transition:color .15s ease, background .15s ease;}
+.site-name-edit:hover{color:var(--sky-dark);background:var(--sky-pale);}
 .exp-delete-btn{background:none;border:none;cursor:pointer;color:var(--red);padding:4px;border-radius:6px;}
 .exp-delete-btn:hover{background:#fef2f2;}
 
@@ -317,9 +319,17 @@ table{border-collapse:collapse;width:100%;}
 
 /* Close button in inline form */
 .offres-form-wrapper .exp-modal-close{background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;line-height:1;}
+.sites-form-wrapper .exp-modal-close{background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;line-height:1;}
 
 /* Status badges */
 .status-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
 .status-badge.success{background:var(--mint-pale);color:var(--mint-dark);}
 .status-badge.danger{background:#fef2f2;color:var(--red);}
 .status-badge.warning{background:#fffbeb;color:#b45309;}
+
+/* Sites layout */
+.sites-layout{display:flex;gap:16px;padding:0 26px 40px;align-items:flex-start;}
+.sites-table-wrapper{flex:1;min-width:0;transition:all .3s ease;}
+.sites-form-wrapper{width:360px;flex-shrink:0;display:none;animation:fadeIn .25s ease;}
+.sites-form-wrapper.active{display:block;}
+.sites-form-wrapper .card{padding:20px;}

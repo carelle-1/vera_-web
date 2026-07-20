@@ -36,6 +36,9 @@
       <a class="nav-item" data-panel="offres">
         <span class="nav-icon">💼</span> Offres d'emploi <span class="nav-count">1 546</span>
       </a>
+      <a class="nav-item" data-panel="sites">
+        <span class="nav-icon">🌐</span> Sites <span class="nav-count">0</span>
+      </a>
 
       <div class="nav-label">Contenu</div>
       <a class="nav-item" data-panel="candidatures">
@@ -294,6 +297,71 @@
                 <label>Logo de l'entreprise<input type="file" name="logo" accept="image/*"></label>
                 <div class="exp-form-actions">
                   <button type="button" class="btn-outline-sm" id="jobCancel">Annuler</button>
+                  <button type="submit" class="btn-primary-sm">Enregistrer</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SITES PANEL -->
+      <div class="panel" id="panel-sites">
+        <div class="page-head">
+          <div>
+            <h1>Sites</h1>
+            <p>Gérer les sites partenaires et leurs liens.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn-primary" id="addSiteBtn">+ Ajouter un site</button>
+          </div>
+        </div>
+
+        <div class="sites-layout">
+          <div class="sites-table-wrapper">
+            <div class="card table-card">
+              <div class="card-head-row">
+                <div class="card-title">Liste des sites</div>
+                <div class="table-tools">
+                  <input type="text" id="siteSearch" placeholder="Rechercher un site...">
+                </div>
+              </div>
+
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Lien</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="siteTableBody"></tbody>
+              </table>
+              <div class="table-footer">
+                <span id="siteTableCount">Affichage de 0 site</span>
+                <div class="pagination" id="sitePagination"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sites-form-wrapper" id="sitesFormWrapper">
+            <div class="card">
+              <div class="card-head-row">
+                <div class="card-title" id="siteModalTitle">Ajouter un site</div>
+                <button class="exp-modal-close" id="siteModalClose" type="button">×</button>
+              </div>
+              <form id="siteForm" class="exp-form">
+                <label>Nom du site<input type="text" name="name" required placeholder="Ex. Google"></label>
+                <label>URL du site<input type="url" name="url" required placeholder="Ex. https://google.com"></label>
+                <label>Statut
+                  <select name="status">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </label>
+                <div class="exp-form-actions">
+                  <button type="button" class="btn-outline-sm" id="siteCancel">Annuler</button>
                   <button type="submit" class="btn-primary-sm">Enregistrer</button>
                 </div>
               </form>
