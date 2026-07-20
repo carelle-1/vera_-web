@@ -168,10 +168,39 @@ function renderDetail() {
 }
 
 // ============== TABS ==============
+const switchablePanels = {
+  filtres: document.getElementById("panelFiltres"),
+  toutes: document.getElementById("panelToutes"),
+  entreprises: document.getElementById("panelEntreprises"),
+  reco: document.getElementById("panelReco")
+};
+const oppLayout = document.querySelector(".opp-layout");
+
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
+    const key = tab.dataset.tab;
+    if (!key || !switchablePanels[key]) return;
+
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
+
+    Object.keys(switchablePanels).forEach(k => {
+      if (switchablePanels[k]) {
+        if (k === key) {
+          switchablePanels[k].classList.add("active");
+        } else {
+          switchablePanels[k].classList.remove("active");
+        }
+      }
+    });
+
+    if (oppLayout) {
+      if (key === "filtres") {
+        oppLayout.classList.add("with-filters");
+      } else {
+        oppLayout.classList.remove("with-filters");
+      }
+    }
   });
 });
 
@@ -216,5 +245,12 @@ document.getElementById("refreshBtn").addEventListener("click", () => {
 });
 
 // ============== INIT ==============
+if (oppLayout) {
+  const activeTab = document.querySelector(".tab.active");
+  if (activeTab && activeTab.dataset.tab === "filtres") {
+    oppLayout.classList.add("with-filters");
+  }
+}
+
 renderJobs();
 renderDetail();

@@ -30,4 +30,8 @@ Route::get('/parametre', function () {
     return view('parametre');
 });
 
+Route::get('/oppotunite', function () {
+    return view('oppotunite');
+});
+
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');

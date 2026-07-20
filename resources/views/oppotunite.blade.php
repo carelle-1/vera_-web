@@ -1,4 +1,4 @@
-@extends('layouts.app')
+Ôªø@extends('layouts.app')
 @section('title', 'VERA - Opportunit√©s')
 @section('styles')
 <link rel="stylesheet" href="style_O.css">
@@ -8,28 +8,28 @@
 <!-- PAGE HEADER -->
     <div class="page-head">
       <div>
-        <h1>Opportunit©s</h1>
-        <p>VERA trouve les meilleures opportunit©s qui correspondent † ton profil.</p>
+        <h1>Opportunit√©s</h1>
+        <p>VERA trouve les meilleures opportunit√©s qui correspondent √† ton profil.</p>
       </div>
-      <button class="btn-refresh" id="refreshBtn">‚ü≥ RafraÆchir les offres</button>
+      <button class="btn-refresh" id="refreshBtn">üîÑ Rafra√Æchir les offres</button>
     </div>
 
     <!-- TABS -->
     <div class="tabs">
       <button class="tab active" data-tab="filtres">Filtres</button>
       <button class="tab" data-tab="toutes">Toutes les offres</button>
-      <button class="tab" data-tab="entreprises">Diff©rentes entreprises</button>
-      <button class="tab" data-tab="reco">Recommand©es</button>
+      <button class="tab" data-tab="entreprises">Diff√©rentes entreprises</button>
+      <button class="tab" data-tab="reco">Recommand√©es</button>
     </div>
 
     <!-- CONTENT GRID -->
     <div class="opp-layout">
 
       <!-- FILTERS PANEL -->
-      <aside class="filters-panel">
+      <aside class="filters-panel active" id="panelFiltres">
         <div class="filters-head">
           <span>Filtres</span>
-          <button id="resetFilters" class="reset-link">R©initialiser</button>
+          <button id="resetFilters" class="reset-link">R√©initialiser</button>
         </div>
 
         <div class="filter-group">
@@ -55,22 +55,22 @@
         </div>
 
         <div class="filter-group">
-          <div class="filter-title">Niveau d'exp©rience</div>
+          <div class="filter-title">Niveau d'exp√©rience</div>
           <label class="check"><input type="checkbox" data-filter="level" value="Junior"> Junior</label>
-          <label class="check"><input type="checkbox" data-filter="level" value="Interm©diaire" checked> Interm©diaire</label>
+          <label class="check"><input type="checkbox" data-filter="level" value="Interm√©diaire" checked> Interm√©diaire</label>
           <label class="check"><input type="checkbox" data-filter="level" value="Senior"> Senior</label>
         </div>
       </aside>
 
       <!-- JOB LIST -->
-      <section class="job-list-panel">
+      <section class="job-list-panel active" id="panelToutes">
         <div class="list-head">
-          <span id="resultCount">247 offres trouv©es</span>
+          <span id="resultCount">247 offres trouv√©es</span>
           <div class="sort-wrap">
             <span>Trier par :</span>
             <select id="sortSelect">
               <option value="pertinence">Pertinence</option>
-              <option value="recent">Plus r©centes</option>
+              <option value="recent">Plus r√©centes</option>
               <option value="salaire">Salaire</option>
             </select>
           </div>
@@ -91,6 +91,21 @@
 
       <!-- DETAIL PANEL -->
       <aside class="detail-panel" id="detailPanel"></aside>
+
+      <!-- EMPTY PANELS FOR OTHER TABS -->
+      <section class="job-list-panel" id="panelEntreprises">
+        <div class="list-head">
+          <span id="resultCountEntreprises">Entreprises</span>
+        </div>
+        <div class="jobs" id="entrepriseList"></div>
+      </section>
+
+      <section class="job-list-panel" id="panelReco">
+        <div class="list-head">
+          <span id="resultCountReco">Offres recommand√©es</span>
+        </div>
+        <div class="jobs" id="recoList"></div>
+      </section>
 
     </div>
 @endsection

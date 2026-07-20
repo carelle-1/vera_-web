@@ -140,10 +140,43 @@ button{font-family:inherit;}
 /* LAYOUT */
 .opp-layout{
   display:grid;
-  grid-template-columns:240px 1fr 320px;
+  grid-template-columns: 1fr 320px;
   gap:20px;
   padding:18px 28px 40px;
   align-items:start;
+}
+
+.opp-layout .detail-panel{
+  grid-column: 2;
+  display: block !important;
+}
+
+.opp-layout .filters-panel{
+  display: none;
+  grid-column: 1;
+}
+.opp-layout .filters-panel.active{
+  display: block;
+}
+.opp-layout .job-list-panel{
+  display: none;
+  grid-column: 1;
+}
+.opp-layout .job-list-panel.active{
+  display: block;
+}
+
+.opp-layout.with-filters{
+  grid-template-columns: 240px 1fr 320px;
+}
+.opp-layout.with-filters .filters-panel.active{
+  grid-column: 1;
+}
+.opp-layout.with-filters .job-list-panel.active{
+  grid-column: 2;
+}
+.opp-layout.with-filters .detail-panel{
+  grid-column: 3;
 }
 
 /* FILTERS PANEL */
