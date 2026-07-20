@@ -363,7 +363,8 @@ function handleJobSubmit(e) {
     contractType: (fd.get("contractType") || "").toString().trim(),
     skills: (fd.get("skills") || "").toString().trim(),
     deadline: (fd.get("deadline") || "").toString().trim(),
-    status: (fd.get("status") || "active").toString().trim()
+    status: (fd.get("status") || "active").toString().trim(),
+    createdAt: Date.now()
   };
 
   const logoFile = e.target.querySelector('input[name="logo"]').files[0];

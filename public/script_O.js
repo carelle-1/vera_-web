@@ -4,6 +4,16 @@ let filteredJobs = [];
 let selectedJobId = null;
 let currentSort = "pertinence";
 
+function getDaysSince(timestamp) {
+  const now = new Date();
+  const created = new Date(timestamp);
+  const diffMs = now - created;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "aujourd'hui";
+  if (diffDays === 1) return "1 jour";
+  return `${diffDays} jours`;
+}
+
 function normalize(text) {
   return (text || "").toString().trim().toLowerCase();
 }
@@ -123,9 +133,9 @@ function renderJobs() {
     const circumference = 2 * Math.PI * 16;
     const offset = circumference - (match / 100) * circumference;
 
+    const company = job.company || "—";
     const logoText = job.logo || (job.company || "?").charAt(0).toUpperCase();
     const logoBg = job.logoBg || "#e5e7eb";
-    const company = job.company || "—";
     const title = job.title || "Sans titre";
     const location = job.location || job.country || "—";
     const locationTag = job.contractType || job.status || location;
@@ -134,10 +144,17 @@ function renderJobs() {
     const salaryMax = job.salaryMax || 0;
     const period = job.period || "par mois";
     const tags = (job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 3);
-    const posted = job.createdAt ? "Récent" : "—";
+    const posted = job.createdAt ? getDaysSince(job.createdAt) : "—";
+    console.log("[OPPO] job id:", job.id, "createdAt:", job.createdAt, "posted:", posted);
+
+    const logoUrl = job.logoURL || "";
+    const logoHtml = logoUrl
+      ? `<img src="${logoUrl}" alt="${company}" style="width:100%;height:100%;object-fit:contain;">`
+      : `<span style="font-weight:800;font-size:18px;color:#fff;">${logoText}</span>`;
+    const logoStyle = logoUrl ? "" : `style="background:${logoBg}"`;
 
     el.innerHTML = `
-      <div class="job-logo" style="background:${logoBg}">${logoText}</div>
+      <div class="job-logo" ${logoStyle}>${logoHtml}</div>
       <div class="job-info">
         <div class="job-title">${title}</div>
         <div class="job-sub">${company} · <span class="tag">${locationTag}</span></div>
@@ -200,9 +217,15 @@ function renderDetail() {
   const matchReasons = job.matchReasons || [];
   const skills = typeof job.skills === "string" ? job.skills.split(",").map((s) => s.trim()).filter(Boolean) : (Array.isArray(job.skills) ? job.skills : []);
 
+  const logoUrl = job.logoURL || "";
+  const logoHtml = logoUrl
+    ? `<img src="${logoUrl}" alt="${company}" style="width:100%;height:100%;object-fit:contain;">`
+    : `<span style="font-weight:800;font-size:18px;color:#fff;">${logoText}</span>`;
+  const logoStyle = logoUrl ? "" : `style="background:${logoBg}"`;
+
   panel.innerHTML = `
     <div class="detail-match">${match}% Compatible</div>
-    <div class="detail-logo" style="background:${logoBg}">${logoText}</div>
+    <div class="detail-logo" ${logoStyle}>${logoHtml}</div>
     <div class="detail-title">${title}</div>
     <div class="detail-sub">${company} · ${location}</div>
     <div class="detail-price">${salaryMin > 0 && salaryMax > 0 ? salaryMin.toLocaleString("fr-FR") + " – " + salaryMax.toLocaleString("fr-FR") + " $" : salaryText}<span>${period}</span></div>
@@ -295,17 +318,23 @@ function renderRecommendedJobs() {
 
   recoList.innerHTML = recommended.map(job => {
     const match = job.compatibility || job.match || 0;
-    const logoText = job.logo || (job.company || "?").charAt(0).toUpperCase();
-    const logoBg = job.logoBg || "#e5e7eb";
     const company = job.company || "—";
     const title = job.title || "Sans titre";
     const location = job.location || job.country || "—";
     const salaryText = job.salary || "—";
     const tags = (job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 3);
+    const logoText = job.logo || (job.company || "?").charAt(0).toUpperCase();
+    const logoBg = job.logoBg || "#e5e7eb";
+
+    const logoUrl = job.logoURL || "";
+    const logoHtml = logoUrl
+      ? `<img src="${logoUrl}" alt="${company}" style="width:100%;height:100%;object-fit:contain;">`
+      : `<span style="font-weight:800;font-size:18px;color:#fff;">${logoText}</span>`;
+    const logoStyle = logoUrl ? "" : `style="background:${logoBg}"`;
 
     return `
       <div class="job" data-id="${job.id}">
-        <div class="job-logo" style="background:${logoBg}">${logoText}</div>
+        <div class="job-logo" ${logoStyle}>${logoHtml}</div>
         <div class="job-info">
           <div class="job-title">${title}</div>
           <div class="job-sub">${company} · <span class="tag">${location}</span></div>
