@@ -26,4 +26,8 @@ Route::get('/favoris', function () {
     return view('favoris');
 });
 
+Route::get('/parametre', function () {
+    return view('parametre');
+});
+
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');

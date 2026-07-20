@@ -20,6 +20,70 @@ function escapeHtml(text) {
   return str.replace(/[&<>"']/g, (m) => map[m]);
 }
 
+function normalize(text) {
+  return (text || "").toString().trim().toLowerCase();
+}
+
+function userSkillNames(skills) {
+  if (!skills || typeof skills !== "object") return [];
+  return Object.values(skills)
+    .map((s) => normalize(s && s.name ? s.name : ""))
+    .filter(Boolean);
+}
+
+function jobSkillNames(job) {
+  const raw = job && job.skills ? job.skills : "";
+  return raw.split(",").map((s) => normalize(s)).filter(Boolean);
+}
+
+function textContainsAny(text, keywords) {
+  const hay = normalize(text);
+  return keywords.some((k) => hay.includes(k));
+}
+
+function calculateJobCompatibility(userData, job) {
+  const userSkills = userSkillNames(userData.skills);
+  const requiredSkills = jobSkillNames(job);
+  if (!requiredSkills.length) return 100;
+
+  let matchCount = 0;
+  requiredSkills.forEach((req) => {
+    if (userSkills.some((us) => us === req || us.includes(req) || req.includes(us))) {
+      matchCount++;
+    }
+  });
+
+  const skillsPct = Math.round((matchCount / requiredSkills.length) * 100);
+
+  const experiences = Array.isArray(userData.experiences) ? userData.experiences : [];
+  const formations = Array.isArray(userData.formations) ? userData.formations : [];
+  const certifications = Array.isArray(userData.certifications) ? userData.certifications : [];
+
+  const experienceText = [
+    userData.jobTitle,
+    userData.about,
+    ...experiences.map((e) => [e.title, e.company, e.description].join(" "))
+  ].join(" ");
+
+  const formationText = [
+    ...formations.map((f) => [f.diploma, f.school, f.description].join(" "))
+  ].join(" ");
+
+  const certificationText = [
+    ...certifications.map((c) => [c.title, c.issuer, c.description].join(" "))
+  ].join(" ");
+
+  let bonus = 0;
+  if (textContainsAny(experienceText, requiredSkills)) bonus += 5;
+  if (textContainsAny(formationText, requiredSkills)) bonus += 5;
+  if (textContainsAny(certificationText, requiredSkills)) bonus += 5;
+
+  let score = skillsPct + bonus;
+  if (score > 100) score = 100;
+  if (score < 0) score = 0;
+  return score;
+}
+
 // ============== CHARGEMENT FAVORIS ==============
 function loadFavorites(uid) {
   const list = document.getElementById("jobList");
@@ -59,10 +123,31 @@ function loadFavorites(uid) {
         return dateB - dateA;
       });
 
-      renderFavorites(jobs);
+      const skillsPromise = firebase.database().ref("users/" + uid + "/skills").once("value");
+      const expPromise = firebase.database().ref("users/" + uid + "/experiences").once("value");
+      const formPromise = firebase.database().ref("users/" + uid + "/formations").once("value");
+      const certPromise = firebase.database().ref("users/" + uid + "/certifications").once("value");
+      const userPromise = firebase.database().ref("users/" + uid).once("value");
 
-      if (resultCount) resultCount.textContent = `${jobs.length} offre${jobs.length > 1 ? 's' : ''} d'emploi`;
-      if (tabSpan) tabSpan.textContent = jobs.length;
+      return Promise.all([userPromise, skillsPromise, expPromise, formPromise, certPromise]).then(([userSnap, skillsSnap, expSnap, formSnap, certSnap]) => {
+        const userData = userSnap.val() || {};
+        const enrichedUser = {
+          ...userData,
+          skills: skillsSnap.val() || {},
+          experiences: Object.keys(expSnap.val() || {}).map(id => ({ id, ...(expSnap.val() || {})[id] })),
+          formations: Object.keys(formSnap.val() || {}).map(id => ({ id, ...(formSnap.val() || {})[id] })),
+          certifications: Object.keys(certSnap.val() || {}).map(id => ({ id, ...(certSnap.val() || {})[id] }))
+        };
+
+        jobs.forEach((job) => {
+          job.compatibility = calculateJobCompatibility(enrichedUser, job);
+        });
+
+        renderFavorites(jobs);
+
+        if (resultCount) resultCount.textContent = `${jobs.length} offre${jobs.length > 1 ? 's' : ''} d'emploi`;
+        if (tabSpan) tabSpan.textContent = jobs.length;
+      });
     });
   }).catch((err) => {
     console.error("[FAV] erreur chargement:", err);
@@ -183,3 +268,18 @@ document.addEventListener("click", (e) => {
 // ============== INIT ==============
 const resultCount = document.getElementById("resultCount");
 if (resultCount) resultCount.textContent = "Chargement...";
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    const main = document.querySelector(".main");
+    if (main) {
+      e.preventDefault();
+      const scrollAmount = 80;
+      if (e.key === "ArrowDown") {
+        main.scrollTop += scrollAmount;
+      } else {
+        main.scrollTop -= scrollAmount;
+      }
+    }
+  }
+});

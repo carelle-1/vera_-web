@@ -12,6 +12,10 @@ function escapeHtml(text) {
   return str.replace(/[&<>"']/g, (m) => map[m]);
 }
 
+let currentPage = 1;
+const JOBS_PER_PAGE = 5;
+let allFilteredJobs = [];
+
 function normalize(text) {
   return (text || "").toString().trim().toLowerCase();
 }
@@ -225,7 +229,11 @@ function renderRecommendedJobs() {
       });
     }
 
-    const topJobs = filteredJobs.slice(0, 6);
+    allFilteredJobs = filteredJobs;
+    const totalPages = Math.max(1, Math.ceil(allFilteredJobs.length / JOBS_PER_PAGE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage - 1) * JOBS_PER_PAGE;
+    const topJobs = allFilteredJobs.slice(start, start + JOBS_PER_PAGE);
 
     const skillsPromise = firebase.database().ref("users/" + user.uid + "/skills").once("value");
     const expPromise = firebase.database().ref("users/" + user.uid + "/experiences").once("value");
@@ -244,10 +252,12 @@ function renderRecommendedJobs() {
       };
       renderJobsList(topJobs, enrichedUser);
       updateFavoriteButtons();
+      renderPagination(allFilteredJobs.length);
     }).catch((err) => {
       console.error("[JOBS] erreur chargement profil:", err);
       renderJobsList(topJobs, {});
       updateFavoriteButtons();
+      renderPagination(allFilteredJobs.length);
     });
   }).catch((err) => {
     container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red);">Erreur de chargement des offres.</div>`;
@@ -538,12 +548,47 @@ function openJobDetailModal(job) {
     <div class="detail-row"><span class="detail-label">Compétences</span><span class="detail-value">${tagsHtml || "—"}</span></div>
     <div class="detail-row"><span class="detail-label">Date limite</span><span class="detail-value">${escapeHtml(job.deadline || "—")}</span></div>
     <div class="detail-row"><span class="detail-label">Email de candidature</span><span class="detail-value">${escapeHtml(job.applyEmail || "—")}</span></div>
-    <div class="detail-row"><span class="detail-label">Compatibilité</span><span class="detail-value">${escapeHtml(job.compatibility || "85%")}</span></div>
+    <div class="detail-row"><span class="detail-label">Compatibilité</span><span class="detail-value" id="jobCompatibilityValue">Calcul...</span></div>
     ${job.verified ? '<div class="detail-row"><span class="detail-label">Vérifié</span><span class="detail-value">✓ Oui</span></div>' : ''}
+    <div class="detail-actions">
+      <button class="btn-primary apply-now-btn" data-job-apply="${escapeHtml(job.id)}" ${!job.applyEmail ? 'disabled' : ''}>Postuler maintenant</button>
+    </div>
   `;
 
   jobDetailTitle.textContent = "Détails de l'offre";
   jobDetailOverlay.classList.add("active");
+
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    const compatEl = document.getElementById("jobCompatibilityValue");
+    if (compatEl) compatEl.textContent = "—";
+    return;
+  }
+
+  firebase.database().ref("users/" + user.uid).once("value").then((userSnap) => {
+    const userData = userSnap.val() || {};
+    const skillsPromise = firebase.database().ref("users/" + user.uid + "/skills").once("value");
+    const expPromise = firebase.database().ref("users/" + user.uid + "/experiences").once("value");
+    const formPromise = firebase.database().ref("users/" + user.uid + "/formations").once("value");
+    const certPromise = firebase.database().ref("users/" + user.uid + "/certifications").once("value");
+
+    return Promise.all([skillsPromise, expPromise, formPromise, certPromise]).then(([skillsSnap, expSnap, formSnap, certSnap]) => {
+      const enrichedUser = {
+        ...userData,
+        skills: skillsSnap.val() || {},
+        experiences: Object.keys(expSnap.val() || {}).map(id => ({ id, ...(expSnap.val() || {})[id] })),
+        formations: Object.keys(formSnap.val() || {}).map(id => ({ id, ...(formSnap.val() || {})[id] })),
+        certifications: Object.keys(certSnap.val() || {}).map(id => ({ id, ...(certSnap.val() || {})[id] }))
+      };
+      const compatibility = calculateJobCompatibility(enrichedUser, job);
+      const compatEl = document.getElementById("jobCompatibilityValue");
+      if (compatEl) compatEl.textContent = compatibility + "%";
+    });
+  }).catch((err) => {
+    console.error("[JOBS] erreur calcul compatibilité modal:", err);
+    const compatEl = document.getElementById("jobCompatibilityValue");
+    if (compatEl) compatEl.textContent = "—";
+  });
 }
 
 function closeJobDetailModal() {
@@ -586,9 +631,31 @@ document.addEventListener("click", (e) => {
   toggleFavorite(jobId);
 });
 
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-job-apply]");
+  if (!btn) return;
+  e.preventDefault();
+  const jobId = btn.getAttribute("data-job-apply");
+  if (!jobId) return;
+
+  firebase.database().ref("jobs/" + jobId).once("value").then((snap) => {
+    const job = snap.val() || {};
+    const email = (job.applyEmail || "").toString().trim();
+    if (!email) {
+      alert("Aucune adresse email de candidature disponible pour cette offre.");
+      return;
+    }
+    window.location.href = "mailto:" + email;
+  }).catch((err) => {
+    console.error("[JOBS] erreur postuler:", err);
+    alert("Impossible de traiter votre candidature pour le moment.");
+  });
+});
+
 const contractFilter = document.getElementById("contractFilter");
 if (contractFilter) {
   contractFilter.addEventListener("change", () => {
+    currentPage = 1;
     renderRecommendedJobs();
   });
 }
@@ -596,6 +663,7 @@ if (contractFilter) {
 const countryFilterEl = document.getElementById("countryFilter");
 if (countryFilterEl) {
   countryFilterEl.addEventListener("change", () => {
+    currentPage = 1;
     renderRecommendedJobs();
   });
 }
@@ -603,6 +671,7 @@ if (countryFilterEl) {
 const companyFilterEl = document.getElementById("companyFilter");
 if (companyFilterEl) {
   companyFilterEl.addEventListener("change", () => {
+    currentPage = 1;
     renderRecommendedJobs();
   });
 }
@@ -613,6 +682,48 @@ if (allChip) {
     if (contractFilter) contractFilter.value = "";
     if (countryFilterEl) countryFilterEl.value = "";
     if (companyFilterEl) companyFilterEl.value = "";
+    currentPage = 1;
     renderRecommendedJobs();
+  });
+}
+
+function renderPagination(totalItems) {
+  const paginationEl = document.getElementById("jobsPagination");
+  if (!paginationEl) return;
+
+  const totalPages = Math.max(1, Math.ceil(totalItems / JOBS_PER_PAGE));
+  if (totalPages <= 1) {
+    paginationEl.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+  html += `<button class="page-arrow" data-page="prev" ${currentPage === 1 ? 'disabled' : ''}>←</button>`;
+  
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+      html += `<button class="page-num ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    } else if (i === currentPage - 2 || i === currentPage + 2) {
+      html += `<span class="page-dots">...</span>`;
+    }
+  }
+  
+  html += `<button class="page-arrow" data-page="next" ${currentPage === totalPages ? 'disabled' : ''}>→</button>`;
+  
+  paginationEl.innerHTML = html;
+
+  paginationEl.querySelectorAll(".page-num, .page-arrow").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const page = btn.getAttribute("data-page");
+      if (page === "prev" && currentPage > 1) {
+        currentPage--;
+      } else if (page === "next" && currentPage < totalPages) {
+        currentPage++;
+      } else if (page !== "prev" && page !== "next") {
+        currentPage = parseInt(page);
+      }
+      renderRecommendedJobs();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
   });
 }
