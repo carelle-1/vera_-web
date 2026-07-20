@@ -165,6 +165,10 @@ button{font-family:inherit;}
 .opp-layout .job-list-panel.active{
   display: block;
 }
+.opp-layout .detail-panel{
+  grid-column: 2;
+  display: block !important;
+}
 
 .opp-layout.with-filters{
   grid-template-columns: 240px 1fr 320px;
