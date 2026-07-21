@@ -47,9 +47,9 @@
         <div class="filter-group">
           <div class="filter-title">Localisation</div>
           <input type="text" class="filter-input" placeholder="Ville, pays...">
-          <label class="check"><input type="checkbox" data-filter="location" value="Remote" checked> Remote</label>
-          <label class="check"><input type="checkbox" data-filter="location" value="Hybride"> Hybride</label>
-          <label class="check"><input type="checkbox" data-filter="location" value="Sur site"> Sur site</label>
+          <label class="check"><input type="checkbox" checked data-filter="location" value="Remote"> Remote</label>
+          <label class="check"><input type="checkbox" checked data-filter="location" value="Hybride"> Hybride</label>
+          <label class="check"><input type="checkbox" checked data-filter="location" value="Sur site"> Sur site</label>
         </div>
 
         <div class="filter-group">

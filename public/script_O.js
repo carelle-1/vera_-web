@@ -328,6 +328,7 @@ function renderDetail() {
   const period = job.period || "par mois";
   const matchReasons = job.matchReasons || [];
   const skills = typeof job.skills === "string" ? job.skills.split(",").map((s) => s.trim()).filter(Boolean) : (Array.isArray(job.skills) ? job.skills : []);
+  const description = (job.description || "").toString().trim();
 
   const logoUrl = job.logoURL || "";
   const logoHtml = logoUrl
@@ -343,7 +344,7 @@ function renderDetail() {
     <div class="detail-price">${salaryMin > 0 && salaryMax > 0 ? salaryMin.toLocaleString("fr-FR") + " – " + salaryMax.toLocaleString("fr-FR") + " $" : salaryText}<span>${period}</span></div>
 
     <div class="detail-actions">
-      <button class="btn-primary">Voir détails</button>
+      <button class="btn-primary">Postuler</button>
       <button class="btn-icon-outline">🔖</button>
     </div>
 
@@ -353,6 +354,13 @@ function renderDetail() {
         ${matchReasons.map(r => `<li>${r}</li>`).join("")}
       </ul>
     </div>
+
+    ${description ? `
+    <div class="detail-section">
+      <div class="detail-section-title">Description de l'offre</div>
+      <div class="detail-description">${description}</div>
+    </div>
+    ` : ''}
 
     <div class="detail-section">
       <div class="detail-section-title">Compétences à améliorer</div>
@@ -490,12 +498,12 @@ function matchesFilters(job, filters) {
   }
 
   const jobLocation = (job.location || job.country || "").toString().toLowerCase();
-  if (filters.locations.length > 0 && !filters.locations.some(l => jobLocation.includes(l.toLowerCase()))) {
+  if (filters.locations.length > 0 && jobLocation && !filters.locations.some(l => jobLocation.includes(l.toLowerCase()))) {
     return false;
   }
 
   const jobLevel = (job.level || "").toString().toLowerCase();
-  if (filters.levels.length > 0 && !filters.levels.some(l => jobLevel.includes(l.toLowerCase()))) {
+  if (filters.levels.length > 0 && jobLevel && !filters.levels.some(l => jobLevel.includes(l.toLowerCase()))) {
     return false;
   }
 

@@ -281,6 +281,14 @@ button{font-family:inherit;}
 .match-list li{font-size:12.5px;color:var(--text);display:flex;gap:8px;align-items:flex-start;line-height:1.4;}
 .match-list li::before{content:"✔";color:var(--green);font-weight:700;flex-shrink:0;}
 
+.detail-description{
+  font-size:12.5px;
+  color:var(--text);
+  line-height:1.6;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+
 .skill-row{margin-bottom:14px;}
 .skill-row:last-child{margin-bottom:0;}
 .skill-label{display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;margin-bottom:6px;}

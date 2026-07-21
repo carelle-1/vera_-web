@@ -29,6 +29,8 @@ class ScraperController extends Controller
                 return ($site['status'] ?? 'active') === 'active';
             });
 
+            \Log::info('[SCRAPER] sites actifs: ' . count($activeSites) . ' sur ' . count($sites) . ' au total');
+
             if (empty($activeSites)) {
                 return response()->json([
                     'success' => true,
@@ -57,10 +59,15 @@ class ScraperController extends Controller
                     $url = $site['url'] ?? '';
                     if (empty($url)) continue;
 
+                    $hasSelectors = !empty($site['selectorTitle']);
+                    \Log::info("[SCRAPER] site: {$site['name']} url: {$url} selecteurs: " . ($hasSelectors ? 'oui' : 'non'));
+
                     $jobs = !empty($site['selectorTitle']) 
                         ? $this->scrapeSiteWithSelectors($url, $site) 
                         : $this->scrapeSite($url, $site['name'] ?? 'Site');
-                    
+
+                    \Log::info("[SCRAPER] site: {$site['name']} offres trouvees: " . count($jobs));
+
                     foreach ($jobs as $job) {
                         if (isset($existingUrls[$job['sourceUrl']])) {
                             continue;
@@ -79,8 +86,11 @@ class ScraperController extends Controller
                     }
                 } catch (\Exception $e) {
                     $errors[] = "Erreur sur {$site['name']}: " . $e->getMessage();
+                    \Log::error("[SCRAPER] erreur site {$site['name']}: " . $e->getMessage());
                 }
             }
+
+            \Log::info("[SCRAPER] total scraped: {$scrapedCount}");
 
             return response()->json([
                 'success' => true,
@@ -92,6 +102,7 @@ class ScraperController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error("[SCRAPER] erreur globale: " . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage()
@@ -175,6 +186,7 @@ class ScraperController extends Controller
                     'sourceName' => $siteName,
                     'status' => 'active',
                     'contractType' => 'CDI',
+                    'level' => 'Intermédiaire',
                     'skills' => '',
                     'logo' => $logoData['text'] ?? '',
                     'logoBg' => $logoData['bg'] ?? '#3b6bf5',
@@ -207,6 +219,7 @@ class ScraperController extends Controller
                 ->get($baseUrl);
 
             if (!$response->successful()) {
+                \Log::warning("[SCRAPER] HTTP error for {$baseUrl}: " . $response->status());
                 return $jobs;
             }
 
@@ -227,7 +240,12 @@ class ScraperController extends Controller
                 return $jobs;
             }
 
-            $titleNodes = $xpath->query($this->cssToXPath($selectorTitle));
+            $titleXPath = $this->cssToXPath($selectorTitle);
+            \Log::info("[SCRAPER] XPath titre pour {$baseUrl}: {$titleXPath}");
+            
+            $titleNodes = $xpath->query($titleXPath);
+            \Log::info("[SCRAPER] noeuds titre trouves: " . $titleNodes->length);
+            
             if ($titleNodes->length === 0) {
                 return $jobs;
             }
@@ -305,6 +323,7 @@ class ScraperController extends Controller
                     'sourceName' => $site['name'] ?? 'Site',
                     'status' => 'active',
                     'contractType' => 'CDI',
+                    'level' => 'Intermédiaire',
                     'skills' => '',
                     'description' => $description,
                     'applyEmail' => $companyEmail,
@@ -319,6 +338,8 @@ class ScraperController extends Controller
 
                 $count++;
             }
+
+            \Log::info("[SCRAPER] offres extraites pour {$baseUrl}: {$count}");
 
         } catch (\Exception $e) {
             \Log::error("Scraping with selectors error for {$baseUrl}: " . $e->getMessage());
@@ -341,33 +362,45 @@ class ScraperController extends Controller
             $part = trim($part);
             if (empty($part)) continue;
 
-            $part = preg_replace('/\s*>\s*/', '/', $part);
-            $part = preg_replace('/\s*\+\s*/', '/following-sibling::', $part);
-            $part = preg_replace('/\s*~\s*/', '/following-sibling::', $part);
+            $part = preg_replace('/\s*>\s*/', '>', $part);
+            $part = preg_replace('/\s*\+\s*/', '+', $part);
+            $part = preg_replace('/\s*~\s*/', '~', $part);
             $part = preg_replace('/\s+/', '//', $part);
 
-            if (str_contains($part, '//')) {
-                $part = './/' . ltrim($part, '/');
-            }
-
-            if (preg_match('/^([a-zA-Z0-9]+)(?:\.([a-zA-Z0-9_-]+))?(?:#([a-zA-Z0-9_-]+))?$/', $part, $matches)) {
-                $tag = $matches[1] ?: '*';
-                $class = $matches[2] ?? '';
-                $id = $matches[3] ?? '';
-
-                $xpath = '//' . $tag;
-                if ($id) {
-                    $xpath = '//' . $tag . '[@id="' . $id . '"]';
-                } elseif ($class) {
-                    $xpath = '//' . $tag . '[contains(concat(" ", normalize-space(@class), " "), " ' . $class . ' ")]';
-                }
-                $xpaths[] = $xpath;
+            $converted = $this->convertCssSelector($part);
+            if ($converted) {
+                $xpaths[] = $converted;
             } else {
                 $xpaths[] = '//' . $part;
             }
         }
 
         return implode(' | ', $xpaths);
+    }
+
+    private function convertCssSelector(string $selector): ?string
+    {
+        if (preg_match('/^\.([a-zA-Z0-9_-]+)$/', $selector, $matches)) {
+            return '//*[contains(concat(" ", normalize-space(@class), " "), " ' . $matches[1] . ' ")]';
+        }
+
+        if (preg_match('/^#([a-zA-Z0-9_-]+)$/', $selector, $matches)) {
+            return '//*[@id="' . $matches[1] . '"]';
+        }
+
+        if (preg_match('/^([a-zA-Z0-9]+)\.([a-zA-Z0-9_-]+)$/', $selector, $matches)) {
+            return '//' . $matches[1] . '[contains(concat(" ", normalize-space(@class), " "), " ' . $matches[2] . ' ")]';
+        }
+
+        if (preg_match('/^([a-zA-Z0-9]+)#([a-zA-Z0-9_-]+)$/', $selector, $matches)) {
+            return '//' . $matches[1] . '[@id="' . $matches[2] . '"]';
+        }
+
+        if (preg_match('/^([a-zA-Z0-9]+)$/', $selector)) {
+            return '//' . $selector;
+        }
+
+        return null;
     }
 
     private function resolveUrl(string $baseUrl, string $relativeUrl): string
