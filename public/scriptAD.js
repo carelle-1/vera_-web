@@ -14,6 +14,50 @@ function escapeHtml(text) {
   return str.replace(/[&<>"']/g, (m) => map[m]);
 }
 
+function updateNavCounts() {
+  const countElements = document.querySelectorAll(".nav-count[data-count-path]");
+  if (countElements.length === 0) return;
+
+  const db = firebase.database();
+  const promises = Array.from(countElements).map(el => {
+    const path = el.getAttribute("data-count-path");
+    if (!path) return Promise.resolve(null);
+    
+    return db.ref(path).once("value").then((snapshot) => {
+      const data = snapshot.val();
+      let count = 0;
+      
+      if (path === "jobs") {
+        count = data ? Object.keys(data).length : 0;
+      } else if (path === "users") {
+        count = data ? Object.keys(data).length : 0;
+      } else if (path === "companies") {
+        count = data ? Object.keys(data).length : 0;
+      } else if (path === "sites") {
+        count = data ? Object.keys(data).length : 0;
+      } else if (path === "moderation") {
+        if (Array.isArray(data)) {
+          count = data.filter(item => item && item.status === 'pending').length;
+        } else if (typeof data === 'object' && data !== null) {
+          count = Object.values(data).filter(item => item && item.status === 'pending').length;
+        }
+      }
+      
+      return { el, count };
+    }).catch(() => {
+      return { el, count: 0 };
+    });
+  });
+
+  Promise.all(promises).then((results) => {
+    results.forEach(({ el, count }) => {
+      if (el && count !== null) {
+        el.textContent = count.toLocaleString('fr-FR');
+      }
+    });
+  });
+}
+
 // ============== PAGINATION OFFRES ==============
 let jobCurrentPage = 1;
 const JOBS_PER_PAGE = 10;
@@ -58,6 +102,7 @@ function initAdminPanel(data) {
   renderAdminKPIs();
   renderAdminUsers();
   renderAdminCharts();
+  updateNavCounts();
 }
 
 function renderAdminKPIs() {
@@ -199,7 +244,22 @@ document.querySelectorAll(".nav-item").forEach(item => {
       if (target) target.classList.add("active");
 
       if (panel === "offres") {
-        setTimeout(() => renderJobs(), 50);
+        setTimeout(() => {
+          renderJobs();
+          updateNavCounts();
+        }, 50);
+      } else if (panel === "sites") {
+        setTimeout(() => {
+          renderSites();
+          updateNavCounts();
+        }, 50);
+      } else if (panel === "utilisateurs") {
+        setTimeout(() => {
+          renderAdminUsers();
+          updateNavCounts();
+        }, 50);
+      } else {
+        setTimeout(() => updateNavCounts(), 50);
       }
     }
   });
@@ -226,7 +286,7 @@ function renderJobs(resetPage) {
 
   const ref = jobRef();
   if (!ref) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#ef4444;">Vous devez être connecté pour voir les offres.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:#ef4444;">Vous devez être connecté pour voir les offres.</td></tr>`;
     return;
   }
 
@@ -259,7 +319,7 @@ function renderJobs(resetPage) {
 
     tbody.innerHTML = "";
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#6b7280;">Aucune offre trouvée.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:#6b7280;">Aucune offre trouvée.</td></tr>`;
       if (countEl) countEl.textContent = "Affichage de 0 offre";
       renderJobPagination(0);
       return;
@@ -286,6 +346,7 @@ function renderJobs(resetPage) {
         : `<div class="job-logo-placeholder">${escapeHtml((job.company || "?").charAt(0).toUpperCase())}</div>`;
 
       tr.innerHTML = `
+        <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="job-select-checkbox" data-id="${job.id}" style="cursor:pointer;width:16px;height:16px;"></td>
         <td style="text-align:center;vertical-align:middle;">${logoHtml}</td>
         <td><button class="job-title-edit" data-id="${job.id}" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;text-align:left;padding:0;font-weight:700;">${escapeHtml(job.title || "Sans titre")}</button></td>
         <td>${escapeHtml(job.company || "—")}</td>
@@ -307,10 +368,14 @@ function renderJobs(resetPage) {
     tbody.querySelectorAll(".exp-delete-btn").forEach((btn) => {
       btn.addEventListener("click", () => deleteJob(btn.dataset.id));
     });
+    tbody.querySelectorAll(".job-select-checkbox").forEach((checkbox) => {
+      checkbox.addEventListener("change", updateBulkDeleteButton);
+    });
 
+    updateBulkDeleteButton();
     renderJobPagination(filtered.length);
   }).catch((err) => {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement: ${err.message || err.code}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement: ${err.message || err.code}</td></tr>`;
   });
 }
 
@@ -361,7 +426,40 @@ function deleteJob(id) {
   const ref = jobRef();
   if (!ref) return;
   ref.child(id).remove()
-    .then(() => renderJobs())
+    .then(() => {
+      renderJobs();
+      updateNavCounts();
+    })
+    .catch((err) => alert("Échec de la suppression : " + (err.message || err.code)));
+}
+
+function updateBulkDeleteButton() {
+  const checkboxes = document.querySelectorAll(".job-select-checkbox:checked");
+  const bulkBtn = document.getElementById("bulkDeleteBtn");
+  if (bulkBtn) {
+    bulkBtn.style.display = checkboxes.length > 0 ? "inline-block" : "none";
+    bulkBtn.textContent = checkboxes.length > 0 ? `🗑 Supprimer la sélection (${checkboxes.length})` : "🗑 Supprimer la sélection";
+  }
+}
+
+function deleteSelectedJobs() {
+  const checkboxes = document.querySelectorAll(".job-select-checkbox:checked");
+  if (checkboxes.length === 0) return;
+
+  const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
+  if (!confirm(`Supprimer ${ids.length} offre(s) d'emploi ?`)) return;
+
+  const ref = jobRef();
+  if (!ref) return;
+
+  const deletions = ids.map(id => ref.child(id).remove());
+  Promise.all(deletions)
+    .then(() => {
+      renderJobs();
+      updateNavCounts();
+      const selectAll = document.getElementById("selectAllJobs");
+      if (selectAll) selectAll.checked = false;
+    })
     .catch((err) => alert("Échec de la suppression : " + (err.message || err.code)));
 }
 
@@ -441,6 +539,7 @@ function handleJobSubmit(e) {
   const finish = () => {
     closeJobForm();
     renderJobs();
+    updateNavCounts();
   };
 
   if (jobEditId) {
@@ -524,6 +623,19 @@ if (jobSearchEl) jobSearchEl.addEventListener("input", renderJobs);
 
 const jobFilterEl = document.getElementById("jobFilter");
 if (jobFilterEl) jobFilterEl.addEventListener("change", renderJobs);
+
+const selectAllJobs = document.getElementById("selectAllJobs");
+if (selectAllJobs) {
+  selectAllJobs.addEventListener("change", () => {
+    document.querySelectorAll(".job-select-checkbox").forEach(cb => cb.checked = selectAllJobs.checked);
+    updateBulkDeleteButton();
+  });
+}
+
+const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+if (bulkDeleteBtn) {
+  bulkDeleteBtn.addEventListener("click", deleteSelectedJobs);
+}
 
 // ============== SITES ==============
 let siteCurrentPage = 1;
@@ -656,7 +768,10 @@ function deleteSite(id) {
   const ref = siteRef();
   if (!ref) return;
   ref.child(id).remove()
-    .then(() => renderSites())
+    .then(() => {
+      renderSites();
+      updateNavCounts();
+    })
     .catch((err) => alert("Échec de la suppression : " + (err.message || err.code)));
 }
 
@@ -679,6 +794,13 @@ function openSiteForm(id) {
         form.name.value = d.name || "";
         form.url.value = d.url || "";
         form.status.value = d.status || "active";
+        form.selectorTitle.value = d.selectorTitle || "";
+        form.selectorCompany.value = d.selectorCompany || "";
+        form.selectorLocation.value = d.selectorLocation || "";
+        form.selectorSalary.value = d.selectorSalary || "";
+        form.selectorLink.value = d.selectorLink || "";
+        form.selectorDescription.value = d.selectorDescription || "";
+        form.selectorCompanyEmail.value = d.selectorCompanyEmail || "";
       });
     }
   } else {
@@ -702,6 +824,13 @@ function handleSiteSubmit(e) {
     name: (fd.get("name") || "").toString().trim(),
     url: (fd.get("url") || "").toString().trim(),
     status: (fd.get("status") || "active").toString().trim(),
+    selectorTitle: (fd.get("selectorTitle") || "").toString().trim(),
+    selectorCompany: (fd.get("selectorCompany") || "").toString().trim(),
+    selectorLocation: (fd.get("selectorLocation") || "").toString().trim(),
+    selectorSalary: (fd.get("selectorSalary") || "").toString().trim(),
+    selectorLink: (fd.get("selectorLink") || "").toString().trim(),
+    selectorDescription: (fd.get("selectorDescription") || "").toString().trim(),
+    selectorCompanyEmail: (fd.get("selectorCompanyEmail") || "").toString().trim(),
     createdAt: Date.now()
   };
 
@@ -715,6 +844,7 @@ function handleSiteSubmit(e) {
   const finish = () => {
     closeSiteForm();
     renderSites();
+    updateNavCounts();
   };
 
   if (siteEditId) {
@@ -754,13 +884,3 @@ if (siteForm) {
 
 const siteSearchEl = document.getElementById("siteSearch");
 if (siteSearchEl) siteSearchEl.addEventListener("input", renderSites);
-
-// Load sites when panel becomes active
-document.querySelectorAll(".nav-item").forEach(item => {
-  item.addEventListener("click", () => {
-    const panel = item.getAttribute("data-panel");
-    if (panel === "sites") {
-      setTimeout(() => renderSites(), 50);
-    }
-  });
-});

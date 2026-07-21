@@ -28,16 +28,16 @@
         <span class="nav-icon">📊</span> Tableau de bord
       </a>
       <a class="nav-item" data-panel="utilisateurs">
-        <span class="nav-icon">👥</span> Utilisateurs <span class="nav-count">4 218</span>
+        <span class="nav-icon">👥</span> Utilisateurs <span class="nav-count" data-count-path="users">0</span>
       </a>
       <a class="nav-item" data-panel="entreprises">
-        <span class="nav-icon">🏢</span> Entreprises <span class="nav-count">312</span>
+        <span class="nav-icon">🏢</span> Entreprises <span class="nav-count" data-count-path="companies">0</span>
       </a>
       <a class="nav-item" data-panel="offres">
-        <span class="nav-icon">💼</span> Offres d'emploi <span class="nav-count">1 546</span>
+        <span class="nav-icon">💼</span> Offres d'emploi <span class="nav-count" data-count-path="jobs">0</span>
       </a>
       <a class="nav-item" data-panel="sites">
-        <span class="nav-icon">🌐</span> Sites <span class="nav-count">0</span>
+        <span class="nav-icon">🌐</span> Sites <span class="nav-count" data-count-path="sites">0</span>
       </a>
 
       <div class="nav-label">Contenu</div>
@@ -48,7 +48,7 @@
         <span class="nav-icon">🎓</span> Formations
       </a>
       <a class="nav-item" data-panel="moderation">
-        <span class="nav-icon">🛡</span> Modération <span class="nav-count alert">7</span>
+        <span class="nav-icon">🛡</span> Modération <span class="nav-count alert" data-count-path="moderation">0</span>
       </a>
 
       <div class="nav-label">Gestion</div>
@@ -237,6 +237,7 @@
               <table class="admin-table">
                 <thead>
                   <tr>
+                    <th style="width:40px;"><input type="checkbox" id="selectAllJobs"></th>
                     <th>Logo</th>
                     <th>Offre</th>
                     <th>Entreprise</th>
@@ -250,7 +251,10 @@
               </table>
               <div class="table-footer">
                 <span id="jobTableCount">Affichage de 0 offre</span>
-                <div class="pagination" id="jobPagination"></div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                  <button class="btn-outline-sm" id="bulkDeleteBtn" style="display:none;color:var(--red);border-color:var(--red);">🗑 Supprimer la sélection</button>
+                  <div class="pagination" id="jobPagination"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -360,6 +364,14 @@
                     <option value="inactive">Inactive</option>
                   </select>
                 </label>
+                <div class="exp-form-section-title">Sélecteurs CSS pour le scraping</div>
+                <label>Sélecteur titre<input type="text" name="selectorTitle" placeholder="Ex. h2.job-title, .offer-title"></label>
+                <label>Sélecteur entreprise<input type="text" name="selectorCompany" placeholder="Ex. .company-name, span.employer"></label>
+                <label>Sélecteur lieu<input type="text" name="selectorLocation" placeholder="Ex. .location, span.city"></label>
+                <label>Sélecteur salaire<input type="text" name="selectorSalary" placeholder="Ex. .salary, span.wage"></label>
+                <label>Sélecteur lien offre<input type="text" name="selectorLink" placeholder="Ex. a.job-link, .offer-url"></label>
+                <label>Sélecteur description<input type="text" name="selectorDescription" placeholder="Ex. .job-description, .offer-details"></label>
+                <label>Sélecteur email entreprise<input type="text" name="selectorCompanyEmail" placeholder="Ex. .company-email, a.recruitment-email"></label>
                 <div class="exp-form-actions">
                   <button type="button" class="btn-outline-sm" id="siteCancel">Annuler</button>
                   <button type="submit" class="btn-primary-sm">Enregistrer</button>

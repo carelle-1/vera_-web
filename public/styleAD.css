@@ -333,3 +333,9 @@ table{border-collapse:collapse;width:100%;}
 .sites-form-wrapper{width:360px;flex-shrink:0;display:none;animation:fadeIn .25s ease;}
 .sites-form-wrapper.active{display:block;}
 .sites-form-wrapper .card{padding:20px;}
+
+/* Form section title */
+.exp-form-section-title{
+  font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;
+  margin-top:4px;padding-top:8px;border-top:1px solid var(--border);
+}

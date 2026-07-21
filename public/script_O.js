@@ -371,6 +371,24 @@ document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
+
+    const key = tab.dataset.tab;
+    if (key === "toutes") {
+      document.querySelectorAll(".filters-panel input[type=checkbox]").forEach(cb => cb.checked = false);
+      document.querySelectorAll(".filters-panel input[type=text]").forEach(inp => inp.value = "");
+      const salaryRange = document.getElementById("salaryRange");
+      if (salaryRange) salaryRange.value = 0;
+      const salaryValue = document.getElementById("salaryValue");
+      if (salaryValue) salaryValue.textContent = "0 $";
+      filteredJobs = [...jobs];
+      renderJobs();
+    } else if (key === "filtres") {
+      const filtersPanel = document.querySelector(".filters-panel");
+      if (filtersPanel) filtersPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (key === "reco") {
+      const recoSection = document.getElementById("panelReco");
+      if (recoSection) recoSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   });
 });
 
@@ -661,4 +679,126 @@ loadJobsFromFirebase().then(() => {
   renderJobs();
   renderDetail();
   renderRecommendedJobs();
+  
+  triggerAutoScrape();
 });
+
+function triggerAutoScrape() {
+  let lastScrape = null;
+  try {
+    lastScrape = localStorage.getItem('lastScrapeTimestamp');
+  } catch (e) {
+    console.warn("[OPPO] localStorage inaccessible:", e.message);
+  }
+
+  const now = Date.now();
+  const oneHour = 60 * 60 * 1000;
+
+  if (lastScrape && (now - parseInt(lastScrape)) < oneHour) {
+    console.log("[OPPO] scrape ignoré (dernier scrape il y a moins d'1h)");
+    return;
+  }
+
+  fetch('/scrape-jobs', {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log("[OPPO] scrape auto résultat:", data);
+    if (data.success) {
+      try {
+        localStorage.setItem('lastScrapeTimestamp', Date.now().toString());
+      } catch (e) {
+        console.warn("[OPPO] impossible de sauvegarder le timestamp:", e.message);
+      }
+      if (data.scraped > 0) {
+        return loadJobsFromFirebase();
+      }
+    }
+  })
+  .catch(err => {
+    console.error("[OPPO] erreur scrape auto:", err);
+  });
+}
+
+function handleScrapeClick() {
+  const btn = document.getElementById("scrapeBtn");
+  const statusEl = document.getElementById("scrapeStatus");
+  if (!btn) return;
+
+  btn.textContent = "🕷 Scraping en cours...";
+  btn.disabled = true;
+  if (statusEl) {
+    statusEl.textContent = "Scraping en cours, veuillez patienter...";
+    statusEl.style.display = "block";
+  }
+
+  fetch('/scrape-jobs', {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error("Erreur HTTP: " + response.status);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log("[OPPO] scrape manuel résultat:", data);
+    btn.textContent = "🕷 Scraper les sites";
+    btn.disabled = false;
+
+    if (data.success) {
+      if (statusEl) {
+        statusEl.textContent = data.message || (data.scraped > 0 ? `${data.scraped} offre(s) scrapée(s).` : "Scraping terminé, aucune nouvelle offre.");
+        setTimeout(() => { if (statusEl) statusEl.style.display = "none"; }, 4000);
+      }
+      try {
+        localStorage.setItem('lastScrapeTimestamp', Date.now().toString());
+      } catch (e) {
+        console.warn("[OPPO] impossible de sauvegarder le timestamp:", e.message);
+      }
+      return loadJobsFromFirebase();
+    } else {
+      const msg = data.error || data.message || "Erreur inconnue lors du scraping";
+      if (statusEl) {
+        statusEl.textContent = "Échec du scraping: " + msg;
+        statusEl.style.color = "var(--red)";
+        setTimeout(() => { if (statusEl) { statusEl.style.display = "none"; statusEl.style.color = ""; } }, 5000);
+      }
+      alert("Échec du scraping: " + msg);
+    }
+  })
+  .then(() => {
+    renderJobs();
+    renderDetail();
+    renderRecommendedJobs();
+  })
+  .catch(err => {
+    console.error("[OPPO] erreur scrape manuel:", err);
+    const btn2 = document.getElementById("scrapeBtn");
+    if (btn2) {
+      btn2.textContent = "🕷 Scraper les sites";
+      btn2.disabled = false;
+    }
+    const statusEl2 = document.getElementById("scrapeStatus");
+    if (statusEl2) {
+      statusEl2.textContent = "Erreur réseau: " + err.message;
+      statusEl2.style.color = "var(--red)";
+      setTimeout(() => { if (statusEl2) { statusEl2.style.display = "none"; statusEl2.style.color = ""; } }, 5000);
+    }
+    alert("Erreur lors du scraping: " + err.message);
+  });
+}
+
+const scrapeBtn = document.getElementById("scrapeBtn");
+if (scrapeBtn) {
+  scrapeBtn.addEventListener("click", handleScrapeClick);
+}

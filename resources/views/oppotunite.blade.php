@@ -11,7 +11,11 @@
         <h1>Opportunités</h1>
         <p>VERA trouve les meilleures opportunités qui correspondent à ton profil.</p>
       </div>
-      <button class="btn-refresh" id="refreshBtn">🔄 Rafraîchir les offres</button>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="btn-refresh" id="refreshBtn">🔄 Rafraîchir les offres</button>
+        <button class="btn-refresh" id="scrapeBtn" style="background:linear-gradient(90deg,#16a34a,#3b6bf5);color:#fff;border-color:transparent;">🕷 Scraper les sites</button>
+        <span id="scrapeStatus" style="display:none;font-size:12px;font-weight:600;"></span>
+      </div>
     </div>
 
     <!-- TABS -->
