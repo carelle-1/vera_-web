@@ -34,6 +34,10 @@ Route::get('/oppotunite', function () {
     return view('oppotunite');
 });
 
+Route::get('/candidatures', function () {
+    return view('candidature');
+});
+
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
 
 Route::get('/scrape-jobs', [App\Http\Controllers\ScraperController::class, 'scrapeAll'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);

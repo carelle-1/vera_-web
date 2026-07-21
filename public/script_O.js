@@ -344,7 +344,7 @@ function renderDetail() {
     <div class="detail-price">${salaryMin > 0 && salaryMax > 0 ? salaryMin.toLocaleString("fr-FR") + " – " + salaryMax.toLocaleString("fr-FR") + " $" : salaryText}<span>${period}</span></div>
 
     <div class="detail-actions">
-      <button class="btn-primary">Postuler</button>
+      <button class="btn-primary" id="applyBtn">Postuler</button>
       <button class="btn-icon-outline">🔖</button>
     </div>
 
@@ -372,6 +372,15 @@ function renderDetail() {
       `).join("")}
     </div>
   `;
+
+  const applyBtn = document.getElementById("applyBtn");
+  if (applyBtn) {
+    applyBtn.addEventListener("click", () => {
+      if (selectedJobId) {
+        window.location.href = "/candidatures?jobId=" + encodeURIComponent(selectedJobId);
+      }
+    });
+  }
 }
 
 // ============== TABS ==============
