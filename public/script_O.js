@@ -376,9 +376,42 @@ function renderDetail() {
   const applyBtn = document.getElementById("applyBtn");
   if (applyBtn) {
     applyBtn.addEventListener("click", () => {
-      if (selectedJobId) {
-        window.location.href = "/candidatures?jobId=" + encodeURIComponent(selectedJobId);
-      }
+      if (!selectedJobId) return;
+      const job = jobs.find(j => j.id === selectedJobId);
+      if (!job) return;
+
+      applyBtn.textContent = "Envoi...";
+      applyBtn.disabled = true;
+
+      const user = firebase.auth().currentUser;
+      const candidature = {
+        jobId: job.id,
+        title: job.title || "Sans titre",
+        company: job.company || "—",
+        location: job.location || job.country || "",
+        salary: job.salary || "",
+        sourceUrl: job.sourceUrl || "",
+        sourceName: job.sourceName || "",
+        logo: job.logo || "",
+        logoBg: job.logoBg || "#e5e7eb",
+        logoURL: job.logoURL || "",
+        status: "sent",
+        statusLabel: "Candidature envoyée",
+        date: "À l'instant",
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        userId: user ? user.uid : null
+      };
+
+      firebase.database().ref("candidatures").push(candidature)
+        .then(() => {
+          window.location.href = "/candidatures?jobId=" + encodeURIComponent(selectedJobId);
+        })
+        .catch((err) => {
+          console.error("[OPPO] erreur sauvegarde candidature:", err);
+          applyBtn.textContent = "Postuler";
+          applyBtn.disabled = false;
+          alert("Impossible d'enregistrer la candidature pour le moment.");
+        });
     });
   }
 }

@@ -1,4 +1,5 @@
 // ============== NAVIGATION SETTINGS ==============
+console.log("[SETTINGS] script_PA.js chargé");
 const panelLabels = {
   profil: "Profil et compte",
   prefs: "Préférences",
@@ -17,10 +18,88 @@ document.querySelectorAll(".settings-nav-item").forEach(item => {
 
     const key = item.dataset.panel;
     if (key !== "profil") {
-      // Pour cette démo, seul le panneau "Profil et compte" a un contenu complet.
-      // Les autres affichent une info visuelle temporaire.
       showToast(`Section "${panelLabels[key]}" — contenu à venir.`);
     }
+  });
+});
+
+// ============== CHARGEMENT DES DONNÉES UTILISATEUR ==============
+function loadSettingsFromFirebase() {
+  const user = firebase.auth().currentUser;
+  console.log("[SETTINGS] loadSettingsFromFirebase - user:", user ? user.uid : "null");
+  if (!user) return;
+
+  firebase.database().ref("users/" + user.uid).once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    console.log("[SETTINGS] données reçues:", data);
+
+    const fullNameEl = document.querySelector('.field-value[data-field="fullName"]');
+    console.log("[SETTINGS] settingsFullName trouvé:", !!fullNameEl, fullNameEl ? fullNameEl.textContent : "");
+    if (fullNameEl) {
+      const fullName = (data.fullName || data.firstName || user.displayName || "Utilisateur").trim();
+      fullNameEl.textContent = fullName || "Utilisateur";
+    }
+
+    const phoneEl = document.querySelector('.field-value[data-field="phone"]');
+    if (phoneEl) {
+      const phone = (data.phone || data.whatsapp || "").trim();
+      phoneEl.textContent = phone || "Non renseigné";
+    }
+
+    const emailEl = document.querySelector('.field-value[data-field="email"]');
+    if (emailEl) {
+      const email = (data.email || user.email || "").trim();
+      emailEl.textContent = email || "Non renseigné";
+    }
+
+    const residenceEl = document.querySelector('.field-value[data-field="residence"]');
+    if (residenceEl) {
+      residenceEl.textContent = (data.residence || data.location || "Non renseigné").trim();
+    }
+
+    const languageEl = document.getElementById("settingsLanguage");
+    if (languageEl && data.language) {
+      languageEl.value = data.language;
+    }
+
+    const currencyEl = document.getElementById("settingsCurrency");
+    if (currencyEl && data.currency) {
+      currencyEl.value = data.currency;
+    }
+
+    const timezoneEl = document.getElementById("settingsTimezone");
+    if (timezoneEl && data.timezone) {
+      timezoneEl.value = data.timezone;
+    }
+
+    const salaryFormatEl = document.getElementById("settingsSalaryFormat");
+    if (salaryFormatEl && data.salaryFormat) {
+      salaryFormatEl.value = data.salaryFormat;
+    }
+  }).catch((err) => {
+    console.error("[SETTINGS] erreur chargement:", err);
+  });
+}
+
+// ============== SAUVEGARDE DES PRÉFÉRENCES ==============
+document.querySelectorAll(".pref-select").forEach(select => {
+  select.addEventListener("change", () => {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const key = select.id;
+    let field = "";
+    let value = select.value;
+
+    if (key === "settingsLanguage") field = "language";
+    else if (key === "settingsCurrency") field = "currency";
+    else if (key === "settingsTimezone") field = "timezone";
+    else if (key === "settingsSalaryFormat") field = "salaryFormat";
+    else return;
+
+    firebase.database().ref("users/" + user.uid).update({ [field]: value })
+      .then(() => showToast(`Préférence mise à jour : ${value}`))
+      .catch((err) => showToast("Erreur lors de la sauvegarde"));
   });
 });
 
@@ -45,9 +124,87 @@ function showToast(message) {
 }
 
 // ============== MODIFIER LE PROFIL ==============
+let profileEditing = false;
+
 document.getElementById("editProfileBtn").addEventListener("click", () => {
-  showToast("Ouverture de l'édition du profil...");
+  const btn = document.getElementById("editProfileBtn");
+  if (!profileEditing) {
+    enableProfileEditMode();
+    btn.textContent = "Enregistrer";
+    profileEditing = true;
+  } else {
+    saveProfileChanges();
+    btn.textContent = "Modifier le profil";
+    profileEditing = false;
+  }
 });
+
+function enableProfileEditMode() {
+  document.querySelectorAll(".field-value[data-field]").forEach(el => {
+    const field = el.dataset.field;
+    const inputType = el.dataset.inputType || "text";
+    const currentText = el.textContent.replace("✅ Vérifié", "").trim();
+
+    el.innerHTML = "";
+    const input = document.createElement("input");
+    input.type = inputType;
+    input.value = currentText;
+    input.className = "profile-edit-input";
+    input.dataset.field = field;
+    el.appendChild(input);
+    input.focus();
+  });
+}
+
+function saveProfileChanges() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const updates = {};
+  document.querySelectorAll(".field-value[data-field]").forEach(el => {
+    const input = el.querySelector("input");
+    if (input && input.dataset.field) {
+      updates[input.dataset.field] = input.value.trim();
+    }
+  });
+
+  const btn = document.getElementById("editProfileBtn");
+  btn.textContent = "Enregistrement...";
+  btn.disabled = true;
+
+  firebase.database().ref("users/" + user.uid).update(updates)
+    .then(() => {
+      refreshProfileDisplay();
+      showToast("Profil enregistré avec succès");
+    })
+    .catch((err) => {
+      showToast("Erreur lors de l'enregistrement");
+      console.error(err);
+    })
+    .finally(() => {
+      btn.disabled = false;
+    });
+}
+
+function refreshProfileDisplay() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  firebase.database().ref("users/" + user.uid).once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+
+    document.querySelectorAll(".field-value[data-field]").forEach(el => {
+      const field = el.dataset.field;
+      const value = data[field] || "";
+
+      if (value) {
+        el.textContent = value;
+      } else {
+        el.textContent = "Non renseigné";
+      }
+    });
+  });
+}
 
 // ============== TELECHARGER DONNEES ==============
 document.getElementById("downloadDataBtn").addEventListener("click", function () {
@@ -83,9 +240,12 @@ document.querySelectorAll(".link-btn").forEach(btn => {
   });
 });
 
-// ============== SELECTS PREFERENCES ==============
-document.querySelectorAll(".pref-select").forEach(select => {
-  select.addEventListener("change", () => {
-    showToast(`Préférence mise à jour : ${select.value}`);
-  });
+// ============== INIT ==============
+console.log("[SETTINGS] init - currentUser:", firebase.auth().currentUser ? firebase.auth().currentUser.uid : "null");
+
+firebase.auth().onAuthStateChanged((user) => {
+  console.log("[SETTINGS] onAuthStateChanged:", user ? user.uid : "null");
+  if (!user) return;
+  console.log("[SETTINGS] chargement des données pour:", user.uid);
+  loadSettingsFromFirebase();
 });

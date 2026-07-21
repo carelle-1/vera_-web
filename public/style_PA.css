@@ -175,6 +175,11 @@ select{font-family:inherit;}
 .field-label{font-size:11px;color:var(--muted);margin-bottom:4px;}
 .field-value{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .verified-tag{font-size:10px;font-weight:700;color:var(--green);}
+.profile-edit-input{
+  width:100%;max-width:320px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;
+  font-size:13px;font-weight:600;color:var(--text);outline:none;background:#fff;
+}
+.profile-edit-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,107,245,0.12);}
 
 /* PREF ROWS */
 .pref-row,.toggle-row,.sec-row{

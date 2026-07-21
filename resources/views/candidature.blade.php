@@ -16,12 +16,12 @@
 
     <!-- TABS -->
     <div class="tabs" id="tabs">
-      <button class="tab active" data-status="all">Toutes <span>17</span></button>
-      <button class="tab" data-status="new">Premières <span>5</span></button>
-      <button class="tab" data-status="response">Réponses <span>3</span></button>
-      <button class="tab" data-status="offer">Offres <span>2</span></button>
-      <button class="tab" data-status="interview">Entretiens <span>4</span></button>
-      <button class="tab" data-status="confirmed">Confirmées <span>1</span></button>
+      <button class="tab active" data-status="all">Toutes <span>0</span></button>
+      <button class="tab" data-status="new">Premières <span>0</span></button>
+      <button class="tab" data-status="response">Réponses <span>0</span></button>
+      <button class="tab" data-status="offer">Offres <span>0</span></button>
+      <button class="tab" data-status="interview">Entretiens <span>0</span></button>
+      <button class="tab" data-status="confirmed">Confirmées <span>0</span></button>
     </div>
 
     <!-- CONTENT GRID -->
@@ -61,14 +61,14 @@
           </div>
           <div class="donut-wrap">
             <svg viewBox="0 0 120 120" id="donutSvg"></svg>
-            <div class="donut-center"><span id="donutTotal">47</span><small>Total</small></div>
+            <div class="donut-center"><span id="donutTotal">0</span><small>Total</small></div>
           </div>
           <ul class="legend" id="legend"></ul>
         </div>
 
         <div class="card rate-card">
           <div class="card-head-row"><span>Taux de réponse</span></div>
-          <div class="rate-value">38% <span class="up">↗ 9%</span></div>
+          <div class="rate-value" id="rateValue">0% <span class="up">↗ 0%</span></div>
           <svg class="sparkline" viewBox="0 0 200 60" preserveAspectRatio="none">
             <polyline points="0,50 30,42 60,45 90,30 120,34 150,18 180,22 200,10" />
           </svg>
@@ -78,11 +78,11 @@
           <div class="card-head-row"><span>Actions recommandées par VERA</span></div>
           <div class="reco-item">
             <div class="reco-icon blue">✉</div>
-            <div class="reco-text">Envoie un message de relance à Spotify</div>
+            <div class="reco-text">Envoie un message de relance</div>
           </div>
           <div class="reco-item">
             <div class="reco-icon orange">📅</div>
-            <div class="reco-text">Prépare ton entretien chez Canva</div>
+            <div class="reco-text">Prépare ton entretien</div>
           </div>
           <div class="reco-item">
             <div class="reco-icon green">🎯</div>
