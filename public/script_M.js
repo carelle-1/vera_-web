@@ -417,18 +417,83 @@ function renderConversationMessages(messages) {
       if (m.text) contentHtml += `<div>${escapeHtml(m.text)}</div>`;
     }
 
+    const rowClass = isUser ? "user" : "vera";
+    const bubbleStyle = isUser 
+      ? 'background:#7dd3fc;color:#0f1730;border-color:#38bdf8;' 
+      : 'background:#86efac;color:#0f1730;border-color:#22c55e;';
+
     return `
-      <div class="msg-row ${isUser ? "user" : ""}">
+      <div class="msg-row ${rowClass}">
         ${!isUser ? `<div class="msg-avatar-sm">${getAvatarForRecipient()}</div>` : ""}
-        <div class="msg-bubble">
+        <div class="msg-bubble" style="${bubbleStyle}">
           ${contentHtml}
-          <span class="msg-time">${formatTime(m.timestamp)} <span class="msg-status">${getMessageStatusIcon(m, isUser)}</span></span>
+          <span class="msg-time" style="color:${isUser ? '#0c4a6e' : '#14532d'}">${formatTime(m.timestamp)} <span class="msg-status">${getMessageStatusIcon(m, isUser)}</span></span>
         </div>
       </div>
     `;
   }).join("");
 
   container.scrollTop = container.scrollHeight;
+}
+
+function appendUserMessageToChat(messageData) {
+  const container = document.getElementById("chatMessages");
+  if (!container) return;
+  const typing = document.getElementById("typingIndicator");
+  if (typing) typing.remove();
+
+  const messageHtml = `
+    <div class="msg-row user">
+      <div class="msg-bubble" style="background:#7dd3fc;color:#0f1730;border-color:#38bdf8;">
+        ${escapeHtml(messageData.text || "")}
+        <span class="msg-time" style="color:#0c4a6e;">${formatTime(Date.now())} <span class="msg-status">${getMessageStatusIcon({read:false}, true)}</span></span>
+      </div>
+    </div>
+  `;
+  container.insertAdjacentHTML("beforeend", messageHtml);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendVeraMessageToChat(messageData) {
+  const container = document.getElementById("chatMessages");
+  if (!container) return;
+  const typing = document.getElementById("typingIndicator");
+  if (typing) typing.remove();
+
+  const messageHtml = `
+    <div class="msg-row vera">
+      <div class="msg-avatar-sm">${getAvatarForRecipient()}</div>
+      <div class="msg-bubble" style="background:#86efac;color:#0f1730;border-color:#22c55e;">
+        ${escapeHtml(messageData.text || "")}
+        <span class="msg-time" style="color:#14532d;">${formatTime(Date.now())}</span>
+      </div>
+    </div>
+  `;
+  container.insertAdjacentHTML("beforeend", messageHtml);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTypingIndicator() {
+  const container = document.getElementById("chatMessages");
+  if (!container) return;
+  hideTypingIndicator();
+  const typingHtml = `
+    <div class="msg-row vera" id="typingIndicator">
+      <div class="msg-avatar-sm">${getAvatarForRecipient()}</div>
+      <div class="typing-indicator" style="background:#86efac;border-color:#22c55e;color:#14532d;">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+        <span>VERA est en train d'écrire...</span>
+      </div>
+    </div>
+  `;
+  container.insertAdjacentHTML("beforeend", typingHtml);
+  container.scrollTop = container.scrollHeight;
+  console.log("[VERA] typing indicator shown");
+}
+
+function hideTypingIndicator() {
+  const indicator = document.getElementById("typingIndicator");
+  if (indicator) indicator.remove();
 }
 
 function getAvatarForRecipient() {
@@ -525,15 +590,16 @@ function sendMessage() {
       text: text || "",
       type: "text"
     };
-    console.log("[VERA] sending message to backend:", userMessage);
+
     saveMessageToFirebase(recipientId, userMessage)
       .then(() => {
         clearPreview();
         input.value = "";
+        appendUserMessageToChat(userMessage);
+        showTypingIndicator();
         return getFirebaseIdToken();
       })
       .then(idToken => {
-        console.log("[VERA] token obtained, calling backend...");
         return fetch("/messages/send", {
           method: "POST",
           headers: {
@@ -544,7 +610,6 @@ function sendMessage() {
         });
       })
       .then(res => {
-        console.log("[VERA] response status:", res.status);
         if (!res.ok) {
           return res.json().then(data => {
             throw new Error(data.message || "Erreur HTTP " + res.status);
@@ -553,21 +618,23 @@ function sendMessage() {
         return res.json();
       })
       .then(data => {
-        console.log("[VERA] backend reply:", data);
+        hideTypingIndicator();
         if (data.success && data.reply) {
           const replyData = {
             text: data.reply,
             type: "text"
           };
-          return saveMessageToFirebase(recipientId, replyData);
+          return saveMessageToFirebase(recipientId, replyData).then(() => replyData);
         }
         throw new Error("Réponse VERA vide");
       })
-      .then(() => {
-        loadConversationMessages(recipientId);
-        showToast("Message envoyé");
+      .then(replyData => {
+        if (replyData) {
+          appendVeraMessageToChat(replyData);
+        }
       })
       .catch(err => {
+        hideTypingIndicator();
         console.error("Erreur chat VERA:", err);
         showToast("Erreur lors de l'envoi");
       });

@@ -16,6 +16,10 @@
   --radius-lg:20px;
   --radius-md:14px;
   --radius-sm:10px;
+  --sky:#7dd3fc;
+  --sky-dark:#38bdf8;
+  --green-light:#86efac;
+  --green-dark:#22c55e;
 }
 
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -200,6 +204,7 @@ a{color:inherit;}
 
 .msg-row{display:flex;gap:10px;max-width:80%;}
 .msg-row.user{align-self:flex-end;flex-direction:row-reverse;}
+.msg-row.vera{align-self:flex-start;}
 .msg-avatar-sm{
   width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--blue-light),var(--blue-dark));
   display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex-shrink:0;
@@ -208,9 +213,19 @@ a{color:inherit;}
   background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 14px;
   font-size:12.5px;line-height:1.5;
 }
-.msg-row.user .msg-bubble{background:var(--blue);color:#fff;border-color:var(--blue);}
+.msg-row.user .msg-bubble{background:var(--sky);color:#0f1730;border-color:var(--sky-dark);}
+.msg-row.vera .msg-bubble{background:var(--green-light);color:#0f1730;border-color:var(--green-dark);}
 .msg-time{font-size:10px;color:var(--muted);margin-top:4px;display:block;text-align:right;}
-.msg-row.user .msg-time{color:#d7e2ff;}
+.msg-row.user .msg-time{color:#0c4a6e;}
+.msg-row.vera .msg-time{color:#14532d;}
+
+/* Typing indicator */
+.typing-indicator{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--green-light);border:1px solid var(--green-dark);border-radius:14px;font-size:11.5px;color:#14532d;max-width:fit-content;}
+.typing-dots{display:flex;gap:4px;}
+.typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--green-dark);animation:typing 1.2s infinite;}
+.typing-dots span:nth-child(2){animation-delay:.2s;}
+.typing-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes typing{0%,60%,100%{opacity:.4;transform:translateY(0);}30%{opacity:1;transform:translateY(-4px);}}
 
 /* Message status icons */
 .msg-status{font-size:10px;margin-left:4px;display:inline-flex;align-items:center;gap:1px;}
