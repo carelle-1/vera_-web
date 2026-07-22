@@ -73,7 +73,7 @@
               </div>
 
               <div class="profile-info-row">
-                <img class="profile-avatar" src="https://i.pravatar.cc/120?img=13" alt="avatar">
+                <img class="profile-avatar" id="settingsProfileAvatar" src="" alt="avatar">
                 <div class="profile-fields">
                   <div class="field">
                     <div class="field-label">Nom complet</div>
@@ -237,35 +237,9 @@
                 <button class="link-btn" id="downloadDataBtn">T&eacute;l&eacute;charger</button>
               </div>
             </div>
-
-            <div class="card">
-              <div class="card-title">S&eacute;curit&eacute; du compte</div>
-              <div class="card-sub">Prot&eacute;gez votre compte et vos donn&eacute;es.</div>
-
-              <div class="sec-row">
-                <div class="pref-icon">&#x1F511;</div>
-                <div class="pref-text"><div class="pref-title">Mot de passe</div><div class="pref-sub">••••••••</div></div>
-                <button class="link-btn" id="changePasswordBtn">Modifier</button>
-              </div>
-              <div class="sec-row">
-                <div class="pref-icon">&#x1F510;</div>
-                <div class="pref-text"><div class="pref-title">Authentification &agrave; deux facteurs</div><div class="pref-sub">Recommand&eacute; pour plus de s&eacute;curit&eacute;</div></div>
-                <label class="switch"><input type="checkbox" checked data-security="twoFactor"><span class="slider"></span></label>
-              </div>
-              <div class="sec-row">
-                <div class="pref-icon">&#x1F4F1;</div>
-                <div class="pref-text"><div class="pref-title">Sessions actives</div><div class="pref-sub">3 sessions actives</div></div>
-                <button class="link-btn" id="viewSessionsBtn">Voir</button>
-              </div>
-              <div class="sec-row">
-                <div class="pref-icon">&#x1F6AA;</div>
-                <div class="pref-text"><div class="pref-title">D&eacute;connexion de tous les appareils</div><div class="pref-sub">S&eacute;curiser votre compte</div></div>
-                <button class="link-btn" id="logoutAllBtn">D&eacute;connecter</button>
-              </div>
-            </div>
           </div>
 
-          <!-- PANEL: CANDIDATURES -->
+            <!-- PANEL: CANDIDATURES -->
           <div class="settings-panel" id="panelCandidatures" style="display:none;">
             <div class="card">
               <div class="card-title">CV et lettres de motivation</div>
@@ -280,10 +254,11 @@
                     <input type="file" id="cvFileInput" accept=".pdf,.doc,.docx" style="font-size:12px;">
                   </div>
                   <div id="cvView" style="display:none;margin-top:8px;">
-                    <a id="cvLink" href="#" target="_blank" class="link-btn" style="display:inline-flex;align-items:center;gap:4px;">&#x1F4C4; Voir le CV</a>
+                    <a id="cvLink" href="#" target="_blank" class="btn-outline view-link-btn">Voir</a>
                   </div>
                 </div>
                 <div class="pref-actions" id="cvActions">
+                  <button class="link-btn" id="cvAddBtn" style="display:none;">Ajouter</button>
                   <button class="link-btn" id="cvReplaceBtn">Remplacer</button>
                   <button class="link-btn" id="cvDeleteBtn" style="color:var(--red);display:none;">Supprimer</button>
                 </div>
@@ -298,7 +273,7 @@
                     <input type="file" id="coverLetterFileInput" accept=".pdf,.doc,.docx" style="font-size:12px;">
                   </div>
                   <div id="coverLetterView" style="display:none;margin-top:8px;">
-                    <a id="coverLetterLink" href="#" target="_blank" class="link-btn" style="display:inline-flex;align-items:center;gap:4px;">&#x1F4C4; Voir le document</a>
+                    <a id="coverLetterLink" href="#" target="_blank" class="btn-outline view-link-btn">Voir</a>
                   </div>
                 </div>
                 <div class="pref-actions" id="coverLetterActions">
@@ -469,63 +444,67 @@
         <!-- RIGHT COLUMN -->
         <aside class="side-col">
 
-          <div class="card">
-            <div class="card-title-row"><span class="shield-icon green">&#x1F6E1;</span><div><div class="card-title">S&eacute;curit&eacute; du compte</div><div class="card-sub">Prot&eacute;gez votre compte et vos donn&eacute;es.</div></div></div>
+           <div class="card">
+             <div class="card-title-row"><span class="shield-icon purple">&#x1F50E;</span><div><div class="card-title">Confidentialit&eacute;</div><div class="card-sub">G&eacute;rez vos donn&eacute;es et votre visibilit&eacute;.</div></div></div>
 
-            <div class="sec-row">
-              <div class="pref-icon">&#x1F511;</div>
-              <div class="pref-text"><div class="pref-title">Mot de passe</div><div class="pref-sub">••••••••</div></div>
-              <button class="link-btn" id="changePasswordBtn">Modifier</button>
-            </div>
-            <div class="sec-row">
-              <div class="pref-icon">&#x1F510;</div>
-              <div class="pref-text"><div class="pref-title">Authentification &agrave; deux facteurs</div><div class="pref-sub">Recommand&eacute; pour plus de s&eacute;curit&eacute;</div></div>
-              <label class="switch"><input type="checkbox" checked data-security="twoFactor"><span class="slider"></span></label>
-            </div>
-            <div class="sec-row">
-              <div class="pref-icon">&#x1F4F1;</div>
-              <div class="pref-text"><div class="pref-title">Sessions actives</div><div class="pref-sub">3 sessions actives</div></div>
-              <button class="link-btn" id="viewSessionsBtn">Voir</button>
-            </div>
-            <div class="sec-row">
-              <div class="pref-icon">&#x1F6AA;</div>
-              <div class="pref-text"><div class="pref-title">D&eacute;connexion de tous les appareils</div><div class="pref-sub">S&eacute;curiser votre compte</div></div>
-              <button class="link-btn" id="logoutAllBtn">D&eacute;connecter</button>
-            </div>
-          </div>
+             <div class="sec-row">
+               <div class="pref-icon">&#x1F441;</div>
+               <div class="pref-text"><div class="pref-title">Profil public</div><div class="pref-sub">Rendre mon profil visible aux recruteurs</div></div>
+               <label class="switch"><input type="checkbox" checked data-privacy="publicProfile"><span class="slider"></span></label>
+             </div>
+             <div class="sec-row">
+               <div class="pref-icon">&#x1F50D;</div>
+               <div class="pref-text"><div class="pref-title">Visible par les recruteurs</div><div class="pref-sub">Autoriser les recruteurs &agrave; me trouver</div></div>
+               <label class="switch"><input type="checkbox" checked data-privacy="visibleByRecruiters"><span class="slider"></span></label>
+             </div>
+             <div class="sec-row">
+               <div class="pref-icon">&#x1F4CA;</div>
+               <div class="pref-text"><div class="pref-title">Donn&eacute;es analytiques</div><div class="pref-sub">Aider &agrave; am&eacute;liorer VERA</div></div>
+               <label class="switch"><input type="checkbox" data-privacy="analytics"><span class="slider"></span></label>
+             </div>
+             <div class="sec-row">
+               <div class="pref-icon">&#x1F4E5;</div>
+               <div class="pref-text"><div class="pref-title">T&eacute;l&eacute;chargement de donn&eacute;es</div><div class="pref-sub">T&eacute;l&eacute;charger vos donn&eacute;es personnelles</div></div>
+               <button class="link-btn" id="downloadDataBtn">T&eacute;l&eacute;charger</button>
+             </div>
+           </div>
 
-          <div class="card">
-            <div class="card-title-row"><span class="shield-icon purple">&#x1F50E;</span><div><div class="card-title">Confidentialit&eacute;</div><div class="card-sub">G&eacute;rez vos donn&eacute;es et votre visibilit&eacute;.</div></div></div>
+           <div class="card">
+             <div class="card-title-row"><span class="shield-icon green">&#x1F6E1;</span><div><div class="card-title">S&eacute;curit&eacute; du compte</div><div class="card-sub">Prot&eacute;gez votre compte et vos donn&eacute;es.</div></div></div>
 
-            <div class="sec-row">
-              <div class="pref-icon">&#x1F441;</div>
-              <div class="pref-text"><div class="pref-title">Profil public</div><div class="pref-sub">Rendre mon profil visible aux recruteurs</div></div>
-              <label class="switch"><input type="checkbox" checked data-privacy="publicProfile"><span class="slider"></span></label>
-            </div>
-            <div class="sec-row">
-              <div class="pref-icon">&#x1F50D;</div>
-              <div class="pref-text"><div class="pref-title">Visible par les recruteurs</div><div class="pref-sub">Autoriser les recruteurs &agrave; me trouver</div></div>
-              <label class="switch"><input type="checkbox" checked data-privacy="visibleByRecruiters"><span class="slider"></span></label>
-            </div>
-            <div class="sec-row">
-              <div class="pref-icon">&#x1F4CA;</div>
-              <div class="pref-text"><div class="pref-title">Donn&eacute;es analytiques</div><div class="pref-sub">Aider &agrave; am&eacute;liorer VERA</div></div>
-              <label class="switch"><input type="checkbox" data-privacy="analytics"><span class="slider"></span></label>
-            </div>
-            <div class="sec-row">
-              <div class="pref-icon">&#x1F4E5;</div>
-              <div class="pref-text"><div class="pref-title">T&eacute;l&eacute;chargement de donn&eacute;es</div><div class="pref-sub">T&eacute;l&eacute;charger vos donn&eacute;es personnelles</div></div>
-              <button class="link-btn" id="downloadDataBtn">T&eacute;l&eacute;charger</button>
-            </div>
-          </div>
+             <div class="sec-row">
+               <div class="pref-icon">&#x1F511;</div>
+               <div class="pref-text">
+                 <div class="pref-title">Mot de passe actuel</div>
+                 <div class="pref-sub" id="passwordDisplay">••••••••</div>
+                 <input type="password" id="passwordInput" class="profile-edit-input" style="display:none;margin-top:6px;max-width:260px;" placeholder="Nouveau mot de passe" autocomplete="new-password">
+               </div>
+               <button type="button" class="link-btn" id="changePasswordBtn">Modifier</button>
+             </div>
+             <div class="sec-row">
+               <div class="pref-icon">&#x1F510;</div>
+               <div class="pref-text"><div class="pref-title">Authentification &agrave; deux facteurs</div><div class="pref-sub">Recommand&eacute; pour plus de s&eacute;curit&eacute;</div></div>
+               <label class="switch"><input type="checkbox" checked data-security="twoFactor"><span class="slider"></span></label>
+             </div>
+             <div class="sec-row">
+               <div class="pref-icon">&#x1F4F1;</div>
+               <div class="pref-text"><div class="pref-title">Sessions actives</div><div class="pref-sub">3 sessions actives</div></div>
+               <button class="link-btn" id="viewSessionsBtn">Voir</button>
+             </div>
+             <div class="sec-row">
+               <div class="pref-icon">&#x1F6AA;</div>
+               <div class="pref-text"><div class="pref-title">D&eacute;connexion de tous les appareils</div><div class="pref-sub">S&eacute;curiser votre compte</div></div>
+               <button class="link-btn" id="logoutAllBtn">D&eacute;connecter</button>
+             </div>
+           </div>
 
-          <div class="card danger-card">
-            <div class="card-title danger">Suppression du compte</div>
-            <p class="danger-text">Cette action est irr&eacute;versible et supprimera d&eacute;finitivement toutes vos donn&eacute;es.</p>
-            <button class="btn-danger" id="deleteAccountBtn">&#x1F5D1; Supprimer mon compte</button>
-          </div>
+           <div class="card danger-card">
+             <div class="card-title danger">Suppression du compte</div>
+             <p class="danger-text">Cette action est irr&eacute;versible et supprimera d&eacute;finitivement toutes vos donn&eacute;es.</p>
+             <button class="btn-danger" id="deleteAccountBtn">&#x1F5D1; Supprimer mon compte</button>
+           </div>
 
-        </aside>
+         </aside>
 
       </div>
     </div>

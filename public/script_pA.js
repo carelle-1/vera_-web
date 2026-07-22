@@ -134,6 +134,64 @@ function refreshProfileDisplay() {
   });
 }
 
+// ============== MODIFIER LE MOT DE PASSE ==============
+let passwordEditing = false;
+
+const changePasswordBtn = document.getElementById("changePasswordBtn");
+if (changePasswordBtn) {
+  changePasswordBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!passwordEditing) {
+      const display = document.getElementById("passwordDisplay");
+      const input = document.getElementById("passwordInput");
+      if (display) display.style.display = "none";
+      if (input) {
+        input.style.display = "block";
+        input.value = "";
+        input.focus();
+      }
+      changePasswordBtn.textContent = "Enregistrer";
+      passwordEditing = true;
+    } else {
+      savePasswordChanges();
+      changePasswordBtn.textContent = "Modifier";
+      passwordEditing = false;
+    }
+  });
+}
+
+function savePasswordChanges() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const newPassword = document.getElementById("passwordInput").value;
+  const display = document.getElementById("passwordDisplay");
+  const input = document.getElementById("passwordInput");
+
+  if (!newPassword) {
+    showToast("Veuillez saisir un mot de passe");
+    return;
+  }
+
+  changePasswordBtn.textContent = "Enregistrement...";
+  changePasswordBtn.disabled = true;
+
+  user.updatePassword(newPassword)
+    .then(() => {
+      showToast("Mot de passe modifi&eacute; avec succ&egrave;s");
+      if (display) display.style.display = "block";
+      if (input) input.style.display = "none";
+    })
+    .catch((err) => {
+      showToast("Erreur lors de la modification");
+      console.error(err);
+    })
+    .finally(() => {
+      changePasswordBtn.disabled = false;
+    });
+}
+
 // ============== CHARGEMENT DES DONNÉES UTILISATEUR ==============
 function loadSettingsFromFirebase() {
   const user = firebase.auth().currentUser;
@@ -141,6 +199,16 @@ function loadSettingsFromFirebase() {
 
   firebase.database().ref("users/" + user.uid).once("value").then((snapshot) => {
     const data = snapshot.val() || {};
+
+    const avatarEl = document.getElementById("settingsProfileAvatar");
+    const photoURL = data.photoURL || user.photoURL || "";
+    if (avatarEl) {
+      if (photoURL) {
+        avatarEl.src = photoURL;
+      } else {
+        avatarEl.src = "https://i.pravatar.cc/120?img=13";
+      }
+    }
 
     const fullNameEl = document.querySelector('.field-value[data-field="fullName"]');
     if (fullNameEl) {
@@ -447,15 +515,17 @@ function loadCandidaturesFromFirebase() {
 
 function renderCandidatures() {
   const cvSub = document.getElementById("cvSub");
+  const cvAddBtn = document.getElementById("cvAddBtn");
   const cvDeleteBtn = document.getElementById("cvDeleteBtn");
   const cvView = document.getElementById("cvView");
   const cvLink = document.getElementById("cvLink");
   if (cvSub) cvSub.textContent = candidaturesData.cvName || "Aucun CV t&eacute;l&eacute;charg&eacute;";
+  if (cvAddBtn) cvAddBtn.style.display = candidaturesData.cvUrl ? "none" : "inline-block";
   if (cvDeleteBtn) cvDeleteBtn.style.display = candidaturesData.cvUrl ? "inline-block" : "none";
   if (cvView) cvView.style.display = candidaturesData.cvUrl ? "block" : "none";
   if (cvLink && candidaturesData.cvUrl) {
     cvLink.href = candidaturesData.cvUrl;
-    cvLink.textContent = "&#x1F4C4; Voir le CV";
+    cvLink.textContent = "Voir";
   }
 
   const coverLetterSub = document.getElementById("coverLetterSub");
@@ -470,7 +540,7 @@ function renderCandidatures() {
   if (coverLetterView) coverLetterView.style.display = candidaturesData.coverLetterUrl ? "block" : "none";
   if (coverLetterLink && candidaturesData.coverLetterUrl) {
     coverLetterLink.href = candidaturesData.coverLetterUrl;
-    coverLetterLink.textContent = "&#x1F4C4; Voir le document";
+    coverLetterLink.textContent = "Voir";
   }
 
   const portfolioSub = document.getElementById("portfolioSub");
@@ -482,10 +552,63 @@ function renderCandidatures() {
 }
 
 // CV
+document.getElementById("cvAddBtn")?.addEventListener("click", () => {
+  const edit = document.getElementById("cvEdit");
+  const addBtn = document.getElementById("cvAddBtn");
+  if (edit) edit.style.display = "block";
+  if (addBtn) addBtn.style.display = "none";
+});
+
 document.getElementById("cvReplaceBtn")?.addEventListener("click", () => {
   const input = document.getElementById("cvFileInput");
   if (!input) return;
   input.click();
+});
+
+document.getElementById("cvFileInput")?.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const btn = document.getElementById("cvAddBtn") || document.getElementById("cvReplaceBtn");
+  if (btn) {
+    btn.textContent = "Envoi...";
+    btn.disabled = true;
+  }
+
+  uploadFileToServer('/upload-cv', file)
+    .then(data => {
+      if (data.success) {
+        return firebase.database().ref("users/" + user.uid + "/candidatures").update({
+          cvUrl: data.url,
+          cvName: data.name,
+          cvPublicId: data.publicId
+        });
+      }
+    })
+    .then(() => {
+      return firebase.database().ref("users/" + user.uid + "/candidatures").once("value");
+    })
+    .then((snap) => {
+      const data = snap.val() || {};
+      candidaturesData.cvUrl = data.cvUrl || "";
+      candidaturesData.cvName = data.cvName || "";
+      const cvEdit = document.getElementById("cvEdit");
+      if (cvEdit) cvEdit.style.display = "none";
+      renderCandidatures();
+      showToast("CV mis &agrave; jour");
+    })
+    .catch((err) => {
+      console.error("[CAND] Erreur:", err);
+      showToast("Erreur lors de la sauvegarde du CV");
+    })
+    .finally(() => {
+      if (btn) {
+        btn.textContent = "Remplacer";
+        btn.disabled = false;
+      }
+    });
 });
 
 function getFirebaseIdToken() {
@@ -520,46 +643,6 @@ function uploadFileToServer(endpoint, file) {
     });
   });
 }
-
-document.getElementById("cvFileInput")?.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const user = firebase.auth().currentUser;
-  if (!user) return;
-  
-  const btn = document.getElementById("cvReplaceBtn");
-  btn.textContent = "Envoi...";
-  btn.disabled = true;
-
-  uploadFileToServer('/upload-cv', file)
-    .then(data => {
-      if (data.success) {
-        return firebase.database().ref("users/" + user.uid + "/candidatures").update({
-          cvUrl: data.url,
-          cvName: data.name,
-          cvPublicId: data.publicId
-        });
-      }
-    })
-    .then(() => {
-      return firebase.database().ref("users/" + user.uid + "/candidatures").once("value");
-    })
-    .then((snap) => {
-      const data = snap.val() || {};
-      candidaturesData.cvUrl = data.cvUrl || "";
-      candidaturesData.cvName = data.cvName || "";
-      renderCandidatures();
-      showToast("CV mis &agrave; jour");
-    })
-    .catch((err) => {
-      console.error("[CAND] Erreur:", err);
-      showToast("Erreur lors de la sauvegarde du CV");
-    })
-    .finally(() => {
-      btn.textContent = "Remplacer";
-      btn.disabled = false;
-    });
-});
 
 document.getElementById("cvDeleteBtn")?.addEventListener("click", () => {
   const user = firebase.auth().currentUser;

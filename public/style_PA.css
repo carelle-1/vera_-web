@@ -202,6 +202,13 @@ select{font-family:inherit;}
 
 .link-btn{background:none;border:none;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .link-btn[target="_blank"]{text-decoration:underline;}
+.view-link-btn{
+  background:#fff;border:1px solid var(--blue);color:var(--blue);
+  padding:7px 14px;border-radius:9px;font-size:12px;font-weight:700;
+  cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;
+  text-decoration:none;transition:background .15s ease,color .15s ease;
+}
+.view-link-btn:hover{background:rgba(59,107,245,0.08);}
 .pref-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
 .pref-edit input,.pref-edit textarea{width:100%;max-width:400px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:#fff;}
 .pref-edit textarea{resize:vertical;min-height:80px;}
@@ -238,9 +245,6 @@ select{font-family:inherit;}
 @media (max-width:820px){
   .app{height:auto;overflow:visible;}
   .sidebar{display:none;}
-  transition:width .2s ease;
-}
-
   .scroll-area{overflow:visible;}
   .profile-fields{grid-template-columns:1fr;}
   .settings-nav{grid-template-columns:1fr;}
