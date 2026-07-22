@@ -215,15 +215,18 @@ function renderObjectives() {
   const ref = objRef();
   if (!ref) return;
 
-  const q = search ? search.value.trim() : "";
+    const q = search ? search.value.trim() : "";
 
-  ref.once("value").then((snapshot) => {
-    const data = snapshot.val() || {};
-    const items = Object.keys(data).map((id) => ({ id, ...data[id] }));
-    const filtered = items.filter((o) => objMatches(o, q));
+    ref.once("value").then((snapshot) => {
+      const data = snapshot.val() || {};
+      const items = Object.keys(data).map((id) => ({ id, ...data[id] }));
+      const filtered = items.filter((o) => objMatches(o, q));
 
-    list.innerHTML = "";
-    if (filtered.length === 0) {
+      const addBtn = document.getElementById("objAddBtn");
+      if (addBtn) addBtn.style.display = items.length >= 1 ? "none" : "";
+
+      list.innerHTML = "";
+      if (filtered.length === 0) {
       empty.style.display = "block";
       empty.querySelector("p").textContent = q
         ? "Aucun objectif ne correspond à votre recherche."
@@ -338,9 +341,23 @@ function buildObjModal() {
     };
     const ref = objRef();
     if (!ref) return;
-    const task = objEditId ? ref.child(objEditId).update(payload) : ref.push(payload);
-    task.then(() => { closeObjModal(); renderObjectives(); })
-      .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
+
+    if (objEditId) {
+      ref.child(objEditId).update(payload)
+        .then(() => { closeObjModal(); renderObjectives(); })
+        .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
+    } else {
+      ref.once("value").then((snap) => {
+        const existing = snap.val() || {};
+        if (Object.keys(existing).length >= 1) {
+          alert("Vous ne pouvez ajouter qu'un seul objectif.");
+          return;
+        }
+        ref.push(payload)
+          .then(() => { closeObjModal(); renderObjectives(); })
+          .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
+      }).catch((err) => alert("Échec de la vérification : " + (err.message || err.code)));
+    }
   });
 }
 
