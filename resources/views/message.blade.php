@@ -5,38 +5,36 @@
 @endsection
 
 @section('content')
-<!-- PAGE HEAD -->
+    <!-- PAGE HEAD -->
     <div class="page-head">
       <div>
-        <h1>Mes messages <span class="cap">💬</span></h1>
-        <p>Échangez avec les entreprises, VERA et notre équipe. Nous sommes là pour vous accompagner.</p>
+        <h1>Messages <span class="cap">💬</span></h1>
+        <p>&Eacute;changez avec l'assistant VERA et notre &eacute;quipe. Nous sommes là pour vous accompagner.</p>
       </div>
       <button class="btn-primary" id="newMsgBtn">✉ Nouveau message</button>
     </div>
 
     <!-- TABS -->
     <div class="tabs" id="msgTabs">
-      <button class="tab active" data-filter="all">Toutes <span>12</span></button>
-      <button class="tab" data-filter="entreprises">Entreprises <span>6</span></button>
-      <button class="tab" data-filter="vera">VERA (IA) <span>3</span></button>
-      <button class="tab" data-filter="admin">Administrateurs <span>2</span></button>
-      <button class="tab" data-filter="unread">Non lues <span>5</span></button>
-      <button class="tab" data-filter="archived">Archivées</button>
+      <button class="tab active" data-filter="all">Toutes <span id="tabCountAll">0</span></button>
+      <button class="tab" data-filter="vera">VERA (IA)</button>
+      <button class="tab" data-filter="admin">Admins</button>
+      <button class="tab" data-filter="unread">Non lues <span id="tabCountUnread">0</span></button>
+      <button class="tab" data-filter="archived">Archiv&eacute;es</button>
     </div>
 
     <!-- MESSAGING LAYOUT -->
     <div class="messaging-layout">
 
-      <!-- CONVERSATION LIST -->
+      <!-- USERS LIST -->
       <section class="conv-panel">
         <div class="conv-search">
           <div class="search small">
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            <input type="text" id="convSearchInput" placeholder="Rechercher une conversation...">
+            <input type="text" id="userSearchInput" placeholder="Rechercher un utilisateur...">
           </div>
-          <button class="icon-square">🔧</button>
         </div>
-        <div class="conv-list" id="convList"></div>
+        <div class="conv-list" id="usersList"></div>
       </section>
 
       <!-- CHAT WINDOW -->

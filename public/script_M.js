@@ -1,87 +1,176 @@
-// ============== DONNÉES CONVERSATIONS ==============
-const conversations = [
-  {
-    id: 1, type: "vera", name: "VERA (Assistant IA)", avatar: "🤖", avatarBg: "linear-gradient(135deg,#5b8bff,#1e40c9)",
-    time: "10:30", preview: "Nous avons trouvé 3 nouvelles opportunités...", subtitle: "Bonne nouvelle ! 🎉", unread: 2
-  },
-  {
-    id: 2, type: "entreprises", name: "TechNova Solutions", avatar: "T", avatarBg: "#0ea5e9",
-    time: "09:15", preview: "Bonjour Junior, votre profil nous intéresse...", subtitle: "Marie Dubois", unread: 1
-  },
-  {
-    id: 3, type: "vera", name: "VERA (Assistant IA)", avatar: "🤖", avatarBg: "linear-gradient(135deg,#5b8bff,#1e40c9)",
-    time: "Hier", preview: "Je viens de postuler automatiquement pour...", subtitle: "Candidature envoyée ✅", unread: 1
-  },
-  {
-    id: 4, type: "admin", name: "Admin VERA", avatar: "V", avatarBg: "#3b6bf5",
-    time: "Hier", preview: "Nous avons mis à jour votre profil pour...", subtitle: "M. Patrice (Admin)", unread: 0
-  },
-  {
-    id: 5, type: "entreprises", name: "AlphaTech Academy", avatar: "A", avatarBg: "#8b5cf6",
-    time: "2 mai", preview: "Votre candidature au programme...", subtitle: "Équipe Recrutement", unread: 0
-  },
-  {
-    id: 6, type: "vera", name: "VERA (Assistant IA)", avatar: "🤖", avatarBg: "linear-gradient(135deg,#5b8bff,#1e40c9)",
-    time: "1 mai", preview: "Voici quelques conseils personnalisés pour...", subtitle: "Conseil carrière 💡", unread: 0
-  },
-  {
-    id: 7, type: "entreprises", name: "Innovatech Group", avatar: "I", avatarBg: "#16a34a",
-    time: "30 avr", preview: "Invitation à un entretien", subtitle: "Recruteur", unread: 0
-  },
-  {
-    id: 8, type: "admin", name: "Admin VERA", avatar: "V", avatarBg: "#3b6bf5",
-    time: "28 avr", preview: "Votre demande a été résolue", subtitle: "Support Utilisateur", unread: 0
-  }
-];
-
-let activeConvId = 1;
+let allUsers = [];
+let activeUserId = null;
 let currentFilter = "all";
 
-// ============== RENDU LISTE CONVERSATIONS ==============
-function renderConvList() {
-  const list = document.getElementById("convList");
-  const search = document.getElementById("convSearchInput").value.toLowerCase();
+function getInitials(firstName, lastName) {
+  const first = (firstName || "").trim().charAt(0).toUpperCase();
+  const last = (lastName || "").trim().charAt(0).toUpperCase();
+  return first || last || "?";
+}
 
-  const filtered = conversations.filter(c => {
+function getAvatarColor(name) {
+  const colors = ["#3b6bf5", "#16a34a", "#8b5cf6", "#0ea5e9", "#f59e0b", "#ef4444"];
+  let hash = 0;
+  for (let i = 0; i < (name || "").length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function getUserType(role) {
+  const r = (role || "").toLowerCase();
+  if (r.includes("admin")) return "admin";
+  if (r.includes("entreprise") || r.includes("company") || r.includes("recrut")) return "entreprises";
+  return "user";
+}
+
+function isAdminRole(role) {
+  const r = String(role || "").toLowerCase();
+  return r === "admin" || r === "administrateur" || r.includes("admin");
+}
+
+function updateTabCounts() {
+  const allCount = allUsers.length;
+  const unreadCount = allUsers.filter(u => u.unread > 0).length;
+  const allTab = document.getElementById("tabCountAll");
+  const unreadTab = document.getElementById("tabCountUnread");
+  if (allTab) allTab.textContent = allCount > 0 ? " " + allCount : "";
+  if (unreadTab) unreadTab.textContent = unreadCount > 0 ? " " + unreadCount : "";
+}
+
+function loadUsersFromFirebase() {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    firebase.auth().onAuthStateChanged((u) => {
+      if (u) loadUsersFromFirebase();
+    });
+    return;
+  }
+
+  firebase.database().ref("users").once("value").then((snapshot) => {
+    const rawData = snapshot.val();
+    console.log("[MESSAGES] raw users snapshot:", rawData);
+    console.log("[MESSAGES] snapshot exists:", snapshot.exists());
+
+    const data = rawData || {};
+    const adminUsers = [];
+    const debugRoles = [];
+
+    Object.keys(data).forEach((uid) => {
+      console.log("[MESSAGES] processing uid:", uid, "currentUser:", user.uid);
+      if (uid === user.uid) {
+        console.log("[MESSAGES] skipping current user");
+        return;
+      }
+      const u = data[uid];
+      const fullName = (u.fullName || u.firstName || "").trim();
+      const email = (u.email || "").trim();
+      const displayName = fullName || email || "Utilisateur";
+      console.log("[MESSAGES] user data:", { uid, fullName, email, role: u.role, jobTitle: u.jobTitle });
+      
+      if (!displayName || displayName === "Utilisateur") {
+        console.log("[MESSAGES] skipping - no displayName");
+        return;
+      }
+
+      const roleField = u.role || u.jobTitle || "";
+      debugRoles.push({ uid, fullName: displayName, roleField });
+
+      const role = String(roleField).toLowerCase();
+      console.log("[MESSAGES] role check:", role, "isAdmin:", isAdminRole(role));
+      
+      if (!isAdminRole(role)) {
+        console.log("[MESSAGES] skipping - not admin");
+        return;
+      }
+
+      const firstName = fullName || email || "Utilisateur";
+      const lastName = "";
+      const initials = getInitials(firstName, lastName);
+      const color = getAvatarColor(displayName);
+
+      adminUsers.push({
+        id: uid,
+        type: "admin",
+        name: displayName,
+        role: roleField || "Admin",
+        avatar: initials,
+        avatarBg: color,
+        status: u.online !== false ? "en ligne" : "hors ligne",
+        unread: 0
+      });
+    });
+
+    console.log("[MESSAGES] users roles:", debugRoles);
+    console.log("[MESSAGES] admins found:", adminUsers.length);
+
+    const veraUser = {
+      id: "vera",
+      type: "vera",
+      name: "VERA (Assistant IA)",
+      role: "Assistant IA",
+      avatar: "🤖",
+      avatarBg: "linear-gradient(135deg,#5b8bff,#1e40c9)",
+      status: "en ligne",
+      unread: 2
+    };
+
+    allUsers = [veraUser, ...adminUsers];
+    if (!activeUserId && allUsers.length > 0) activeUserId = allUsers[0].id;
+    updateTabCounts();
+    renderUsersList();
+    if (activeUserId) updateChatHeader(allUsers.find(u => u.id === activeUserId) || allUsers[0]);
+  }).catch((err) => {
+    console.error("Erreur chargement utilisateurs:", err);
+  });
+}
+
+// ============== RENDU LISTE UTILISATEURS ==============
+function renderUsersList() {
+  const list = document.getElementById("usersList");
+  const search = document.getElementById("userSearchInput").value.toLowerCase();
+
+  const filtered = allUsers.filter(u => {
     const typeOk =
       currentFilter === "all" ? true :
-      currentFilter === "unread" ? c.unread > 0 :
+      currentFilter === "unread" ? u.unread > 0 :
       currentFilter === "archived" ? false :
-      c.type === currentFilter;
-    const searchOk = (c.name + " " + c.subtitle).toLowerCase().includes(search);
+      u.type === currentFilter;
+    const searchOk = (u.name + " " + u.role).toLowerCase().includes(search);
     return typeOk && searchOk;
   });
 
-  list.innerHTML = filtered.map(c => `
-    <div class="conv-item ${c.id === activeConvId ? 'active' : ''}" data-id="${c.id}">
-      <div class="conv-avatar" style="background:${c.avatarBg}">${c.avatar}</div>
+  list.innerHTML = filtered.map(u => `
+    <div class="conv-item ${u.id === activeUserId ? 'active' : ''}" data-id="${u.id}">
+      <div class="conv-avatar" style="background:${u.avatarBg}">${u.avatar}</div>
       <div class="conv-body">
         <div class="conv-top">
-          <span class="conv-name">${c.name}</span>
-          <span class="conv-time">${c.time}</span>
+          <span class="conv-name">${u.name}</span>
         </div>
-        <div class="conv-sub">${c.subtitle}</div>
-        <div class="conv-preview">${c.preview}</div>
+        <div class="conv-sub">${u.role}</div>
+        <div class="conv-preview" style="color:${u.status === 'en ligne' ? 'var(--green)' : 'var(--muted)'}">
+          ${u.status === 'en ligne' ? '● En ligne' : '● Hors ligne'}
+        </div>
       </div>
-      ${c.unread > 0 ? `<span class="conv-unread">${c.unread}</span>` : ""}
+      ${u.unread > 0 ? `<span class="conv-unread">${u.unread}</span>` : ""}
     </div>
   `).join("");
 
   list.querySelectorAll(".conv-item").forEach(item => {
     item.addEventListener("click", () => {
-      activeConvId = parseInt(item.dataset.id);
-      const conv = conversations.find(c => c.id === activeConvId);
-      conv.unread = 0;
-      renderConvList();
-      updateChatHeader(conv);
+      activeUserId = item.dataset.id;
+      const user = allUsers.find(u => u.id === activeUserId);
+      if (user) {
+        user.unread = 0;
+        updateChatHeader(user);
+      }
+      renderUsersList();
     });
   });
 }
 
-function updateChatHeader(conv) {
-  document.getElementById("chatAvatar").textContent = conv.avatar;
-  document.getElementById("chatAvatar").style.background = conv.avatarBg;
-  document.querySelector(".chat-name").innerHTML = conv.name + (conv.type === "vera" ? ' <span class="ia-badge">IA</span>' : "");
+function updateChatHeader(user) {
+  document.getElementById("chatAvatar").textContent = user.avatar;
+  document.getElementById("chatAvatar").style.background = user.avatarBg;
+  document.querySelector(".chat-name").innerHTML = user.name + (user.role === "Assistant IA" ? ' <span class="ia-badge">IA</span>' : "");
 }
 
 // ============== FILTRES / TABS ==============
@@ -90,11 +179,15 @@ document.querySelectorAll(".tab").forEach(tab => {
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
     currentFilter = tab.dataset.filter;
-    renderConvList();
+    renderUsersList();
   });
 });
 
-document.getElementById("convSearchInput").addEventListener("input", renderConvList);
+// ============== RECHERCHE UTILISATEURS ==============
+document.getElementById("userSearchInput").addEventListener("input", renderUsersList);
+
+// ============== INITIALISATION ==============
+loadUsersFromFirebase();
 
 // ============== CHAT MESSAGES (conversation VERA initiale) ==============
 const initialMessages = [
@@ -226,5 +319,5 @@ document.querySelectorAll(".file-download").forEach(btn => {
 });
 
 // ============== INIT ==============
-renderConvList();
+loadUsersFromFirebase();
 renderMessages(currentMessages);
