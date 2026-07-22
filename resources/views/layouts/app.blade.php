@@ -49,10 +49,10 @@
         <svg viewBox="0 0 24 24"><path d="M2 8l10-5 10 5-10 5z"/><path d="M6 10.5V16c0 1.5 2.5 3 6 3s6-1.5 6-3v-5.5"/></svg>
         Formations
       </a>
-      <a class="nav-item" href="/messages">
+      <a class="nav-item {{ request()->is('messages') ? 'active' : '' }}" href="/messages">
         <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
         Messages
-        <span class="pill blue">12</span>
+        <span class="pill blue" id="navMsgUnread">0</span>
       </a>
       <a class="nav-item" href="/notifications">
         <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>

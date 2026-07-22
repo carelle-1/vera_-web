@@ -53,11 +53,17 @@ function updateTabCounts() {
   const unreadTab = document.getElementById("tabCountUnread");
   if (allTab) allTab.textContent = allCount > 0 ? " " + allCount : "";
   if (unreadTab) unreadTab.textContent = unreadCount > 0 ? " " + unreadCount : "";
+
+  const navPill = document.getElementById("navMsgUnread");
+  if (navPill) {
+    navPill.textContent = unreadCount > 0 ? unreadCount : "0";
+    navPill.style.display = "flex";
+  }
 }
 
 function loadUsersFromFirebase() {
-  const user = firebase.auth().currentUser;
-  if (!user) {
+  const currentUser = firebase.auth().currentUser;
+  if (!currentUser) {
     firebase.auth().onAuthStateChanged((u) => {
       if (u) loadUsersFromFirebase();
     });
@@ -74,8 +80,8 @@ function loadUsersFromFirebase() {
     const debugRoles = [];
 
     Object.keys(data).forEach((uid) => {
-      console.log("[MESSAGES] processing uid:", uid, "currentUser:", user.uid);
-      if (uid === user.uid) {
+      console.log("[MESSAGES] processing uid:", uid, "currentUser:", currentUser.uid);
+      if (uid === currentUser.uid) {
         console.log("[MESSAGES] skipping current user");
         return;
       }
@@ -139,6 +145,18 @@ function loadUsersFromFirebase() {
     if (activeUserId) {
       updateChatHeader(allUsers.find(u => u.id === activeUserId) || allUsers[0]);
       loadConversationMessages(activeUserId);
+    }
+
+    if (currentUser) {
+      firebase.database().ref("conversations/" + currentUser.uid).once("value").then((snapshot) => {
+        const convs = snapshot.val() || {};
+        allUsers.forEach(u => {
+          const c = convs[u.id];
+          if (c) u.unread = c.unread ? 1 : 0;
+        });
+        updateTabCounts();
+        renderUsersList();
+      });
     }
   }).catch((err) => {
     console.error("Erreur chargement utilisateurs:", err);

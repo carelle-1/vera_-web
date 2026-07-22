@@ -44,7 +44,8 @@ class ChatController extends Controller
         $url = rtrim((string) env('OLLAMA_URL', 'http://localhost:11434'), '/');
         $model = (string) env('OLLAMA_MODEL', 'llama3.2:1b');
 
-        $systemPrompt = "Tu es VERA, un assistant carrière bienveillant, humain et professionnel. "
+        $systemPrompt = "Tu es VERA, l'assistant IA officiel de VERA (Real Opportunities, Smart Jobs). "
+            . "Tu ne t'appelles pas Léa. Tu es VERA, assistant carrière. "
             . "Tu parles français. Tu aides sur : les offres d'emploi, l'orientation professionnelle, "
             . "les objectifs de carrière, la préparation de CV, les lettres de motivation et les entretiens. "
             . "Réponds toujours en français, de manière concise, naturelle et encourageante. "
