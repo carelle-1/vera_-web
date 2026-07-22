@@ -1,6 +1,17 @@
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.textContent = message;
+  toast.style.cssText = "position:fixed;bottom:20px;right:20px;background:#1f2937;color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.18);opacity:0;transition:opacity .2s ease;";
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => { toast.style.opacity = "1"; });
+  setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 200); }, 2500);
+}
+
 let allUsers = [];
 let activeUserId = null;
 let currentFilter = "all";
+let pendingAttachment = null;
+let currentConversationId = null;
 
 function getInitials(firstName, lastName) {
   const first = (firstName || "").trim().charAt(0).toUpperCase();
@@ -13,6 +24,14 @@ function getAvatarColor(name) {
   let hash = 0;
   for (let i = 0; i < (name || "").length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
+}
+
+function getFirebaseIdToken() {
+  return new Promise((resolve, reject) => {
+    const user = firebase.auth().currentUser;
+    if (!user) return reject("Utilisateur non connecté");
+    user.getIdToken().then(token => resolve(token)).catch(reject);
+  });
 }
 
 function getUserType(role) {
@@ -117,7 +136,10 @@ function loadUsersFromFirebase() {
     if (!activeUserId && allUsers.length > 0) activeUserId = allUsers[0].id;
     updateTabCounts();
     renderUsersList();
-    if (activeUserId) updateChatHeader(allUsers.find(u => u.id === activeUserId) || allUsers[0]);
+    if (activeUserId) {
+      updateChatHeader(allUsers.find(u => u.id === activeUserId) || allUsers[0]);
+      loadConversationMessages(activeUserId);
+    }
   }).catch((err) => {
     console.error("Erreur chargement utilisateurs:", err);
   });
@@ -250,7 +272,7 @@ function renderMessages(messages) {
           ${m.text}
           ${jobsHtml}
           ${actionsHtml}
-          <span class="msg-time">${m.time}${m.read ? " ✓✓" : ""}</span>
+          <span class="msg-time">${m.time} <span class="msg-status">${getMessageStatusIcon(m, isUser)}</span></span>
         </div>
       </div>
     `;
@@ -261,38 +283,7 @@ function renderMessages(messages) {
 
 let currentMessages = [...initialMessages];
 
-// ============== ENVOI DE MESSAGE ==============
-function sendMessage() {
-  const input = document.getElementById("chatInput");
-  const text = input.value.trim();
-  if (!text) return;
-
-  currentMessages.push({ from: "user", text: text, time: currentTime() });
-  renderMessages(currentMessages);
-  input.value = "";
-
-  // Réponse automatique simulée de VERA
-  setTimeout(() => {
-    currentMessages.push({
-      from: "vera",
-      text: "Merci pour votre message ! Je traite votre demande et reviens vers vous très rapidement.",
-      time: currentTime()
-    });
-    renderMessages(currentMessages);
-  }, 900);
-}
-
-function currentTime() {
-  const d = new Date();
-  return d.getHours().toString().padStart(2, "0") + ":" + d.getMinutes().toString().padStart(2, "0");
-}
-
-document.getElementById("sendBtn").addEventListener("click", sendMessage);
-document.getElementById("chatInput").addEventListener("keypress", (e) => {
-  if (e.key === "Enter") sendMessage();
-});
-
-// ============== BOUTONS ACTIONS DANS LES MESSAGES ==============
+// ============== GESTION DES PIÈCES JOINTES ==============
 document.getElementById("chatMessages").addEventListener("click", (e) => {
   if (e.target.matches(".msg-btn")) {
     const original = e.target.textContent;
@@ -318,6 +309,383 @@ document.querySelectorAll(".file-download").forEach(btn => {
   });
 });
 
+// ============== UPLOAD VERS CLOUDINARY ==============
+function uploadToCloudinary(file, type) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "vera2026");
+  formData.append("folder", type === "image" ? "messages/images" : "messages/files");
+
+  return fetch("https://api.cloudinary.com/v1_1/demjpkcfj/upload", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.secure_url) {
+      return { url: data.secure_url, publicId: data.public_id };
+    }
+    throw new Error(data.error?.message || "Upload Cloudinary échoué");
+  });
+}
+
+// ============== SAUVEGARDE MESSAGE DANS FIREBASE ==============
+function saveMessageToFirebase(recipientId, messageData) {
+  const user = firebase.auth().currentUser;
+  if (!user) return Promise.reject("Utilisateur non connecté");
+
+  const conversationId = getConversationId(user.uid, recipientId);
+  const messageRef = firebase.database().ref("messages/" + conversationId).push();
+  const messageWithId = {
+    ...messageData,
+    id: messageRef.key,
+    senderUid: user.uid,
+    timestamp: Date.now(),
+    read: false
+  };
+
+  return messageRef.set(messageWithId)
+    .then(() => {
+      if (recipientId === "vera") {
+        return firebase.database().ref("conversations/" + user.uid + "/vera").update({
+          lastMessage: messageData.text || (messageData.type === "image" ? "📷 Photo" : messageData.fileName || "Fichier"),
+          lastTimestamp: messageWithId.timestamp,
+          recipientId: recipientId,
+          unread: false
+        });
+      }
+      return firebase.database().ref("conversations/" + user.uid + "/" + recipientId).update({
+        lastMessage: messageData.text || (messageData.type === "image" ? "📷 Photo" : messageData.fileName || "Fichier"),
+        lastTimestamp: messageWithId.timestamp,
+        recipientId: recipientId
+      });
+    })
+    .then(() => {
+      if (recipientId === "vera") {
+        return Promise.resolve();
+      }
+      return firebase.database().ref("conversations/" + recipientId + "/" + user.uid).update({
+        lastMessage: messageData.text || (messageData.type === "image" ? "📷 Photo" : messageData.fileName || "Fichier"),
+        lastTimestamp: messageWithId.timestamp,
+        recipientId: user.uid,
+        unread: true
+      });
+    });
+}
+
+function getConversationId(uid1, uid2) {
+  return [uid1, uid2].sort().join("_");
+}
+
+// ============== CHARGEMENT CONVERSATIONS ==============
+function loadConversationMessages(recipientId) {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  currentConversationId = getConversationId(user.uid, recipientId);
+  const container = document.getElementById("chatMessages");
+  container.innerHTML = '<div class="day-divider">Chargement...</div>';
+
+  firebase.database().ref("messages/" + currentConversationId)
+    .orderByChild("timestamp")
+    .once("value")
+    .then(snapshot => {
+      const data = snapshot.val() || {};
+      const messages = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+      messages.sort((a, b) => a.timestamp - b.timestamp);
+      renderConversationMessages(messages);
+    })
+    .catch(err => {
+      container.innerHTML = '<div class="day-divider">Erreur de chargement</div>';
+      console.error(err);
+    });
+}
+
+function renderConversationMessages(messages) {
+  const container = document.getElementById("chatMessages");
+  container.innerHTML = messages.map(m => {
+    const isUser = m.senderUid === (firebase.auth().currentUser?.uid);
+    let contentHtml = "";
+
+    if (m.type === "text") {
+      contentHtml = escapeHtml(m.text || "");
+    } else if (m.type === "image" && m.fileUrl) {
+      contentHtml = `<img src="${m.fileUrl}" class="msg-image" onclick="window.open('${m.fileUrl}', '_blank')">`;
+      if (m.text) contentHtml += `<div>${escapeHtml(m.text)}</div>`;
+    } else if (m.type === "file" && m.fileUrl) {
+      contentHtml = `<a href="${m.fileUrl}" target="_blank" class="msg-file">📄 ${escapeHtml(m.fileName || "Fichier")}</a>`;
+      if (m.text) contentHtml += `<div>${escapeHtml(m.text)}</div>`;
+    }
+
+    return `
+      <div class="msg-row ${isUser ? "user" : ""}">
+        ${!isUser ? `<div class="msg-avatar-sm">${getAvatarForRecipient()}</div>` : ""}
+        <div class="msg-bubble">
+          ${contentHtml}
+          <span class="msg-time">${formatTime(m.timestamp)} <span class="msg-status">${getMessageStatusIcon(m, isUser)}</span></span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function getAvatarForRecipient() {
+  const user = allUsers.find(u => u.id === activeUserId);
+  return user ? user.avatar : "🤖";
+}
+
+function formatTime(timestamp) {
+  const d = new Date(timestamp);
+  return d.getHours().toString().padStart(2, "0") + ":" + d.getMinutes().toString().padStart(2, "0");
+}
+
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function getMessageStatusIcon(message, isUser) {
+  if (!isUser) return "";
+  if (message.read) return '<span class="status-read">✓✓</span>';
+  return '<span class="status-sent">✓</span>';
+}
+
+// ============== ENVOI DE MESSAGE ==============
+function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+  const recipientId = activeUserId;
+
+  if (!recipientId) {
+    showToast("Veuillez sélectionner un destinataire");
+    return;
+  }
+
+  if (!text && !pendingAttachment) return;
+
+  const processMessage = (fileUrl = null, resourceType = "text") => {
+    const messageData = {
+      text: text || "",
+      type: pendingAttachment ? pendingAttachment.type : (resourceType === "image" ? "image" : resourceType === "raw" && pendingAttachment?.type === "file" ? "file" : "text")
+    };
+
+    if (pendingAttachment) {
+      messageData.fileUrl = fileUrl || pendingAttachment.url;
+      messageData.fileName = pendingAttachment.fileName || "";
+      messageData.fileSize = pendingAttachment.fileSize || "";
+    } else if (fileUrl) {
+      messageData.fileUrl = fileUrl;
+      messageData.fileName = "";
+      messageData.fileSize = "";
+    }
+
+    saveMessageToFirebase(recipientId, messageData)
+      .then(() => {
+        input.value = "";
+        clearPreview();
+        loadConversationMessages(recipientId);
+        showToast("Message envoyé");
+      })
+      .catch(err => {
+        console.error("Erreur envoi message:", err);
+        showToast("Erreur lors de l'envoi");
+      });
+  };
+
+  if (pendingAttachment) {
+    const formData = new FormData();
+    formData.append("file", pendingAttachment.file);
+
+    getFirebaseIdToken().then(idToken => {
+      return fetch("/messages/upload", {
+        method: "POST",
+        body: formData,
+        headers: {
+          "Authorization": "Bearer " + idToken
+        }
+      });
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.url) {
+        processMessage(data.url, data.resourceType || "auto");
+      } else {
+        throw new Error(data.message || "Upload échoué");
+      }
+    })
+    .catch(err => {
+      console.error("Erreur upload pièce jointe:", err);
+      showToast("Erreur lors de l'upload du fichier");
+    });
+  } else if (recipientId === "vera") {
+    const userMessage = {
+      text: text || "",
+      type: "text"
+    };
+    console.log("[VERA] sending message to backend:", userMessage);
+    saveMessageToFirebase(recipientId, userMessage)
+      .then(() => {
+        clearPreview();
+        input.value = "";
+        return getFirebaseIdToken();
+      })
+      .then(idToken => {
+        console.log("[VERA] token obtained, calling backend...");
+        return fetch("/messages/send", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + idToken,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message: text, recipientId: recipientId })
+        });
+      })
+      .then(res => {
+        console.log("[VERA] response status:", res.status);
+        if (!res.ok) {
+          return res.json().then(data => {
+            throw new Error(data.message || "Erreur HTTP " + res.status);
+          });
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log("[VERA] backend reply:", data);
+        if (data.success && data.reply) {
+          const replyData = {
+            text: data.reply,
+            type: "text"
+          };
+          return saveMessageToFirebase(recipientId, replyData);
+        }
+        throw new Error("Réponse VERA vide");
+      })
+      .then(() => {
+        loadConversationMessages(recipientId);
+        showToast("Message envoyé");
+      })
+      .catch(err => {
+        console.error("Erreur chat VERA:", err);
+        showToast("Erreur lors de l'envoi");
+      });
+  } else {
+    processMessage();
+  }
+}
+
+// ============== GESTION DES PIÈCES JOINTES ==============
+function handleImageSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    pendingAttachment = {
+      type: "image",
+      file: file,
+      url: event.target.result,
+      fileName: file.name,
+      fileSize: (file.size / 1024).toFixed(1) + " KB"
+    };
+    showPreview(pendingAttachment);
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    pendingAttachment = {
+      type: "file",
+      file: file,
+      url: event.target.result,
+      fileName: file.name,
+      fileSize: (file.size / 1024).toFixed(1) + " KB"
+    };
+    showPreview(pendingAttachment);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPreview(attachment) {
+  const previewArea = document.getElementById("previewArea");
+  const previewContent = document.getElementById("previewContent");
+  previewArea.style.display = "block";
+
+  if (attachment.type === "image") {
+    previewContent.innerHTML = `
+      <div class="preview-item">
+        <img src="${attachment.url}" alt="aperçu">
+        <button class="preview-remove" onclick="clearPreview()">×</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);">${escapeHtml(attachment.fileName)} (${attachment.fileSize})</div>
+    `;
+  } else {
+    previewContent.innerHTML = `
+      <div class="preview-item">
+        <div class="preview-file">
+          <span>📄</span>
+          <span class="file-name">${escapeHtml(attachment.fileName)}</span>
+          <span style="color:var(--muted);">${attachment.fileSize}</span>
+        </div>
+        <button class="preview-remove" onclick="clearPreview()">×</button>
+      </div>
+    `;
+  }
+}
+
+function clearPreview() {
+  pendingAttachment = null;
+  document.getElementById("previewArea").style.display = "none";
+  document.getElementById("previewContent").innerHTML = "";
+  document.getElementById("imageInput").value = "";
+  document.getElementById("fileInput").value = "";
+}
+
+// ============== INITIALISATION DES BOUTONS ==============
+document.getElementById("attachImageBtn")?.addEventListener("click", () => {
+  document.getElementById("imageInput").click();
+});
+
+document.getElementById("attachFileBtn")?.addEventListener("click", () => {
+  document.getElementById("fileInput").click();
+});
+
+document.getElementById("imageInput")?.addEventListener("change", handleImageSelect);
+document.getElementById("fileInput")?.addEventListener("change", handleFileSelect);
+
+document.getElementById("sendAttachment")?.addEventListener("click", () => {
+  sendMessage();
+});
+
+document.getElementById("cancelAttachment")?.addEventListener("click", () => {
+  clearPreview();
+});
+
+document.getElementById("sendBtn").addEventListener("click", sendMessage);
+document.getElementById("chatInput").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") sendMessage();
+});
+
+// ============== CLIC SUR UTILISATEUR ==============
+document.getElementById("usersList").addEventListener("click", (e) => {
+  const item = e.target.closest(".conv-item");
+  if (!item) return;
+  const userId = item.dataset.id;
+  const user = allUsers.find(u => u.id === userId);
+  if (!user) return;
+  activeUserId = userId;
+  user.unread = 0;
+  updateChatHeader(user);
+  loadConversationMessages(user.id);
+  renderUsersList();
+});
+
 // ============== INIT ==============
 loadUsersFromFirebase();
-renderMessages(currentMessages);

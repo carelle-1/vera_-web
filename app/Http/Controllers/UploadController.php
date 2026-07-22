@@ -212,6 +212,64 @@ class UploadController extends Controller
         }
     }
 
+    public function uploadMessageFile(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|max:10240|mimetypes:image/jpeg,image/png,image/gif,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/zip,application/x-rar-compressed'
+        ]);
+
+        try {
+            $uid = $this->verifyFirebaseToken($request);
+            if (!$uid) {
+                return response()->json(['success' => false, 'message' => 'Non autorisé'], 401);
+            }
+
+            $file = $request->file('file');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $folder = 'messages/' . $uid;
+
+            $response = Http::asMultipart()
+                ->attach(
+                    name: 'file',
+                    contents: fopen($file->getRealPath(), 'r'),
+                    filename: $filename,
+                )
+                ->post("https://api.cloudinary.com/v1_1/{$this->cloudName()}/upload", [
+                    'upload_preset' => $this->uploadPreset(),
+                    'folder' => $folder,
+                ]);
+
+            if (!$response->successful()) {
+                \Log::error('Cloudinary message upload failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreur lors de l\'upload: ' . $response->body(),
+                ], 500);
+            }
+
+            $result = $response->json();
+            $publicId = $result['public_id'] ?? '';
+            $fileUrl = $result['secure_url'] ?? $result['url'] ?? '';
+            $resourceType = $result['resource_type'] ?? 'auto';
+
+            return response()->json([
+                'success' => true,
+                'url' => $fileUrl,
+                'name' => $filename,
+                'publicId' => $publicId,
+                'resourceType' => $resourceType,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'upload: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     private function deleteFromCloudinary(string $publicId): void
     {
         $apiKey = env('CLOUDINARY_API_KEY');

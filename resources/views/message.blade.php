@@ -56,12 +56,20 @@
         <div class="chat-messages" id="chatMessages"></div>
 
         <div class="chat-input">
-          <button class="input-icon">📎</button>
+          <button class="input-icon" id="attachImageBtn" title="Ajouter une image">🖼️</button>
+          <button class="input-icon" id="attachFileBtn" title="Ajouter un fichier">📎</button>
           <button class="input-icon">😊</button>
-          <button class="input-icon">GIF</button>
-          <button class="input-icon">⋮</button>
+          <input type="file" id="imageInput" accept="image/*" style="display:none;">
+          <input type="file" id="fileInput" style="display:none;">
           <input type="text" id="chatInput" placeholder="Écrivez votre message...">
           <button class="send-btn" id="sendBtn">➤</button>
+        </div>
+        <div id="previewArea" style="display:none; padding: 10px 18px; background: #fff; border-top: 1px solid var(--border);">
+          <div id="previewContent" style="display: flex; gap: 10px; align-items: center;"></div>
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <button class="btn-outline-sm" id="cancelAttachment">Annuler</button>
+            <button class="btn-primary-sm" id="sendAttachment">Envoyer</button>
+          </div>
         </div>
       </section>
 
