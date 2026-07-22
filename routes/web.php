@@ -14,6 +14,10 @@ Route::get('/tableau-de-bord', function () {
     return view('index');
 });
 
+Route::get('/coaching', function () {
+    return view('coach');
+});
+
 Route::get('/profil', function () {
     return view('profil');
 });

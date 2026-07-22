@@ -320,6 +320,50 @@ a{color:inherit;}
 .insight-spark{width:56px;height:28px;flex-shrink:0;}
 .insight-spark polyline{fill:none;stroke:var(--blue);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
+/* OBJECTIFS CRUD */
+.btn-primary-sm{background:var(--blue);color:#fff;border:none;border-radius:9px;padding:8px 15px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.btn-primary-sm:hover{background:var(--blue-dark);}
+.btn-outline-sm{background:#fff;border:1px solid var(--border);border-radius:9px;padding:6px 12px;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--text);}
+.btn-outline-sm:hover{border-color:var(--blue);color:var(--blue);}
+.exp-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.exp-search-toggle{background:#fff;border:1px solid var(--border);border-radius:12px;width:44px;height:44px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+.exp-search-toggle img{width:22px;height:22px;object-fit:contain;}
+.exp-search-toggle:hover{border-color:var(--blue);}
+.exp-search{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 14px;}
+.exp-search span{opacity:.6;}
+.exp-search input{border:none;outline:none;flex:1;font-size:13px;font-family:inherit;background:transparent;color:var(--text);}
+.exp-card{padding:8px;}
+.exp-table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;}
+.exp-table thead th{text-align:left;font-size:11.5px;font-weight:700;color:var(--muted);background:#f5f7fc;padding:12px 14px;border-bottom:1px solid var(--border);white-space:nowrap;}
+.exp-table tbody td{font-size:12.5px;color:var(--text);padding:13px 14px;border-bottom:1px solid #f1f3f9;vertical-align:top;}
+.exp-table tbody tr:last-child td{border-bottom:none;}
+.exp-table tbody tr:hover{background:#fafbff;}
+.exp-cell-title{font-family:inherit;font-size:13px;font-weight:800;color:var(--text);background:none;border:none;padding:0;cursor:pointer;text-align:left;text-decoration:underline dotted transparent;text-underline-offset:3px;}
+.exp-cell-title:hover{color:var(--blue);text-decoration-color:var(--blue);}
+.exp-desc-cell{max-width:240px;color:var(--muted);line-height:1.5;}
+.exp-action-cell{text-align:center;width:80px;}
+.exp-delete-btn{background:#fff;border:1px solid var(--border);border-radius:8px;width:34px;height:34px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;}
+.exp-delete-btn img{width:16px;height:16px;object-fit:contain;}
+.exp-delete-btn:hover{border-color:#ef4444;background:#fef2f2;}
+.exp-empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.exp-empty-icon{font-size:38px;margin-bottom:10px;}
+.exp-empty p{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.exp-empty span{font-size:12px;}
+
+/* MODALE OBJECTIFS */
+.exp-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.exp-modal-overlay.active{display:flex;}
+.exp-modal{background:#fff;border-radius:18px;width:100%;max-width:520px;padding:22px;box-shadow:0 20px 60px rgba(15,23,42,.25);max-height:90vh;overflow:auto;}
+.exp-modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.exp-modal-head h3{font-size:17px;font-weight:800;}
+.exp-modal-close{background:none;border:none;font-size:24px;line-height:1;cursor:pointer;color:var(--muted);}
+.exp-form{display:flex;flex-direction:column;gap:12px;}
+.exp-form label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;color:var(--muted);}
+.exp-form input{font-family:inherit;font-size:13px;font-weight:500;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:9px 11px;outline:none;}
+.exp-form input:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(59,130,246,.15);}
+.exp-form select{font-family:inherit;font-size:13px;font-weight:500;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:9px 11px;outline:none;background:#fff;}
+.exp-form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;}
+
 /* RESPONSIVE */
 @media (max-width:1300px){
   .skills-grid,.formations-grid,.objectifs-grid{grid-template-columns:repeat(2,1fr);}

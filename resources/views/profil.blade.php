@@ -62,7 +62,6 @@
         <button class="tab" data-tab="formations">Formations</button>
         <button class="tab" data-tab="certifs">Certifications</button>
         <button class="tab" data-tab="langues">Langues</button>
-        <button class="tab" data-tab="objectifs">Objectifs</button>
         <button class="tab" data-tab="prefs">Préférences</button>
       </div>
 
@@ -429,30 +428,6 @@
               <div class="exp-empty-icon">🗣</div>
               <p>Aucune langue pour le moment.</p>
               <span>Cliquez sur « + Ajouter une langue » pour commencer.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- LAYOUT: OBJECTIFS -->
-      <div class="profile-layout obj-layout" id="objectivesLayout" style="display:none;">
-        <div class="col-full">
-          <div class="exp-toolbar">
-            <button class="exp-search-toggle" id="objSearchToggle" type="button" title="Rechercher">
-              <img src="/image/3917754.png" alt="Rechercher">
-            </button>
-            <div class="exp-search" id="objSearchWrap" style="display:none;">
-              <span>🔎</span>
-              <input type="text" id="objSearch" placeholder="Rechercher un objectif...">
-            </div>
-            <button class="btn-primary-sm" id="objAddBtn" type="button">+ Ajouter un objectif</button>
-          </div>
-          <div class="card exp-card">
-            <div id="objList" class="exp-list"></div>
-            <div id="objEmpty" class="exp-empty" style="display:none;">
-              <div class="exp-empty-icon">🎯</div>
-              <p>Aucun objectif pour le moment.</p>
-              <span>Cliquez sur « + Ajouter un objectif » pour commencer.</span>
             </div>
           </div>
         </div>

@@ -41,7 +41,7 @@
         Profil
         <span class="pill">100%</span>
       </a>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="/coaching">
         <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>
         Coaching &amp; Carrière
       </a>
