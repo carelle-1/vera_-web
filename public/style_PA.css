@@ -181,6 +181,10 @@ select{font-family:inherit;}
 }
 .profile-edit-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,107,245,0.12);}
 
+/* SETTINGS PANELS */
+.settings-panel{animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
 /* PREF ROWS */
 .pref-row,.toggle-row,.sec-row{
   display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border);
@@ -197,6 +201,11 @@ select{font-family:inherit;}
 .pref-select:focus{border-color:var(--blue);}
 
 .link-btn{background:none;border:none;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.link-btn[target="_blank"]{text-decoration:underline;}
+.pref-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.pref-edit input,.pref-edit textarea{width:100%;max-width:400px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:#fff;}
+.pref-edit textarea{resize:vertical;min-height:80px;}
+#cvView,#coverLetterView{margin-top:8px;padding:8px 0;}
 
 .see-all{font-size:12px;color:var(--blue);font-weight:600;text-decoration:none;display:inline-block;margin-top:14px;}
 
