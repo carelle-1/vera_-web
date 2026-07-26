@@ -116,6 +116,19 @@
             <div class="objectifs-grid" id="objectifsGrid"></div>
           </section>
 
+          <!-- COMPETENCES IA -->
+          <section class="section-block" id="skillsAiSection" style="display:none;">
+            <div class="section-head">
+              <div>
+                <h2>Compétences recommandées pour votre objectif</h2>
+                <p>Basé sur votre objectif de carrière</p>
+              </div>
+            </div>
+            <div class="card" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
+              <div id="skillsAiContent" class="ai-text-content">Génération en cours...</div>
+            </div>
+          </section>
+
         </div>
 
         <!-- RIGHT COLUMN -->
@@ -127,9 +140,11 @@
               <div class="plan-goal-icon">&#127891;</div>
               <div>
                 <div class="plan-goal-label">Objectif professionnel</div>
-                <div class="plan-goal-value">Devenir Product Designer Senior</div>
+                <div class="plan-goal-value" id="planGoalValue">À définir</div>
               </div>
             </div>
+
+            <div id="planAiContent" class="ai-text-content" style="margin-top:12px;">Sauvegardez votre objectif pour générer un plan personnalisé.</div>
 
             <ul class="timeline" id="timelineList"></ul>
 
@@ -138,37 +153,14 @@
 
           <div class="card advice-card">
             <div class="card-head-row"><span>Conseils de votre coach IA &#10024;</span></div>
-            <p>Pour atteindre le niveau Avancé plus rapidement, je vous recommande de vous concentrer sur le Design System et le Prototyping avancé.</p>
+            <div id="adviceAiContent" class="ai-text-content">Sauvegardez votre objectif pour recevoir des conseils personnalisés.</div>
             <div class="robot-mini">&#129302;</div>
-            <button class="btn-white-outline full">Voir mes recommandations personnalisées &rarr;</button>
+            <button class="btn-white-outline full" id="adviceCardBtn">Voir mes recommandations personnalisées &rarr;</button>
           </div>
 
           <div class="card insights-card">
             <div class="card-head-row"><span>Insights du marché</span><a href="#" class="see-all">Voir plus &rarr;</a></div>
-            <div class="insight-item">
-              <div class="insight-icon blue">&#128203;</div>
-              <div class="insight-text">
-                <div class="insight-title">Product Designer <span class="tag-demand">En forte demande</span></div>
-                <div class="insight-sub">+32% d'offres ce mois-ci</div>
-              </div>
-              <svg class="insight-spark" viewBox="0 0 60 30" preserveAspectRatio="none"><polyline points="0,24 15,18 30,20 45,8 60,4"></polyline></svg>
-            </div>
-            <div class="insight-item">
-              <div class="insight-icon green">&#128178;</div>
-              <div class="insight-text">
-                <div class="insight-title">Salaire moyen</div>
-                <div class="insight-sub">1 800 &ndash; 3 500 $ <span class="up-sub">+18% vs l'année dernière</span></div>
-              </div>
-              <svg class="insight-spark" viewBox="0 0 60 30" preserveAspectRatio="none"><polyline points="0,20 15,22 30,14 45,16 60,4"></polyline></svg>
-            </div>
-            <div class="insight-item">
-              <div class="insight-icon orange">&#127919;</div>
-              <div class="insight-text">
-                <div class="insight-title">Compétence la plus recherchée</div>
-                <div class="insight-sub">Design System <span class="up-sub">Dans 78% des offres</span></div>
-              </div>
-              <svg class="insight-spark" viewBox="0 0 60 30" preserveAspectRatio="none"><polyline points="0,10 15,18 30,8 45,20 60,6"></polyline></svg>
-            </div>
+            <div id="insightsAiContent" class="ai-text-content">Sauvegardez votre objectif pour recevoir des analyses de marché.</div>
           </div>
 
         </div>
@@ -199,8 +191,52 @@
         </div>
       </div>
 
-    </div>
+      <!-- LAYOUT: PLAN -->
+      <div class="layout" id="planLayout" style="display:none;">
+        <div class="col-full">
+          <div class="card" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
+            <div id="planFullContent" class="ai-text-content">Chargement du plan...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYOUT: SKILLS -->
+      <div class="layout" id="skillsLayout" style="display:none;">
+        <div class="col-full">
+          <div class="card" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
+            <div id="skillsFullContent" class="ai-text-content">Chargement des compétences...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYOUT: INSIGHTS -->
+      <div class="layout" id="insightsLayout" style="display:none;">
+        <div class="col-full">
+          <div class="card" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
+            <div id="insightsFullContent" class="ai-text-content">Chargement des analyses...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYOUT: CONSEILS -->
+      <div class="layout" id="conseilsLayout" style="display:none;">
+        <div class="col-full">
+          <div class="card" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
+            <div id="conseilsFullContent" class="ai-text-content">Chargement des conseils...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYOUT: OVERVIEW -->
+      <div class="layout" id="overviewFullLayout" style="display:none;">
+        <div class="col-full">
+          <div class="card" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
+            <div id="overviewFullContent" class="ai-text-content">Chargement de la synthèse...</div>
+          </div>
+        </div>
+      </div>
+
 @endsection
 @section('scripts')
-<script src="script_CO.js"></script>
+<script src="script_CO.js?v=2"></script>
 @endsection

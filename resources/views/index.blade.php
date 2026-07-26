@@ -7,8 +7,7 @@
 <link rel="stylesheet" href="/styleI.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
-</head>
+  </head>
 <body>
 
 <div class="app">

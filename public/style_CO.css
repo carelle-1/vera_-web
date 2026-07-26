@@ -364,6 +364,12 @@ a{color:inherit;}
 .exp-form select{font-family:inherit;font-size:13px;font-weight:500;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:9px 11px;outline:none;background:#fff;}
 .exp-form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;}
 
+/* IA SECTIONS */
+.ai-text-content{font-family:inherit;font-size:13.5px;line-height:1.6;color:var(--text);}
+.ai-text-content p{margin:0 0 8px;}
+.ai-text-content strong{display:block;margin:10px 0 4px;}
+.ai-text-content div{margin:4px 0 4px 12px;}
+
 /* RESPONSIVE */
 @media (max-width:1300px){
   .skills-grid,.formations-grid,.objectifs-grid{grid-template-columns:repeat(2,1fr);}

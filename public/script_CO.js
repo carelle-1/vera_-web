@@ -150,33 +150,224 @@ const tabLabels = {
   conseils: "Conseils IA"
 };
 
+const sectionLayouts = {
+  overview: "overviewLayout",
+  plan: "planLayout",
+  skills: "skillsLayout",
+  insights: "insightsLayout",
+  conseils: "conseilsLayout",
+  objectifs: "objectivesLayout",
+  overview_full: "overviewFullLayout"
+};
+
+function hideAllLayouts() {
+  Object.values(sectionLayouts).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "none";
+  });
+  const placeholder = document.getElementById("tabPlaceholder");
+  if (placeholder) placeholder.style.display = "none";
+}
+
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
 
     const key = tab.dataset.tab;
-    const overview = document.getElementById("overviewLayout");
-    const placeholder = document.getElementById("tabPlaceholder");
-    const objectivesLayout = document.getElementById("objectivesLayout");
+    hideAllLayouts();
 
     if (key === "overview") {
-      overview.style.display = "grid";
-      if (objectivesLayout) objectivesLayout.style.display = "none";
-      placeholder.style.display = "none";
+      const el = document.getElementById(sectionLayouts.overview);
+      if (el) el.style.display = "grid";
+      loadOverviewHighlights();
     } else if (key === "objectifs") {
-      overview.style.display = "none";
-      placeholder.style.display = "none";
-      if (objectivesLayout) objectivesLayout.style.display = "block";
+      const el = document.getElementById(sectionLayouts.objectifs);
+      if (el) el.style.display = "block";
       if (typeof renderObjectives === "function") renderObjectives();
     } else {
-      overview.style.display = "none";
-      if (objectivesLayout) objectivesLayout.style.display = "none";
-      placeholder.style.display = "block";
-      placeholder.textContent = `Section "${tabLabels[key]}" — contenu à compléter prochainement.`;
+      const el = document.getElementById(sectionLayouts[key]);
+      if (el) el.style.display = "block";
+      const fullMap = {
+        plan: "plan",
+        skills: "skills",
+        insights: "insights",
+        conseils: "conseils"
+      };
+      if (fullMap[key]) {
+        loadAiSection(fullMap[key]);
+      }
     }
   });
 });
+
+async function getFirebaseIdToken() {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) return null;
+    return await user.getIdToken();
+  } catch (e) {
+    return null;
+  }
+}
+
+function getCachedObjective() {
+  try {
+    const raw = localStorage.getItem("vera_objective");
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || !data.title) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+function cacheObjective(objective) {
+  try {
+    if (!objective) return;
+    localStorage.setItem("vera_objective", JSON.stringify(objective));
+  } catch (e) {}
+}
+
+function isFirebaseNetworkError(e) {
+  if (!e) return false;
+  const msg = (e.message || "").toString().toLowerCase();
+  return msg.includes("failed to fetch") || msg.includes("network") || msg.includes("fetch") || msg.includes("cordova") || msg.includes("firebase");
+}
+
+async function loadAiSection(section) {
+  const map = {
+    plan: "planFullContent",
+    skills: "skillsFullContent",
+    insights: "insightsFullContent",
+    conseils: "conseilsFullContent",
+    overview: "overviewFullContent"
+  };
+  const el = document.getElementById(map[section]);
+  if (!el) return;
+  el.innerHTML = '<span style="opacity:0.6;">Génération en cours...</span>';
+
+  try {
+    const token = await getFirebaseIdToken();
+    const cachedObjective = getCachedObjective();
+
+    if (!token && !cachedObjective) {
+      el.textContent = "Vous devez être connecté ou avoir déjà créé un objectif.";
+      return;
+    }
+
+    const headers = {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Cache-Control": "no-cache"
+    };
+
+    if (token) {
+      headers["Authorization"] = "Bearer " + token;
+    } else if (cachedObjective) {
+      headers["X-Offline-Mode"] = "true";
+    }
+
+    const body = { section };
+    if (!token && cachedObjective) {
+      body.objective = cachedObjective;
+    }
+
+    const response = await fetch("/coaching/advice?t=" + Date.now(), {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body)
+    });
+
+    const rawText = await response.text();
+    let data = {};
+    try { data = JSON.parse(rawText); } catch (e) { data = { raw: rawText }; }
+
+    console.log("[COACH] section=" + section + " status=" + response.status, data);
+
+    if (data.success && data.reply) {
+      el.innerHTML = formatAiReply(data.reply);
+      const goalEl = document.getElementById("planGoalValue");
+      if (goalEl && data.objective && data.objective.title) {
+        goalEl.textContent = data.objective.title;
+      }
+    } else if (response.status === 0 || response.type === "opaque" || response.type === "error") {
+      el.textContent = "Réseau indisponible : vérifiez votre connexion Internet.";
+    } else if (!token && cachedObjective) {
+      el.textContent = "Connexion au coach impossible hors-ligne pour le moment.";
+    } else {
+      el.textContent = data.message || "Erreur lors de la génération.";
+    }
+  } catch (e) {
+    console.error("[COACH] fetch error", e);
+    el.textContent = "Erreur réseau lors de la génération du contenu.";
+  }
+}
+
+function formatAiReply(text) {
+  if (!text) return "";
+  return escapeHtml(text)
+    .split('\n')
+    .map(line => {
+      const trimmed = line.trim();
+      if (trimmed === "") return "";
+      if (trimmed.startsWith("- ") || trimmed.startsWith("• ")) {
+        return "<div style=\"margin:4px 0 4px 12px;\">" + trimmed + "</div>";
+      }
+      if (/^\d+\./.test(trimmed)) {
+        return "<div style=\"margin:4px 0 4px 12px;\">" + trimmed + "</div>";
+      }
+      if (trimmed.endsWith(":")) {
+        return "<strong style=\"display:block;margin:10px 0 4px;\">" + trimmed + "</strong>";
+      }
+      return "<p style=\"margin:0 0 8px;line-height:1.6;\">" + trimmed + "</p>";
+    })
+    .join("");
+}
+
+async function loadOverviewHighlights() {
+  const skillsEl = document.getElementById("skillsAiContent");
+  const adviceEl = document.getElementById("adviceAiContent");
+  const insightsEl = document.getElementById("insightsAiContent");
+
+  if (!skillsEl && !adviceEl && !insightsEl) return;
+
+  try {
+    const token = await getFirebaseIdToken();
+    if (!token) return;
+
+    const sections = ["skills", "conseils", "insights"];
+    for (const section of sections) {
+      const response = await fetch("/coaching/advice", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ section: section })
+      });
+
+      const rawText = await response.text();
+      let data = {};
+      try { data = JSON.parse(rawText); } catch (e) { data = { raw: rawText }; }
+
+      console.log("[COACH][overview] section=" + section + " status=" + response.status, data);
+      if (!data.success) continue;
+
+      if (section === "skills" && skillsEl) {
+        skillsEl.innerHTML = formatAiReply(data.reply);
+      } else if (section === "conseils" && adviceEl) {
+        adviceEl.innerHTML = formatAiReply(data.reply);
+      } else if (section === "insights" && insightsEl) {
+        insightsEl.innerHTML = formatAiReply(data.reply);
+      }
+    }
+  } catch (e) {
+    console.error("[COACH][overview] error", e);
+  }
+}
 
 // ============== BOUTON COACH IA ==============
 document.getElementById("coachBtn").addEventListener("click", () => {
@@ -213,20 +404,28 @@ function renderObjectives() {
   const search = document.getElementById("objSearch");
   if (!list) return;
   const ref = objRef();
-  if (!ref) return;
+  if (!ref) {
+    if (list) list.innerHTML = '<div class="exp-empty"><p>Connectez-vous pour voir vos objectifs.</p></div>';
+    return;
+  }
 
-    const q = search ? search.value.trim() : "";
+  const q = search ? search.value.trim() : "";
 
-    ref.once("value").then((snapshot) => {
-      const data = snapshot.val() || {};
-      const items = Object.keys(data).map((id) => ({ id, ...data[id] }));
-      const filtered = items.filter((o) => objMatches(o, q));
+  ref.once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const items = Object.keys(data).map((id) => ({ id, ...data[id] }));
 
-      const addBtn = document.getElementById("objAddBtn");
-      if (addBtn) addBtn.style.display = items.length >= 1 ? "none" : "";
+    if (items.length > 0) {
+      cacheObjective(items[0]);
+    }
 
-      list.innerHTML = "";
-      if (filtered.length === 0) {
+    const addBtn = document.getElementById("objAddBtn");
+    if (addBtn) addBtn.style.display = items.length >= 1 ? "none" : "";
+
+    const filtered = items.filter((o) => objMatches(o, q));
+
+    list.innerHTML = "";
+    if (filtered.length === 0) {
       empty.style.display = "block";
       empty.querySelector("p").textContent = q
         ? "Aucun objectif ne correspond à votre recherche."
@@ -272,7 +471,7 @@ function renderObjectives() {
     list.querySelectorAll(".obj-title-edit").forEach((b) => b.addEventListener("click", () => openObjModal(b.dataset.id)));
     list.querySelectorAll(".exp-delete-btn").forEach((b) => b.addEventListener("click", () => deleteObjective(b.dataset.id)));
   }).catch((err) => {
-    if (list) list.innerHTML = `<div class="exp-empty"><p>Impossible de charger les objectifs.</p><span>${(err && (err.message || err.code)) || ""}</span></div>`;
+    if (list) list.innerHTML = '<div class="exp-empty"><p>Impossible de charger les objectifs.</p><span>' + (err && (err.message || err.code) || "") + '</span></div>';
   });
 }
 
@@ -281,7 +480,7 @@ function deleteObjective(id) {
   const ref = objRef();
   if (!ref) return;
   ref.child(id).remove()
-    .then(() => renderObjectives())
+    .then(() => { localStorage.removeItem("vera_objective"); renderObjectives(); })
     .catch((err) => alert("Échec de la suppression : " + (err.message || err.code)));
 }
 
@@ -344,7 +543,7 @@ function buildObjModal() {
 
     if (objEditId) {
       ref.child(objEditId).update(payload)
-        .then(() => { closeObjModal(); renderObjectives(); })
+        .then(() => { cacheObjective(payload); closeObjModal(); renderObjectives(); })
         .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
     } else {
       ref.once("value").then((snap) => {
@@ -354,7 +553,7 @@ function buildObjModal() {
           return;
         }
         ref.push(payload)
-          .then(() => { closeObjModal(); renderObjectives(); })
+          .then(() => { cacheObjective(payload); closeObjModal(); renderObjectives(); })
           .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
       }).catch((err) => alert("Échec de la vérification : " + (err.message || err.code)));
     }
@@ -415,3 +614,35 @@ renderSkills();
 renderFormations();
 renderObjectifs();
 renderTimeline();
+
+const adviceCardBtn = document.getElementById("adviceCardBtn");
+if (adviceCardBtn) {
+  adviceCardBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const conseilsTab = document.querySelector('.tab[data-tab="conseils"]');
+    if (conseilsTab) conseilsTab.click();
+  });
+}
+
+const coachBtn = document.getElementById("coachBtn");
+if (coachBtn) {
+  coachBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const conseilsTab = document.querySelector('.tab[data-tab="conseils"]');
+    if (conseilsTab) conseilsTab.click();
+  });
+}
+
+// Load overview highlights on startup if objective exists
+(function loadInitialHighlights() {
+  const ref = objRef();
+  if (!ref) return;
+  ref.once("value").then(snap => {
+    const data = snap.val() || {};
+    if (Object.keys(data).length > 0) {
+      loadOverviewHighlights();
+      const skillsEl = document.getElementById("skillsAiSection");
+      if (skillsEl) skillsEl.style.display = "";
+    }
+  });
+})();

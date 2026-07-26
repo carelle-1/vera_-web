@@ -56,6 +56,7 @@ Route::post('/delete-cv', [App\Http\Controllers\UploadController::class, 'delete
 Route::post('/delete-cover-letter', [App\Http\Controllers\UploadController::class, 'deleteCoverLetter'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 Route::post('/messages/upload', [App\Http\Controllers\UploadController::class, 'uploadMessageFile'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 Route::post('/messages/send', [App\Http\Controllers\ChatController::class, 'send'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+Route::post('/coaching/advice', [App\Http\Controllers\CoachController::class, 'advice'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 
 Route::get('/test-firebase', function () {
     return response()->json([

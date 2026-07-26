@@ -28,7 +28,7 @@
     <div class="cand-layout">
 
       <!-- LIST -->
-      <section class="list-panel">
+      <section class="list-panel"> 
 
         <div class="toolbar">
           <div class="search small">
