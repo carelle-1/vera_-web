@@ -31,6 +31,8 @@ const goals = [
 // ============== RENDU REPRENDRE MES FORMATIONS ==============
 function renderContinueCourses() {
   const grid = document.getElementById("continueGrid");
+  if (!grid) return;
+
   grid.innerHTML = continueCourses.map((c, i) => `
     <div class="course-card">
       <div class="course-icon" style="background:${c.bg}">${c.icon}</div>
@@ -46,7 +48,8 @@ function renderContinueCourses() {
   requestAnimationFrame(() => {
     setTimeout(() => {
       continueCourses.forEach((c, i) => {
-        document.getElementById(`courseFill${i}`).style.width = c.value + "%";
+        const el = document.getElementById(`courseFill${i}`);
+        if (el) el.style.width = c.value + "%";
       });
     }, 150);
   });
@@ -55,6 +58,8 @@ function renderContinueCourses() {
 // ============== RENDU RECOMMANDEES ==============
 function renderRecoCourses() {
   const grid = document.getElementById("recoGrid");
+  if (!grid) return;
+
   grid.innerHTML = recoCourses.map(c => `
     <div class="reco-card">
       <div class="reco-icon" style="background:${c.bg}">${c.icon}</div>
@@ -69,6 +74,8 @@ function renderRecoCourses() {
 // ============== RENDU CATEGORIES ==============
 function renderCategories() {
   const grid = document.getElementById("categoriesGrid");
+  if (!grid) return;
+
   grid.innerHTML = categories.map(c => `
     <div class="category-card">
       <div class="category-icon">${c.icon}</div>
@@ -81,6 +88,8 @@ function renderCategories() {
 // ============== RENDU OBJECTIFS ==============
 function renderGoals() {
   const list = document.getElementById("goalsList");
+  if (!list) return;
+
   list.innerHTML = goals.map((g, i) => `
     <div class="goal-item">
       <div class="goal-row">
@@ -95,74 +104,83 @@ function renderGoals() {
   requestAnimationFrame(() => {
     setTimeout(() => {
       goals.forEach((g, i) => {
-        document.getElementById(`goalFill${i}`).style.width = g.value + "%";
+        const el = document.getElementById(`goalFill${i}`);
+        if (el) el.style.width = g.value + "%";
       });
     }, 150);
   });
 }
 
 // ============== TABS ==============
-const tabLabels = {
-  mesformations: "Mes formations",
-  catalogue: "Parcourir le catalogue",
-  certifs: "Certifications",
-  reco: "Recommandées pour vous",
-  favoris: "Mes favoris"
-};
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
 
-document.querySelectorAll(".tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
+      const key = tab.dataset.tab;
+      const overview = document.getElementById("overviewLayout");
+      const placeholder = document.getElementById("tabPlaceholder");
 
-    const key = tab.dataset.tab;
-    const overview = document.getElementById("overviewLayout");
-    const placeholder = document.getElementById("tabPlaceholder");
+      if (key === "overview") {
+        if (overview) overview.style.display = "grid";
+        if (placeholder) placeholder.style.display = "none";
+      } else {
+        if (overview) overview.style.display = "none";
+        if (placeholder) {
+          placeholder.style.display = "block";
+          placeholder.textContent =
+            "Section \"" +
+            {
+              mesformations: "Mes formations",
+              catalogue: "Parcourir le catalogue",
+              certifs: "Certifications",
+              reco: "Recommandées pour vous",
+              favoris: "Mes favoris"
+            }[key] +
+            "\" — contenu à compléter prochainement.";
+        }
+      }
+    });
+  });
 
-    if (key === "overview") {
-      overview.style.display = "grid";
-      placeholder.style.display = "none";
-    } else {
-      overview.style.display = "none";
-      placeholder.style.display = "block";
-      placeholder.textContent = `Section "${tabLabels[key]}" — contenu à compléter prochainement.`;
+  const coachSearchBtn = document.getElementById("coachSearchBtn");
+  if (coachSearchBtn) {
+    coachSearchBtn.addEventListener("click", () => {
+      const original = coachSearchBtn.textContent;
+      coachSearchBtn.textContent = "Recherche en cours...";
+      setTimeout(() => { coachSearchBtn.textContent = original; }, 1200);
+    });
+  }
+
+  const addGoalBtn = document.querySelector(".add-goal-btn");
+  if (addGoalBtn) {
+    addGoalBtn.addEventListener("click", function () {
+      const original = this.textContent;
+      this.textContent = "✓ Objectif ajouté";
+      setTimeout(() => { this.textContent = original; }, 1200);
+    });
+  }
+
+  document.addEventListener("click", (e) => {
+    if (e.target.matches(".btn-continue, .btn-reco")) {
+      const original = e.target.textContent;
+      e.target.textContent = "Chargement...";
+      setTimeout(() => { e.target.textContent = original; }, 1000);
     }
   });
-});
 
-// ============== BOUTON COACH IA ==============
-document.getElementById("coachSearchBtn").addEventListener("click", () => {
-  const btn = document.getElementById("coachSearchBtn");
-  const original = btn.textContent;
-  btn.textContent = "Recherche en cours...";
-  setTimeout(() => { btn.textContent = original; }, 1200);
-});
-
-// ============== BOUTON AJOUTER OBJECTIF ==============
-document.querySelector(".add-goal-btn").addEventListener("click", function () {
-  const original = this.textContent;
-  this.textContent = "✓ Objectif ajouté";
-  setTimeout(() => { this.textContent = original; }, 1200);
-});
-
-// ============== BOUTONS CONTINUER / VOIR FORMATION (démo) ==============
-document.addEventListener("click", (e) => {
-  if (e.target.matches(".btn-continue, .btn-reco")) {
-    const original = e.target.textContent;
-    e.target.textContent = "Chargement...";
-    setTimeout(() => { e.target.textContent = original; }, 1000);
+  const certDownload = document.querySelector(".cert-download");
+  if (certDownload) {
+    certDownload.addEventListener("click", function () {
+      const original = this.textContent;
+      this.textContent = "✓ Téléchargé";
+      setTimeout(() => { this.textContent = original; }, 1200);
+    });
   }
-});
 
-// ============== TELECHARGEMENT CERTIFICAT ==============
-document.querySelector(".cert-download").addEventListener("click", function () {
-  const original = this.textContent;
-  this.textContent = "✓ Téléchargé";
-  setTimeout(() => { this.textContent = original; }, 1200);
+  renderContinueCourses();
+  renderRecoCourses();
+  renderCategories();
+  renderGoals();
 });
-
-// ============== INIT ==============
-renderContinueCourses();
-renderRecoCourses();
-renderCategories();
-renderGoals();

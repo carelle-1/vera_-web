@@ -38,6 +38,10 @@ Route::get('/oppotunite', function () {
     return view('oppotunite');
 });
 
+Route::get('/formations', function () {
+    return view('formations');
+});
+
 Route::get('/candidatures', function () {
     return view('candidature');
 });

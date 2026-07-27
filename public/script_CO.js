@@ -33,9 +33,10 @@ function escapeHtml(str) {
 }
 
 // ============== RENDU SCORE RING ==============
-function renderCareerRing() {
+function renderCareerRing(score) {
   const ring = document.getElementById("careerRing");
-  const score = 78;
+  if (!ring) return;
+  const s = typeof score === "number" ? score : 0;
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
   ring.style.strokeDasharray = circumference;
@@ -43,7 +44,7 @@ function renderCareerRing() {
   requestAnimationFrame(() => {
     setTimeout(() => {
       ring.style.transition = "stroke-dashoffset 1.2s ease";
-      ring.style.strokeDashoffset = circumference - (score / 100) * circumference;
+      ring.style.strokeDashoffset = circumference - (s / 100) * circumference;
     }, 150);
   });
 }
@@ -180,6 +181,7 @@ document.querySelectorAll(".tab").forEach(tab => {
     if (key === "overview") {
       const el = document.getElementById(sectionLayouts.overview);
       if (el) el.style.display = "grid";
+      loadOverviewUserData();
       loadOverviewHighlights();
     } else if (key === "objectifs") {
       const el = document.getElementById(sectionLayouts.objectifs);
@@ -324,6 +326,299 @@ function formatAiReply(text) {
       return "<p style=\"margin:0 0 8px;line-height:1.6;\">" + trimmed + "</p>";
     })
     .join("");
+}
+
+function getUserRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("users/" + user.uid) : null;
+}
+
+function getUserObjectivesRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("users/" + user.uid + "/objectives") : null;
+}
+
+function getUserSkillsRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("users/" + user.uid + "/skills") : null;
+}
+
+function loadOverviewUserData() {
+  const userRef = getUserRef();
+  if (!userRef) return;
+
+  const objectivesRef = getUserObjectivesRef();
+  const skillsRef = getUserSkillsRef();
+  const formationsRef = getUserFormationsRef();
+  const experiencesRef = getUserExperiencesRef();
+
+  let hasObjectives = false;
+  let objectivesCount = 0;
+  let objectivesProgress = 0;
+
+const userNamePromise = userRef.once("value").then((snap) => {
+    const data = snap.val() || {};
+    const user = firebase.auth().currentUser;
+    const fallbackName = (user && user.displayName) ? user.displayName.split(" ")[0] : "";
+    const emailFallback = (user && user.email) ? user.email.split("@")[0] : "";
+    return data.firstName || data.fullName || fallbackName || emailFallback || "";
+  }).catch(() => {
+    const user = firebase.auth().currentUser;
+    if (!user) return "";
+    return user.displayName ? user.displayName.split(" ")[0] : (user.email ? user.email.split("@")[0] : "");
+  });
+
+  const authNamePromise = new Promise((resolve) => {
+    const user = firebase.auth().currentUser;
+    if (!user) { resolve(""); return; }
+    resolve(user.displayName ? user.displayName.split(" ")[0] : (user.email ? user.email.split("@")[0] : ""));
+  });
+
+  const objectivesPromise = objectivesRef
+    ? objectivesRef.once("value").then((snap) => {
+        const data = snap.val() || {};
+        const items = Object.keys(data).map((id) => ({ id, ...data[id] }));
+        hasObjectives = items.length > 0;
+        objectivesCount = items.length;
+
+        if (items.length > 0) {
+          const totalProgress = items.reduce((sum, o) => {
+            const v = parseInt(o.value, 10);
+            return sum + (isNaN(v) ? 0 : v);
+          }, 0);
+          objectivesProgress = Math.round(totalProgress / items.length);
+        }
+
+        return { items, hasObjectives, objectivesCount, objectivesProgress };
+      }).catch(() => ({ items: [], hasObjectives: false, objectivesCount: 0, objectivesProgress: 0 }))
+    : Promise.resolve({ items: [], hasObjectives: false, objectivesCount: 0, objectivesProgress: 0 });
+
+  Promise.all([userNamePromise, authNamePromise, objectivesPromise]).then(([dbName, authName, objData]) => {
+    const firstName = dbName || authName || "";
+    hasObjectives = objData.hasObjectives;
+    objectivesCount = objData.objectivesCount;
+    objectivesProgress = objData.objectivesProgress;
+    const items = objData.items;
+
+    const grid = document.getElementById("objectifsGrid");
+    if (grid) {
+      if (items.length > 0) {
+        const radius = 18;
+        const circumference = 2 * Math.PI * radius;
+        const iconBg = ["#3b6bf5", "#16a34a", "#8b5cf6", "#f59e0b", "#ef4444"];
+        grid.innerHTML = items.map((o, i) => {
+          const bg = iconBg[i % iconBg.length];
+          const value = parseInt(o.value, 10) || 0;
+          const offset = circumference - (value / 100) * circumference;
+          return `
+            <div class="objectif-card">
+              <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                <div class="objectif-icon" style="background:${bg}">🎯</div>
+                <div style="min-width:0;">
+                  <div class="objectif-title">${escapeHtml(o.title || "Objectif")}</div>
+                  <div class="objectif-date">${escapeHtml(o.targetDate || "—")}</div>
+                </div>
+              </div>
+              <div class="objectif-ring">
+                <svg viewBox="0 0 44 44">
+                  <circle class="objectif-ring-bg" cx="22" cy="22" r="${radius}"></circle>
+                  <circle class="objectif-ring-fg" cx="22" cy="22" r="${radius}"
+                    stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"></circle>
+                </svg>
+                <div class="objectif-ring-num">${value}%</div>
+              </div>
+            </div>`;
+        }).join("") + `
+          <div class="add-objectif">
+            <span class="plus">+</span>
+            Ajouter un objectif
+          </div>`;
+      } else {
+        grid.innerHTML = `
+          <div class="exp-empty">
+            <div class="exp-empty-icon">🎯</div>
+            <p>Aucun objectif pour le moment.</p>
+            <span>Cliquez sur « + Ajouter un objectif » pour commencer.</span>
+          </div>`;
+      }
+    }
+
+    const goalEl = document.getElementById("planGoalValue");
+    if (goalEl) {
+      goalEl.textContent = hasObjectives ? (items[0].title || "À définir") : "À définir";
+    }
+
+    updateScoreHero(objectivesProgress, hasObjectives, objectivesCount, firstName);
+
+    if (skillsRef) {
+      skillsRef.once("value").then((snap) => {
+        const data = snap.val() || {};
+        const skillItems = Object.keys(data).map((id) => ({ id, ...data[id] }));
+        const skillsGrid = document.getElementById("skillsGrid");
+        if (skillsGrid) {
+          if (skillItems.length > 0) {
+            skillsGrid.innerHTML = skillItems.map((s, i) => {
+              const level = s.level || "Intermédiaire";
+              const priority = level === "Expert" ? "high" : level === "Avancé" ? "medium" : "low";
+              const priorityLabel = "Priorité : " + level;
+              const value = s.value || 50;
+              return `
+                <div class="skill-card">
+                  <div class="skill-card-head">
+                    <div class="skill-card-icon">💡</div>
+                    <div>
+                      <div class="skill-card-title">${escapeHtml(s.name || "Compétence")}</div>
+                      <span class="skill-priority ${priority}">${priorityLabel}</span>
+                    </div>
+                  </div>
+                  <div class="skill-card-level">Votre niveau actuel</div>
+                  <div class="skill-card-bar"><div class="skill-card-fill" id="skillFill${i}" style="width:${value}%"></div></div>
+                  <button class="btn-improve">Améliorer</button>
+                </div>`;
+            }).join("");
+          } else {
+            skillsGrid.innerHTML = `
+              <div class="exp-empty" style="grid-column:1/-1;">
+                <p>Aucune compétence renseignée.</p>
+                <span>Ajoutez vos compétences dans l'onglet Profil.</span>
+              </div>`;
+          }
+        }
+      }).catch(() => {});
+    }
+
+    if (formationsRef) {
+      formationsRef.once("value").then((snap) => {
+        const data = snap.val() || {};
+        const formItems = Object.keys(data).map((id) => ({ id, ...data[id] }));
+        const formGrid = document.getElementById("formationsGrid");
+        if (formGrid) {
+          if (formItems.length > 0) {
+            const bgColors = ["#f24e1e", "#6d28d9", "#0ea5e9", "#16a34a", "#8b5cf6", "#ef4444"];
+            formGrid.innerHTML = formItems.map((f, i) => {
+              const bg = bgColors[i % bgColors.length];
+              const level = f.level || "En cours";
+              return `
+                <div class="formation-card">
+                  <div class="formation-icon" style="background:${bg}">🎓</div>
+                  <div class="formation-title">${escapeHtml(f.diploma || f.title || "Formation")}</div>
+                  <span class="formation-level">${escapeHtml(level)}</span>
+                  <div class="formation-meta">${escapeHtml(f.school || "")} · ${escapeHtml(f.startYear || "")}${f.endYear && f.endYear !== "Présent" ? " → " + escapeHtml(f.endYear) : ""}</div>
+                  <button class="btn-formation">Voir la formation</button>
+                </div>`;
+            }).join("");
+          } else {
+            formGrid.innerHTML = `
+              <div class="exp-empty" style="grid-column:1/-1;">
+                <p>Aucune formation renseignée.</p>
+                <span>Ajoutez vos formations dans l'onglet Profil.</span>
+              </div>`;
+          }
+        }
+      }).catch(() => {});
+    }
+
+    if (experiencesRef) {
+      experiencesRef.once("value").then((snap) => {
+        const data = snap.val() || {};
+        const expItems = Object.keys(data).map((id) => ({ id, ...data[id] }))
+          .sort((a, b) => (b.startYear || 0) - (a.startYear || 0));
+        const timelineList = document.getElementById("timelineList");
+        if (timelineList) {
+          if (expItems.length > 0) {
+            timelineList.innerHTML = expItems.map((exp, i) => {
+              const status = i === 0 ? "current" : "done";
+              const statusLabel = i === 0 ? "En cours" : "Terminé";
+              const endYear = exp.endYear && exp.endYear !== "Présent" ? exp.endYear : (exp.endYear === "Présent" ? "Présent" : "");
+              return `
+                <li>
+                  <div class="timeline-dot ${status}">${status === "done" ? "✓" : ""}</div>
+                  <div class="timeline-content">
+                    <div class="timeline-title">${escapeHtml(exp.title || "Poste")}</div>
+                    <div class="timeline-row">
+                      <span class="timeline-status ${status}">${statusLabel}</span>
+                      <span class="timeline-date">${escapeHtml(exp.company || "")} · ${escapeHtml(exp.startYear || "")}${endYear ? " → " + escapeHtml(endYear) : ""}</span>
+                    </div>
+                  </div>
+                </li>`;
+            }).join("");
+          }
+        }
+      }).catch(() => {});
+    }
+  });
+}
+
+function updateScoreHero(progress, hasObjectives, objCount, firstName) {
+  const score = hasObjectives ? Math.max(progress, 10) : 0;
+  const scoreNumEl = document.querySelector(".score-num");
+  const scoreFillEl = document.querySelector(".score-hero-fill");
+  const progressValueEl = document.querySelector(".progress-value");
+  const midTitleEl = document.querySelector(".mid-title");
+  const midDescEl = document.querySelector(".score-mid p");
+  const levelBadgeOrange = document.querySelector(".level-badge.orange");
+  const levelBadgeBlue = document.querySelector(".level-badge.blue");
+  const levelNoteEl = document.querySelector(".level-note");
+
+  if (scoreNumEl) {
+    scoreNumEl.innerHTML = score + '<span>/100</span>';
+  }
+  if (scoreFillEl) {
+    scoreFillEl.style.width = score + "%";
+  }
+  if (progressValueEl) {
+    progressValueEl.innerHTML = "+" + score + "% <small>depuis le mois dernier</small>";
+  }
+
+  let currentLevel = "Débutant";
+  let nextLevel = "Intermédiaire";
+  let pointsNeeded = 40 - score;
+
+  if (score >= 70) {
+    currentLevel = "Avancé";
+    nextLevel = "Expert";
+    pointsNeeded = 100 - score;
+  } else if (score >= 40) {
+    currentLevel = "Intermédiaire";
+    nextLevel = "Avancé";
+    pointsNeeded = 70 - score;
+  } else if (score >= 20) {
+    currentLevel = "Débutant";
+    nextLevel = "Intermédiaire";
+    pointsNeeded = 40 - score;
+  }
+
+  if (levelBadgeOrange) levelBadgeOrange.textContent = currentLevel;
+  if (levelBadgeBlue) levelBadgeBlue.textContent = nextLevel;
+  if (levelNoteEl) levelNoteEl.textContent = "Il vous manque " + pointsNeeded + " points pour atteindre le niveau " + nextLevel;
+
+  const name = firstName || "";
+  if (midTitleEl) {
+    if (hasObjectives) {
+      midTitleEl.textContent = "Bien joué " + name + " !";
+    } else {
+      midTitleEl.textContent = "Commencez votre parcours";
+    }
+  }
+  if (midDescEl) {
+    if (hasObjectives) {
+      midDescEl.textContent = "Vous avez " + objCount + " objectif" + (objCount > 1 ? "s" : "") + " en cours. Continuez à développer vos compétences pour atteindre le niveau " + nextLevel + ".";
+    } else {
+      midDescEl.textContent = "Ajoutez votre premier objectif de carrière pour commencer à suivre votre progression.";
+    }
+  }
+
+  renderCareerRing(score);
+}
+
+function getUserFormationsRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("users/" + user.uid + "/formations") : null;
+}
+
+function getUserExperiencesRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("users/" + user.uid + "/experiences") : null;
 }
 
 async function loadOverviewHighlights() {
@@ -609,11 +904,9 @@ if (objSearchToggle && objSearchWrap) {
 }
 
 // ============== INIT ==============
-renderCareerRing();
-renderSkills();
-renderFormations();
-renderObjectifs();
-renderTimeline();
+renderCareerRing(0);
+renderObjectives();
+loadOverviewUserData();
 
 const adviceCardBtn = document.getElementById("adviceCardBtn");
 if (adviceCardBtn) {
@@ -640,9 +933,16 @@ if (coachBtn) {
   ref.once("value").then(snap => {
     const data = snap.val() || {};
     if (Object.keys(data).length > 0) {
+      loadOverviewUserData();
       loadOverviewHighlights();
       const skillsEl = document.getElementById("skillsAiSection");
       if (skillsEl) skillsEl.style.display = "";
     }
   });
 })();
+
+firebase.auth().onAuthStateChanged((user) => {
+  if (!user) return;
+  loadOverviewUserData();
+  if (typeof renderObjectifs === "function") renderObjectifs();
+});

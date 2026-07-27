@@ -383,8 +383,6 @@ a{color:inherit;}
   .app{height:auto;overflow:visible;}
   .sidebar{display:none;}
   transition:width .2s ease;
-}
-
   .scroll-area{overflow:visible;}
   .skills-grid,.formations-grid,.objectifs-grid{grid-template-columns:1fr;}
 }

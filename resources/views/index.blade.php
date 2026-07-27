@@ -44,7 +44,7 @@
         <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>
         Coaching &amp; Carrière
       </a>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="/formations">
         <svg viewBox="0 0 24 24"><path d="M2 8l10-5 10 5-10 5z"/><path d="M6 10.5V16c0 1.5 2.5 3 6 3s6-1.5 6-3v-5.5"/></svg>
         Formations
       </a>

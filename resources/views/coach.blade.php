@@ -97,7 +97,7 @@
                 <h2>Formations recommandées pour vous</h2>
                 <p>Sélectionnées spécialement pour atteindre vos objectifs</p>
               </div>
-              <a href="#" class="see-all">Voir toutes les formations &rarr;</a>
+              <a href="/formations" class="see-all">Voir toutes les formations &rarr;</a>
             </div>
 
             <div class="formations-grid" id="formationsGrid"></div>
