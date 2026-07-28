@@ -256,9 +256,6 @@ select{font-family:inherit;}
 @media (max-width:820px){
   .app{height:auto;overflow:visible;}
   .sidebar{display:none;}
-  transition:width .2s ease;
-}
-
   .scroll-area{overflow:visible;}
   .notif-item{flex-wrap:wrap;}
 }

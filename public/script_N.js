@@ -1,58 +1,89 @@
-// ============== DONNÉES ==============
-const notifications = [
-  {
-    id: 1, group: "Aujourd'hui", type: "opportunites", unread: true,
-    icon: "N", iconBg: "#000000", tag: "Nouvelle opportunité", tagClass: "green",
-    title: "Nouvelle opportunité : Product Designer UI/UX",
-    desc: "Notion Labs a publié une offre qui correspond à votre profil.",
-    chips: ["UI/UX", "Figma", "Remote"],
-    time: "Il y a 15 min"
-  },
-  {
-    id: 2, group: "Aujourd'hui", type: "candidatures", unread: true,
-    icon: "💬", iconBg: "#8b5cf6", tag: "Message recruteur", tagClass: "blue",
-    title: "Message de Sarah de Notion Labs",
-    desc: "Bonjour Junior, votre profil nous a beaucoup intéressés...",
-    time: "Il y a 1 heure"
-  },
-  {
-    id: 3, group: "Aujourd'hui", type: "candidatures", unread: true,
-    icon: "✓", iconBg: "#22c55e", tag: "Candidature mise à jour", tagClass: "orange",
-    title: "Votre candidature a été consultée",
-    desc: "Votre candidature pour Développeur Full Stack a été consultée par BMW Group.",
-    time: "Il y a 2 heures"
-  },
-  {
-    id: 4, group: "Hier", type: "formations", unread: true,
-    icon: "🎓", iconBg: "#f59e0b", tag: "Formation recommandée", tagClass: "orange",
-    title: "Nouvelle recommandation de formation",
-    desc: "Améliorez vos compétences avec \"Design System avec Figma\".",
-    time: "Hier à 14:30"
-  },
-  {
-    id: 5, group: "Hier", type: "opportunites", unread: true,
-    icon: "⭐", iconBg: "#0ea5e9", tag: "Alerte emploi", tagClass: "blue",
-    title: "5 nouvelles opportunités correspondent à votre profil",
-    desc: "Consultez les dernières offres sélectionnées pour vous.",
-    time: "Hier à 09:15"
-  },
-  {
-    id: 6, group: "21 Mai 2024", type: "opportunites", unread: true,
-    icon: "🏆", iconBg: "#eab308", tag: "Félicitations", tagClass: "pink",
-    title: "Vous faites partie du top 10%",
-    desc: "Votre profil est très attractif ! Continuez comme ça.",
-    time: "21 Mai à 16:45"
-  },
-  {
-    id: 7, group: "21 Mai 2024", type: "systeme", unread: true,
-    icon: "⚙", iconBg: "#94a3b8", tag: "Mise à jour système", tagClass: "gray",
-    title: "VERA a été mis à jour",
-    desc: "Découvrez les nouvelles fonctionnalités de la plateforme.",
-    time: "21 Mai à 10:20"
+// ============== HELPERS ==============
+async function getFirebaseIdToken() {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) return null;
+    return await user.getIdToken();
+  } catch (e) {
+    return null;
   }
-];
+}
 
+function escapeHtml(str) {
+  return (str || "").toString()
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+// ============== DONNÉES ==============
+let notifications = [];
 let currentFilter = "all";
+
+// ============== CHARGEMENT DYNAMIQUE ==============
+async function loadNotificationsData() {
+  try {
+    const token = await getFirebaseIdToken();
+    const headers = {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Cache-Control": "no-cache"
+    };
+
+    if (token) {
+      headers["Authorization"] = "Bearer " + token;
+    }
+
+    const response = await fetch("/notifications/data?t=" + Date.now(), {
+      method: "GET",
+      headers
+    });
+
+    const rawText = await response.text();
+    let data = {};
+    try { data = JSON.parse(rawText); } catch (e) { data = {}; }
+
+    if (data.success) {
+      notifications = data.notifications || [];
+      updateCounts(data.counts || {});
+      updateSummary(data.summary || {});
+    } else {
+      notifications = [];
+    }
+  } catch (e) {
+    console.error("[NOTIFICATIONS] load error", e);
+    notifications = [];
+  }
+
+  renderNotifications();
+}
+
+function updateCounts(counts) {
+  const map = {
+    all: "tabCountAll",
+    unread: "tabCountUnread",
+    opportunites: "tabCountOpportunites",
+    candidatures: "tabCountCandidatures",
+    formations: "tabCountFormations",
+    systeme: "tabCountSysteme"
+  };
+
+  Object.entries(map).forEach(([key, id]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = (counts[key] || 0).toString();
+  });
+}
+
+function updateSummary(summary) {
+  const unreadEl = document.getElementById("summaryUnread");
+  const weekEl = document.getElementById("summaryWeek");
+  const monthEl = document.getElementById("summaryMonth");
+  const totalEl = document.getElementById("summaryTotal");
+
+  if (unreadEl) unreadEl.textContent = (summary.unread || 0).toString();
+  if (weekEl) weekEl.textContent = (summary.week || 0).toString();
+  if (monthEl) monthEl.textContent = (summary.month || 0).toString();
+  if (totalEl) totalEl.textContent = (summary.total || 0).toString();
+}
 
 // ============== RENDU ==============
 function renderNotifications() {
@@ -74,19 +105,19 @@ function renderNotifications() {
   container.innerHTML = groups.map(groupName => {
     const items = filtered.filter(n => n.group === groupName);
     return `
-      <div class="date-group-label">${groupName}</div>
+      <div class="date-group-label">${escapeHtml(groupName)}</div>
       ${items.map(n => `
         <div class="notif-item ${n.unread ? 'unread' : ''}" data-id="${n.id}">
           <input type="checkbox" class="notif-checkbox">
-          <div class="notif-icon" style="background:${n.iconBg}">${n.icon}</div>
+          <div class="notif-icon" style="background:${escapeHtml(n.iconBg)}">${escapeHtml(n.icon)}</div>
           <div class="notif-body">
-            <span class="notif-tag ${n.tagClass}">${n.tag}</span>
-            <div class="notif-title">${n.title}</div>
-            <div class="notif-desc">${n.desc}</div>
-            ${n.chips ? `<div class="notif-chips">${n.chips.map(c => `<span>${c}</span>`).join("")}</div>` : ""}
+            <span class="notif-tag ${escapeHtml(n.tagClass)}">${escapeHtml(n.tag)}</span>
+            <div class="notif-title">${escapeHtml(n.title)}</div>
+            <div class="notif-desc">${escapeHtml(n.desc)}</div>
+            ${n.chips && n.chips.length ? `<div class="notif-chips">${n.chips.map(c => `<span>${escapeHtml(c)}</span>`).join("")}</div>` : ""}
           </div>
           <div class="notif-right">
-            <span class="notif-time">${n.time}</span>
+            <span class="notif-time">${escapeHtml(n.time)}</span>
             ${n.unread ? `<span class="notif-dot"></span>` : ""}
           </div>
         </div>
@@ -94,16 +125,30 @@ function renderNotifications() {
     `;
   }).join("");
 
-  // Clic sur une notification = marquer comme lue
   container.querySelectorAll(".notif-item").forEach(item => {
     item.addEventListener("click", (e) => {
       if (e.target.classList.contains("notif-checkbox")) return;
-      const id = parseInt(item.dataset.id);
+      const id = item.dataset.id;
       const notif = notifications.find(n => n.id === id);
-      notif.unread = false;
-      renderNotifications();
+      if (notif) {
+        notif.unread = false;
+        renderNotifications();
+        updateCountsFromData();
+      }
     });
   });
+}
+
+function updateCountsFromData() {
+  const counts = {
+    all: notifications.length,
+    unread: notifications.filter(n => n.unread).length,
+    opportunites: notifications.filter(n => n.type === "opportunites").length,
+    candidatures: notifications.filter(n => n.type === "candidatures").length,
+    formations: notifications.filter(n => n.type === "formations").length,
+    systeme: notifications.filter(n => n.type === "systeme").length,
+  };
+  updateCounts(counts);
 }
 
 // ============== TABS / FILTRES ==============
@@ -125,6 +170,7 @@ document.getElementById("selectAll").addEventListener("change", (e) => {
 document.getElementById("markAllRead").addEventListener("click", () => {
   notifications.forEach(n => n.unread = false);
   renderNotifications();
+  updateCountsFromData();
 });
 
 // ============== PAGINATION ==============
@@ -144,4 +190,4 @@ document.getElementById("dndToggle").addEventListener("change", function () {
 });
 
 // ============== INIT ==============
-renderNotifications();
+loadNotificationsData();

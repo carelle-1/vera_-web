@@ -17,7 +17,7 @@
   <aside class="brand-panel">
     <div class="brand-panel-content">
       <div class="brand" style="flex-direction:column;align-items:center;text-align:center;">
-        <div class="brand-logo" style="background:none;border:none;border-radius:0;backdrop-filter:none;width:96px;height:96px;"><img src="/image/veras1.png" alt="VERA" style="width:100%;height:100%;object-fit:contain;"></div>
+        <div class="brand-logo" style="background:none;border:none;border-radius:0;backdrop-filter:none;width:224px;height:140px; margin: 0 10px -58px -27px;"><img src="/image/veras1.png" alt="VERA" style="width:100%;height:100%;object-fit:contain;"></div>
         <div>
           <div class="brand-name">VERA</div>
           <div class="brand-tag">Real Opportunities, Smart Jobs</div>

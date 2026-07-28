@@ -29,7 +29,7 @@ class CoachController extends Controller
     }
 
     private function getUserObjective(string $uid): ?array
-    {
+    { 
         try {
             /** @var Database $db */
             $db = app('firebase.database');

@@ -15,12 +15,12 @@
 
       <!-- TABS -->
       <div class="tabs" id="notifTabs">
-        <button class="tab active" data-filter="all">Toutes <span>8</span></button>
-        <button class="tab" data-filter="unread">Non lus <span>8</span></button>
-        <button class="tab" data-filter="opportunites">Opportunités <span>4</span></button>
-        <button class="tab" data-filter="candidatures">Candidatures <span>2</span></button>
-        <button class="tab" data-filter="formations">Formations <span>1</span></button>
-        <button class="tab" data-filter="systeme">Système <span>1</span></button>
+        <button class="tab active" data-filter="all">Toutes <span id="tabCountAll">0</span></button>
+        <button class="tab" data-filter="unread">Non lus <span id="tabCountUnread">0</span></button>
+        <button class="tab" data-filter="opportunites">Opportunités <span id="tabCountOpportunites">0</span></button>
+        <button class="tab" data-filter="candidatures">Candidatures <span id="tabCountCandidatures">0</span></button>
+        <button class="tab" data-filter="formations">Formations <span id="tabCountFormations">0</span></button>
+        <button class="tab" data-filter="systeme">Système <span id="tabCountSysteme">0</span></button>
       </div>
 
       <!-- LAYOUT -->
@@ -91,10 +91,10 @@
           <div class="card">
             <div class="card-head-row"><span>Résumé</span></div>
             <div class="summary-grid">
-              <div class="summary-item blue"><div class="summary-num">8</div><div class="summary-label">Non lus</div></div>
-              <div class="summary-item green"><div class="summary-num">24</div><div class="summary-label">Cette semaine</div></div>
-              <div class="summary-item blue"><div class="summary-num">96</div><div class="summary-label">Ce mois-ci</div></div>
-              <div class="summary-item green"><div class="summary-num">320</div><div class="summary-label">Total</div></div>
+              <div class="summary-item blue"><div class="summary-num" id="summaryUnread">0</div><div class="summary-label">Non lus</div></div>
+              <div class="summary-item green"><div class="summary-num" id="summaryWeek">0</div><div class="summary-label">Cette semaine</div></div>
+              <div class="summary-item blue"><div class="summary-num" id="summaryMonth">0</div><div class="summary-label">Ce mois-ci</div></div>
+              <div class="summary-item green"><div class="summary-num" id="summaryTotal">0</div><div class="summary-label">Total</div></div>
             </div>
           </div>
 

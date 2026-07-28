@@ -46,6 +46,14 @@ Route::get('/candidatures', function () {
     return view('candidature');
 });
 
+Route::get('/formations/data', [App\Http\Controllers\FormationsController::class, 'data'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+
+Route::get('/notifications', function () {
+    return view('notification');
+});
+
+Route::get('/notifications/data', [App\Http\Controllers\NotificationsController::class, 'data'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+
 Route::get('/messages', function () {
     return view('message');
 });

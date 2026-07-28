@@ -11,10 +11,17 @@ const successBox = document.getElementById("successBox");
 
 function switchTo(formName) {
   tabs.forEach(t => t.classList.toggle("active", t.dataset.form === formName));
-  forms.forEach(f => f.classList.toggle("active", f.id === formName + "Form"));
+  forms.forEach(f => {
+    if (f.id === formName + "Form") {
+      f.classList.add("active");
+      f.style.display = "flex";
+    } else {
+      f.classList.remove("active");
+      f.style.display = "none";
+    }
+  });
   indicator.style.transform = formName === "signup" ? "translateX(100%)" : "translateX(0)";
   successBox.classList.remove("active");
-  forms.forEach(f => { if (f.id === formName + "Form") f.style.display = "flex"; });
 }
 
 function showForm(formId) {

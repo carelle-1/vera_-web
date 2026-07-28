@@ -37,18 +37,18 @@
           <!-- HERO -->
           <section class="hero">
             <div class="hero-left">
-              <h2>Continuez votre apprentissage, Junior !</h2>
-              <p>Chaque compétence acquise vous rapproche de vos objectifs. Ne vous arrêtez pas maintenant.</p>
+              <h2 id="heroTitle">Continuez votre apprentissage, Junior !</h2>
+              <p id="heroSubtitle">Chaque compétence acquise vous rapproche de vos objectifs. Ne vous arrêtez pas maintenant.</p>
               <div class="hero-progress">
-                <div class="hero-progress-row"><span>Progression globale</span><span class="hero-progress-value">68%</span></div>
-                <div class="hero-bar"><div class="hero-fill" style="width:68%"></div></div>
+                <div class="hero-progress-row"><span>Progression globale</span><span class="hero-progress-value" id="heroProgressValue">0%</span></div>
+                <div class="hero-bar"><div class="hero-fill" id="heroProgressFill" style="width:0%"></div></div>
               </div>
             </div>
             <div class="hero-streak">
               <div class="streak-trophy">🏆</div>
               <div class="streak-label">Série d'apprentissage</div>
-              <div class="streak-value">7 jours 🔥</div>
-              <div class="streak-sub">Continuez ainsi !</div>
+              <div class="streak-value" id="heroStreakValue">0 jour 🔥</div>
+              <div class="streak-sub" id="heroStreakSub">Continuez ainsi !</div>
             </div>
           </section>
 
