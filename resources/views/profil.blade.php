@@ -204,16 +204,19 @@
           </div>
 
           <div class="card cv-card">
-            <div class="card-head-row"><span>Mon CV</span><button class="btn-outline-sm">Modifier</button></div>
+            <div class="card-head-row"><span>Mon CV</span></div>
             <div class="cv-file">
               <div class="cv-icon">📄</div>
               <div class="cv-info">
-                <div class="cv-name">CV_Junior_Tchouaka.pdf</div>
-                <div class="cv-date">Mis à jour le 20 Mai 2024</div>
+                <div class="cv-name">CV généré à partir de votre profil</div>
+                <div class="cv-date" id="cvStatusText">Prêt à générer</div>
               </div>
-              <button class="cv-download">⬇</button>
+              <button class="cv-download" id="cvDownloadBtn" title="Télécharger le CV">⬇</button>
             </div>
-            <a href="#" class="see-more" id="generateCvBtn">✨ Générer un nouveau CV avec l'IA</a>
+            <div class="cv-actions">
+              <button class="btn-primary-sm" id="cvGenerateBtn" type="button">✨ Générer mon CV</button>
+              <button class="btn-outline-sm" id="cvEditBtn" type="button">✎ Modifier les informations du CV</button>
+            </div>
           </div>
 
         </div>
@@ -453,6 +456,73 @@
               <p>Aucune préférence pour le moment.</p>
               <span>Cliquez sur « + Ajouter une préférence » pour commencer.</span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CV EDIT MODAL -->
+      <div class="cv-modal-overlay" id="cvEditModal">
+        <div class="cv-modal">
+          <div class="cv-modal-head">
+            <div class="cv-modal-title">Modifier mon CV</div>
+            <button class="cv-modal-close" id="cvModalClose" type="button">×</button>
+          </div>
+          <div class="cv-modal-tabs" id="cvModalTabs">
+            <button class="cv-modal-tab active" data-tab="cv-exp">Expérience</button>
+            <button class="cv-modal-tab" data-tab="cv-form">Formation</button>
+            <button class="cv-modal-tab" data-tab="cv-cert">Certification</button>
+            <button class="cv-modal-tab" data-tab="cv-skill">Compétence</button>
+          </div>
+          <div class="cv-modal-body" id="cvModalBody">
+            <div class="cv-section" data-section="cv-exp">
+              <div class="cv-section-title">Expériences professionnelles</div>
+              <div class="cv-grid" id="cvExpList"></div>
+              <div class="cv-add-row">
+                <input class="cv-input" id="cvExpTitle" placeholder="Poste">
+                <input class="cv-input" id="cvExpCompany" placeholder="Entreprise">
+                <input class="cv-input" id="cvExpYear" placeholder="Année (ex. 2024)">
+                <button class="cv-add-btn" id="cvExpAddBtn">Ajouter</button>
+              </div>
+            </div>
+            <div class="cv-section" data-section="cv-form" style="display:none;">
+              <div class="cv-section-title">Formations</div>
+              <div class="cv-grid" id="cvFormList"></div>
+              <div class="cv-add-row">
+                <input class="cv-input" id="cvFormDiploma" placeholder="Diplôme">
+                <input class="cv-input" id="cvFormSchool" placeholder="École / Université">
+                <input class="cv-input" id="cvFormYear" placeholder="Année (ex. 2024)">
+                <button class="cv-add-btn" id="cvFormAddBtn">Ajouter</button>
+              </div>
+            </div>
+            <div class="cv-section" data-section="cv-cert" style="display:none;">
+              <div class="cv-section-title">Certifications</div>
+              <div class="cv-grid" id="cvCertList"></div>
+              <div class="cv-add-row">
+                <input class="cv-input" id="cvCertName" placeholder="Nom de la certification">
+                <input class="cv-input" id="cvCertIssuer" placeholder="Organisme">
+                <input class="cv-input" id="cvCertDate" placeholder="Date (ex. 2024)">
+                <button class="cv-add-btn" id="cvCertAddBtn">Ajouter</button>
+              </div>
+            </div>
+            <div class="cv-section" data-section="cv-skill" style="display:none;">
+              <div class="cv-section-title">Compétences</div>
+              <div class="cv-grid" id="cvSkillList"></div>
+              <div class="cv-add-row">
+                <input class="cv-input" id="cvSkillName" placeholder="Compétence">
+                <select class="cv-input" id="cvSkillLevel">
+                  <option value="">Niveau</option>
+                  <option value="Débutant">Débutant</option>
+                  <option value="Intermédiaire">Intermédiaire</option>
+                  <option value="Avancé">Avancé</option>
+                  <option value="Expert">Expert</option>
+                </select>
+                <button class="cv-add-btn" id="cvSkillAddBtn">Ajouter</button>
+              </div>
+            </div>
+          </div>
+          <div class="cv-modal-foot">
+            <button class="cv-modal-btn ghost" id="cvModalCancel" type="button">Annuler</button>
+            <button class="cv-modal-btn primary" id="cvModalSave" type="button">Enregistrer et fermer</button>
           </div>
         </div>
       </div>

@@ -534,6 +534,7 @@ function openJobDetailModal(job) {
     <div class="detail-row"><span class="detail-label">Compatibilité</span><span class="detail-value" id="jobCompatibilityValue">Calcul...</span></div>
     ${job.verified ? '<div class="detail-row"><span class="detail-label">Vérifié</span><span class="detail-value">✓ Oui</span></div>' : ''}
     <div class="detail-actions">
+      <button class="btn-secondary download-docs-btn" data-job-id="${escapeHtml(job.id)}" ${!job.sourceUrl ? 'disabled' : ''}><img class="btn-icon-small" src="/image/download.png" alt="Télécharger"> Télécharger les pièces</button>
       <button class="btn-primary apply-now-btn" data-job-apply="${escapeHtml(job.id)}" ${!job.applyEmail ? 'disabled' : ''}>Postuler maintenant</button>
     </div>
   `;
@@ -602,6 +603,48 @@ document.addEventListener("click", (e) => {
     }
   }).catch((err) => {
     console.error("[JOBS] erreur chargement détail:", err);
+  });
+});
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".download-docs-btn");
+  if (!btn) return;
+  const jobId = btn.getAttribute("data-job-id");
+  if (!jobId) return;
+
+  btn.textContent = "Chargement...";
+  btn.disabled = true;
+
+  firebase.database().ref("jobs/" + jobId).once("value").then((snap) => {
+    const job = snap.val() || {};
+    const sourceUrl = (job.sourceUrl || "").toString().trim();
+    const company = (job.company || "offre").toString().trim().replace(/[^a-z0-9_-]/gi, "_").substring(0, 50);
+
+    if (!sourceUrl) {
+      alert("Aucun lien de téléchargement disponible pour cette offre.");
+      btn.textContent = "📎 Télécharger les pièces";
+      btn.disabled = false;
+      return;
+    }
+
+    const link = document.createElement("a");
+    link.href = sourceUrl;
+    link.download = company + ".pdf";
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    btn.textContent = "✓ Téléchargement lancé";
+    setTimeout(() => {
+      btn.textContent = "📎 Télécharger les pièces";
+      btn.disabled = false;
+    }, 2000);
+  }).catch((err) => {
+    console.error("[JOBS] erreur téléchargement pièces:", err);
+    alert("Impossible de lancer le téléchargement pour le moment.");
+    btn.textContent = "📎 Télécharger les pièces";
+    btn.disabled = false;
   });
 });
 

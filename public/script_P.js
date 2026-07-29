@@ -675,8 +675,10 @@ function showAvatar(url) {
 }
 
 function loadProfile(user) {
+  console.log("[PROFIL] loadProfile appelé pour uid:", user.uid);
   firebase.database().ref("users/" + user.uid).once("value").then((snapshot) => {
     const data = snapshot.val() || {};
+    console.log("[PROFIL] données reçues:", data);
     const firstName = data.firstName
       || (user.displayName ? user.displayName.split(" ")[0] : "")
       || (user.email ? user.email.split("@")[0] : "");
@@ -689,10 +691,9 @@ function loadProfile(user) {
     const nameEl = document.getElementById("profileFullName");
     if (nameEl) nameEl.textContent = fullName || "Utilisateur";
 
-    // S'assure que chaque champ éditable est initialisé dans la DB (sauf jobTitle : on garde "Non renseigné" en vue sans écrire dans la DB)
     const initialDefaults = {};
     profileFields.forEach((field) => {
-      if (field === "jobTitle") return; // non initialisé : reste vide dans la DB
+      if (field === "jobTitle") return;
       const el = document.querySelector(`[data-field="${field}"]`);
       if (!el) return;
       if (!data[field] || data[field] === "") {
@@ -704,33 +705,28 @@ function loadProfile(user) {
     fillProfileFields(data);
     fillInfoLayout(data);
 
-    // Fonction de l'utilisateur : affiche la valeur DB si présente, sinon "Non renseigné"
     const jobTitleEl = document.querySelector('[data-field="jobTitle"]');
     if (jobTitleEl) {
       const jobTitleVal = (data.jobTitle || "").trim();
       jobTitleEl.textContent = jobTitleVal || "Non renseigné";
     }
 
-    // À propos de moi : affiche la valeur DB si présente, sinon "Non renseigné"
     const aboutEl = document.querySelector('[data-field="about"]');
     if (aboutEl) {
       aboutEl.textContent = (data.about || "").trim() || "Non renseigné";
     }
 
-    // Statistiques (années d'expérience, projets, clients) : valeurs DB ou valeurs par défaut
     document.querySelectorAll(".stat-input").forEach((input) => {
       const field = input.dataset.stat;
       const val = data[field];
       input.value = (val !== undefined && val !== null && val !== "") ? val : input.value;
     });
 
-    // Si la DB ne contient aucune de ces infos, on les y écrit une fois (depuis les valeurs par défaut de la vue)
     if (Object.keys(initialDefaults).length > 0) {
       firebase.database().ref("users/" + user.uid).update(initialDefaults)
         .catch((err) => console.warn("Initialisation profil échouée:", err && (err.message || err.code)));
     }
 
-    // Remplit l'en-tête du profil (rôle, lieu, dispo, contacts) depuis la DB
     const setText = (id, value) => {
       const el = document.getElementById(id);
       if (el) el.textContent = (value || "").trim() || "Non renseigné";
@@ -742,7 +738,6 @@ function loadProfile(user) {
     setText("profileEmail", data.email);
     setText("profileLinkedin", data.linkedin);
 
-    // En-tête de l'onglet Informations (hero)
     const infoName = document.getElementById("infoFullName");
     if (infoName) infoName.textContent = fullName || "Utilisateur";
     const infoJob = document.getElementById("infoJob");
@@ -786,6 +781,8 @@ function loadProfile(user) {
         targetTab.click();
       }
     }
+  }).catch((err) => {
+    console.error("[PROFIL] Erreur chargement données :", err && (err.message || err.code));
   });
 }
 
@@ -837,89 +834,173 @@ function generateCV() {
     const skillItems = Object.keys(skills).map(id => ({ id, ...skills[id] }));
     const langItems = Object.keys(languages).map(id => ({ id, ...languages[id] }));
 
-    const cvContent = document.createElement("div");
-    cvContent.style.cssText = "font-family: Arial, sans-serif; color: #0f1730; max-width: 900px; margin: 0 auto;";
+    let projectItems = [];
+    if (data.projects && typeof data.projects === "object") {
+      projectItems = Object.keys(data.projects).map(id => ({ id, ...data.projects[id] }));
+    }
 
-    let html = `<table style="width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(15,23,42,0.15);"><tr>`;
+    const cvContent = document.createElement("div");
+    cvContent.style.cssText = "font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #111827; max-width: 210mm; margin: 0 auto; background: #ffffff;";
+
+    const accent = "#2563eb";
+    const textPrimary = "#111827";
+    const textSecondary = "#6b7280";
+    const textMuted = "#9ca3af";
+    const bgSidebar = "#f8fafc";
+    const border = "#e5e7eb";
+
+    let html = "";
+
+    html += `<div style="display: flex; flex-direction: column; height: 297mm; box-shadow: 0 20px 60px rgba(0,0,0,0.18);">`;
+
+    // ===== HEADER =====
+    html += `<div style="background: #ffffff; border-bottom: 3px solid ${accent}; padding: 28px 32px 22px;">`;
+    html += `<div style="display: flex; align-items: center; gap: 20px;">`;
 
     if (photoURL) {
-      html += `<td style="width: 32%; background: #dbeafe; padding: 30px 20px; text-align: center; vertical-align: top;"><img src="${photoURL}" style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid #3b6bf5; margin-bottom: 12px;"></td>`;
-    } else {
-      html += `<td style="width: 32%; background: #dbeafe; padding: 30px 20px; vertical-align: top;"></td>`;
+      html += `<img src="${escapeHtml(photoURL)}" style="width: 88px; height: 88px; border-radius: 50%; object-fit: cover; border: 3px solid ${accent}; flex-shrink: 0;">`;
     }
 
-    html += `<td style="width: 68%; background: #dbeafe; padding: 30px 24px; text-align: center; vertical-align: top;"><h1 style="font-size: 24px; font-weight: 800; color: #0b1130; margin: 0 0 6px;">${escapeHtml(fullName)}</h1>`;
-    if (jobTitle) html += `<p style="font-size: 13px; color: #1e40c9; font-weight: 600; margin: 0;">${escapeHtml(jobTitle)}</p>`;
-    html += `</td></tr>`;
-
-    html += `<tr><td colspan="2" style="background: #dbeafe; padding: 0 24px 18px; text-align: center; font-size: 11px; color: #1e3a8a; line-height: 1.7;">`;
-
-    const contacts = [];
-    if (email) contacts.push(`✉ ${escapeHtml(email)}`);
-    if (whatsapp) contacts.push(`📱 ${escapeHtml(whatsapp)}`);
-    if (linkedin) contacts.push(`💻 ${escapeHtml(linkedin)}`);
-    if (residence) contacts.push(`📍 ${escapeHtml(residence)}`);
-    if (contacts.length > 0) {
-      html += contacts.join("<br>");
+    html += `<div style="flex: 1; min-width: 0;">`;
+    html += `<h1 style="font-size: 22px; font-weight: 800; color: ${textPrimary}; margin: 0 0 4px; letter-spacing: -0.3px;">${escapeHtml(fullName)}</h1>`;
+    if (jobTitle) {
+      html += `<p style="font-size: 13px; font-weight: 600; color: ${accent}; margin: 0 0 10px;">${escapeHtml(jobTitle)}</p>`;
     }
+    html += `<div style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 10.5px; color: ${textSecondary}; line-height: 1.5;">`;
+    if (email) html += `<span>${escapeHtml(email)}</span>`;
+    if (whatsapp) html += `<span>${escapeHtml(whatsapp)}</span>`;
+    if (residence) html += `<span>${escapeHtml(residence)}</span>`;
+    if (linkedin) html += `<span>${escapeHtml(linkedin)}</span>`;
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
 
-    html += `</td></tr>`;
+    // ===== BODY =====
+    html += `<div style="display: flex; flex: 1; min-height: 0;">`;
+
+    // ===== COLONNE PRINCIPALE =====
+    html += `<div style="flex: 1; padding: 24px 28px; min-width: 0;">`;
 
     if (about) {
-      html += `<tr><td colspan="2" style="background: #dbeafe; padding: 0 24px 20px;"><div style="background: rgba(255,255,255,0.6); border-radius: 10px; padding: 12px; font-size: 12px; line-height: 1.6; color: #0f1730; text-align: left;"><strong style="color: #1e40c9;">À propos</strong><br>${escapeHtml(about)}</div></td></tr>`;
+      html += `<section style="margin-bottom: 22px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 8px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Profil professionnel</h2>`;
+      html += `<p style="font-size: 11.5px; color: ${textSecondary}; line-height: 1.6; margin: 0; text-align: justify;">${escapeHtml(about)}</p>`;
+      html += `</section>`;
     }
 
-    html += `</table>`;
-
-    html += `<table style="width: 100%; border-collapse: collapse; margin-top: 0; box-shadow: 0 10px 30px rgba(15,23,42,0.15); border-radius: 12px; overflow: hidden;"><tr><td style="padding: 30px; background: #fff; vertical-align: top;">`;
-
     if (expItems.length > 0) {
-      html += `<div style="margin-bottom: 22px;"><h2 style="font-size: 15px; font-weight: 800; color: #3b6bf5; border-bottom: 2px solid #3b6bf5; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Expérience professionnelle</h2>`;
+      html += `<section style="margin-bottom: 22px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Expériences professionnelles</h2>`;
       expItems.forEach(exp => {
-        html += `<div style="margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #3b6bf5;"><div style="font-weight: 700; font-size: 13px; color: #0f1730;">${escapeHtml(exp.title || "Poste")}</div><div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${escapeHtml(exp.company || "")}${exp.location ? " | " + escapeHtml(exp.location) : ""}</div><div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${exp.startYear || ""}${exp.endYear && exp.endYear !== "Présent" ? " - " + exp.endYear : exp.endYear === "Présent" ? " - Présent" : ""}</div>${exp.description ? `<p style="font-size: 12px; margin-top: 4px; line-height: 1.5; color: #374151;">${escapeHtml(exp.description)}</p>` : ""}</div>`;
+        html += `<div style="margin-bottom: 14px; padding-left: 12px; border-left: 3px solid ${accent};">`;
+        html += `<div style="font-weight: 700; font-size: 13px; color: ${textPrimary}; margin-bottom: 2px;">${escapeHtml(exp.title || "Poste")}</div>`;
+        html += `<div style="font-size: 11.5px; color: ${textSecondary}; margin-bottom: 2px;">${escapeHtml(exp.company || "")}${exp.location ? " · " + escapeHtml(exp.location) : ""}</div>`;
+        html += `<div style="font-size: 10.5px; color: ${textMuted}; margin-bottom: 4px;">${exp.startYear || ""}${exp.endYear && exp.endYear !== "Présent" ? " - " + exp.endYear : exp.endYear === "Présent" ? " - Présent" : ""}</div>`;
+        if (exp.description) {
+          html += `<p style="font-size: 11.5px; color: ${textSecondary}; line-height: 1.5; margin: 0;">${escapeHtml(exp.description)}</p>`;
+        }
+        html += `</div>`;
       });
-      html += `</div>`;
+      html += `</section>`;
     }
 
     if (formItems.length > 0) {
-      html += `<div style="margin-bottom: 22px;"><h2 style="font-size: 15px; font-weight: 800; color: #3b6bf5; border-bottom: 2px solid #3b6bf5; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Formation</h2>`;
+      html += `<section style="margin-bottom: 22px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Formations</h2>`;
       formItems.forEach(form => {
-        html += `<div style="margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #3b6bf5;"><div style="font-weight: 700; font-size: 13px; color: #0f1730;">${escapeHtml(form.diploma || "Diplôme")}</div><div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${escapeHtml(form.school || "")}${form.location ? " | " + escapeHtml(form.location) : ""}</div><div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${form.startYear || ""}${form.endYear && form.endYear !== "Présent" ? " - " + form.endYear : form.endYear === "Présent" ? " - Présent" : ""}</div>${form.description ? `<p style="font-size: 12px; margin-top: 4px; line-height: 1.5; color: #374151;">${escapeHtml(form.description)}</p>` : ""}</div>`;
+        html += `<div style="margin-bottom: 12px; padding-left: 12px; border-left: 3px solid ${accent};">`;
+        html += `<div style="font-weight: 700; font-size: 13px; color: ${textPrimary}; margin-bottom: 2px;">${escapeHtml(form.diploma || "Diplôme")}</div>`;
+        html += `<div style="font-size: 11.5px; color: ${textSecondary}; margin-bottom: 2px;">${escapeHtml(form.school || "")}${form.location ? " · " + escapeHtml(form.location) : ""}</div>`;
+        html += `<div style="font-size: 10.5px; color: ${textMuted};">${form.startYear || ""}${form.endYear && form.endYear !== "Présent" ? " - " + form.endYear : form.endYear === "Présent" ? " - Présent" : ""}</div>`;
+        html += `</div>`;
       });
-      html += `</div>`;
+      html += `</section>`;
+    }
+
+    if (projectItems.length > 0) {
+      html += `<section style="margin-bottom: 22px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Projets</h2>`;
+      projectItems.forEach(project => {
+        html += `<div style="margin-bottom: 12px; padding-left: 12px; border-left: 3px solid ${accent};">`;
+        html += `<div style="font-weight: 700; font-size: 13px; color: ${textPrimary}; margin-bottom: 2px;">${escapeHtml(project.title || project.name || "Projet")}</div>`;
+        if (project.description) {
+          html += `<p style="font-size: 11.5px; color: ${textSecondary}; line-height: 1.5; margin: 0 0 4px;">${escapeHtml(project.description)}</p>`;
+        }
+        if (project.technologies || project.tags || project.skills) {
+          const techs = [project.technologies, project.tags, project.skills].filter(Boolean).join(", ");
+          html += `<div style="font-size: 10.5px; color: ${accent}; font-weight: 600;">${escapeHtml(techs)}</div>`;
+        }
+        html += `</div>`;
+      });
+      html += `</section>`;
     }
 
     if (certItems.length > 0) {
-      html += `<div style="margin-bottom: 22px;"><h2 style="font-size: 15px; font-weight: 800; color: #3b6bf5; border-bottom: 2px solid #3b6bf5; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Certifications</h2>`;
+      html += `<section style="margin-bottom: 22px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Certifications</h2>`;
       certItems.forEach(cert => {
-        html += `<div style="margin-bottom: 10px; padding-left: 10px; border-left: 3px solid #3b6bf5;"><div style="font-weight: 700; font-size: 13px; color: #0f1730;">${escapeHtml(cert.name || "Certification")}</div><div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${escapeHtml(cert.issuer || "")}${cert.date ? " | " + escapeHtml(cert.date) : ""}${cert.expiryDate ? " - " + escapeHtml(cert.expiryDate) : ""}</div>${cert.description ? `<p style="font-size: 12px; margin-top: 4px; line-height: 1.5; color: #374151;">${escapeHtml(cert.description)}</p>` : ""}</div>`;
+        html += `<div style="margin-bottom: 10px; padding-left: 12px; border-left: 3px solid ${accent};">`;
+        html += `<div style="font-weight: 700; font-size: 13px; color: ${textPrimary}; margin-bottom: 2px;">${escapeHtml(cert.name || "Certification")}</div>`;
+        html += `<div style="font-size: 11.5px; color: ${textSecondary};">${escapeHtml(cert.issuer || "")}${cert.date ? " · " + escapeHtml(cert.date) : ""}${cert.expiryDate ? " - " + escapeHtml(cert.expiryDate) : ""}</div>`;
+        html += `</div>`;
       });
-      html += `</div>`;
+      html += `</section>`;
     }
 
+    html += `</div>`;
+
+    // ===== COLONNE GAUCHE / SIDEBAR =====
+    html += `<div style="width: 32%; background: ${bgSidebar}; border-left: 1px solid ${border}; padding: 24px 20px; flex-shrink: 0;">`;
+
     if (skillItems.length > 0) {
-      html += `<div style="margin-bottom: 22px;"><h2 style="font-size: 15px; font-weight: 800; color: #3b6bf5; border-bottom: 2px solid #3b6bf5; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Compétences</h2>`;
-      html += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
+      html += `<section style="margin-bottom: 20px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 10px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Compétences</h2>`;
+      html += `<div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
       skillItems.forEach(skill => {
-        html += `<span style="background: #eef2ff; color: #1e40c9; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;">${escapeHtml(skill.name || "")}${skill.level ? " (" + escapeHtml(skill.level) + ")" : ""}</span>`;
+        html += `<span style="background: #ffffff; color: ${accent}; border: 1px solid ${border}; padding: 4px 10px; border-radius: 6px; font-size: 10.5px; font-weight: 600;">${escapeHtml(skill.name || "")}${skill.level ? " (" + escapeHtml(skill.level) + ")" : ""}</span>`;
       });
-      html += `</div></div>`;
+      html += `</div>`;
+      html += `</section>`;
     }
 
     if (langItems.length > 0) {
-      html += `<div style="margin-bottom: 10px;"><h2 style="font-size: 15px; font-weight: 800; color: #3b6bf5; border-bottom: 2px solid #3b6bf5; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Langues</h2>`;
+      html += `<section style="margin-bottom: 20px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 10px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Langues</h2>`;
       langItems.forEach(lang => {
-        html += `<div style="margin-bottom: 6px; font-size: 12px; color: #374151;"><strong style="color: #0f1730;">${escapeHtml(lang.name || "")}</strong>${lang.level ? " - " + escapeHtml(lang.level) : ""}${lang.description ? " : " + escapeHtml(lang.description) : ""}</div>`;
+        html += `<div style="margin-bottom: 6px; font-size: 11.5px; color: ${textSecondary};">`;
+        html += `<strong style="color: ${textPrimary};">${escapeHtml(lang.name || "")}</strong>`;
+        if (lang.level) html += ` · ${escapeHtml(lang.level)}`;
+        html += `</div>`;
       });
-      html += `</div>`;
+      html += `</section>`;
     }
 
-    html += `</td></tr></table>`;
+    html += `<section style="margin-bottom: 20px;">`;
+    html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 10px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Informations</h2>`;
+    html += `<div style="font-size: 10.5px; color: ${textSecondary}; line-height: 1.7;">`;
+    if (nationality) html += `<div><strong style="color: ${textPrimary};">Nationalité:</strong> ${escapeHtml(nationality)}</div>`;
+    if (birthDate) html += `<div><strong style="color: ${textPrimary};">Naissance:</strong> ${escapeHtml(birthDate)}</div>`;
+    if (maritalStatus) html += `<div><strong style="color: ${textPrimary};">Situation:</strong> ${escapeHtml(maritalStatus)}</div>`;
+    if (availability) html += `<div><strong style="color: ${textPrimary};">Disponibilité:</strong> ${escapeHtml(availability)}</div>`;
+    if (contractType) html += `<div><strong style="color: ${textPrimary};">Contrat:</strong> ${escapeHtml(contractType)}</div>`;
+    if (workLocation) html += `<div><strong style="color: ${textPrimary};">Lieu de travail:</strong> ${escapeHtml(workLocation)}</div>`;
+    if (salary) html += `<div><strong style="color: ${textPrimary};">Salaire:</strong> ${escapeHtml(salary)}</div>`;
+    html += `</div>`;
+    html += `</section>`;
+
+    html += `<div style="margin-top: auto; padding-top: 16px; border-top: 1px solid ${border}; font-size: 10px; color: ${textMuted}; text-align: center;">`;
+    html += `Généré depuis VERA · ${new Date().getFullYear()}`;
+    html += `</div>`;
+
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
 
     cvContent.innerHTML = html;
 
     const opt = {
-      margin: 10,
+      margin: 0,
       filename: (fullName.replace(/\s+/g, "_") || "CV") + ".pdf",
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
@@ -939,11 +1020,14 @@ if (generateCvBtn) {
 }
 
 firebase.auth().onAuthStateChanged((user) => {
+  console.log("[PROFIL] onAuthStateChanged:", user ? "connecté (" + user.uid + ")" : "déconnecté");
   if (!user) return;
   loadProfile(user);
 });
 
-avatarEditBtn.addEventListener("click", () => avatarInput.click());
+if (avatarEditBtn && avatarInput) {
+  avatarEditBtn.addEventListener("click", () => avatarInput.click());
+}
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -954,7 +1038,8 @@ function fileToBase64(file) {
   });
 }
 
-avatarInput.addEventListener("change", (e) => {
+if (avatarInput) {
+  avatarInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
   avatarError.style.display = "none";
   if (!file) return;
@@ -998,7 +1083,8 @@ avatarInput.addEventListener("change", (e) => {
       avatarError.textContent = "Échec de l'envoi : " + (error.message || error.code);
       avatarError.style.display = "block";
     });
-});
+  });
+}
 
 // ============== EXPÉRIENCES PROFESSIONNELLES ==============
 function expRef() {
@@ -2161,6 +2247,269 @@ if (prefSearchToggle && prefSearchWrap) {
       prefSearchWrap.style.display = "flex";
       if (prefSearchEl) prefSearchEl.focus();
     }
+  });
+}
+
+// ============== CV MODAL ==============
+const cvEditModal = document.getElementById("cvEditModal");
+const cvModalClose = document.getElementById("cvModalClose");
+const cvModalCancel = document.getElementById("cvModalCancel");
+const cvModalSave = document.getElementById("cvModalSave");
+const cvModalTabs = document.getElementById("cvModalTabs");
+const cvModalBody = document.getElementById("cvModalBody");
+const cvGenerateBtn = document.getElementById("cvGenerateBtn");
+const cvDownloadBtn = document.getElementById("cvDownloadBtn");
+const cvEditBtn = document.getElementById("cvEditBtn");
+const cvStatusText = document.getElementById("cvStatusText");
+
+function openCvModal() {
+  if (!cvEditModal) return;
+  cvEditModal.classList.add("active");
+  refreshCvLists();
+}
+
+function closeCvModal() {
+  if (!cvEditModal) return;
+  cvEditModal.classList.remove("active");
+}
+
+function refreshCvLists() {
+  renderCvExpList();
+  renderCvFormList();
+  renderCvCertList();
+  renderCvSkillList();
+}
+
+function getCvListItemHtml(type, item) {
+  let title = "";
+  let sub = "";
+
+  if (type === "exp") {
+    title = item.title || "Poste";
+    sub = [item.company, item.location, item.startYear, item.endYear].filter(Boolean).join(" | ");
+  } else if (type === "form") {
+    title = item.diploma || "Diplôme";
+    sub = [item.school, item.location, item.startYear, item.endYear].filter(Boolean).join(" | ");
+  } else if (type === "cert") {
+    title = item.name || "Certification";
+    sub = [item.issuer, item.date].filter(Boolean).join(" | ");
+  } else if (type === "skill") {
+    title = item.name || "Compétence";
+    sub = item.level || "";
+  }
+
+  return `<div class="cv-item" data-id="${item.id}">
+    <div class="cv-item-body">
+      <div class="cv-item-title">${escapeHtml(title)}</div>
+      ${sub ? `<div class="cv-item-sub">${escapeHtml(sub)}</div>` : ""}
+    </div>
+    <button class="cv-item-remove" data-id="${item.id}" data-type="${type}" type="button">×</button>
+  </div>`;
+}
+
+function renderCvExpList() {
+  const list = document.getElementById("cvExpList");
+  if (!list) return;
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  firebase.database().ref("users/" + user.uid + "/experiences").once("value").then((snap) => {
+    const data = snap.val() || {};
+    const items = Object.keys(data).map((id) => ({ id, ...data[id] }));
+    if (items.length === 0) {
+      list.innerHTML = '<div class="cv-modal-empty"><p>Aucune expérience ajoutée</p><span>Utilisez le formulaire ci-dessous pour ajouter votre première expérience.</span></div>';
+      return;
+    }
+    list.innerHTML = items.map((item) => getCvListItemHtml("exp", item)).join("");
+    list.querySelectorAll(".cv-item-remove").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        const type = btn.getAttribute("data-type");
+        if (!id || !type || !user) return;
+        firebase.database().ref("users/" + user.uid + "/experiences/" + id).remove().then(() => renderCvExpList());
+      });
+    });
+  });
+}
+
+function renderCvFormList() {
+  const list = document.getElementById("cvFormList");
+  if (!list) return;
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  firebase.database().ref("users/" + user.uid + "/formations").once("value").then((snap) => {
+    const data = snap.val() || {};
+    const items = Object.keys(data).map((id) => ({ id, ...data[id] }));
+    if (items.length === 0) {
+      list.innerHTML = '<div class="cv-modal-empty"><p>Aucune formation ajoutée</p><span>Utilisez le formulaire ci-dessous pour ajouter votre première formation.</span></div>';
+      return;
+    }
+    list.innerHTML = items.map((item) => getCvListItemHtml("form", item)).join("");
+    list.querySelectorAll(".cv-item-remove").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        const type = btn.getAttribute("data-type");
+        if (!id || !type || !user) return;
+        firebase.database().ref("users/" + user.uid + "/formations/" + id).remove().then(() => renderCvFormList());
+      });
+    });
+  });
+}
+
+function renderCvCertList() {
+  const list = document.getElementById("cvCertList");
+  if (!list) return;
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  firebase.database().ref("users/" + user.uid + "/certifications").once("value").then((snap) => {
+    const data = snap.val() || {};
+    const items = Object.keys(data).map((id) => ({ id, ...data[id] }));
+    if (items.length === 0) {
+      list.innerHTML = '<div class="cv-modal-empty"><p>Aucune certification ajoutée</p><span>Utilisez le formulaire ci-dessous pour ajouter votre première certification.</span></div>';
+      return;
+    }
+    list.innerHTML = items.map((item) => getCvListItemHtml("cert", item)).join("");
+    list.querySelectorAll(".cv-item-remove").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        const type = btn.getAttribute("data-type");
+        if (!id || !type || !user) return;
+        firebase.database().ref("users/" + user.uid + "/certifications/" + id).remove().then(() => renderCvCertList());
+      });
+    });
+  });
+}
+
+function renderCvSkillList() {
+  const list = document.getElementById("cvSkillList");
+  if (!list) return;
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  firebase.database().ref("users/" + user.uid + "/skills").once("value").then((snap) => {
+    const data = snap.val() || {};
+    const items = Object.keys(data).map((id) => ({ id, ...data[id] }));
+    if (items.length === 0) {
+      list.innerHTML = '<div class="cv-modal-empty"><p>Aucune compétence ajoutée</p><span>Utilisez le formulaire ci-dessous pour ajouter votre première compétence.</span></div>';
+      return;
+    }
+    list.innerHTML = items.map((item) => getCvListItemHtml("skill", item)).join("");
+    list.querySelectorAll(".cv-item-remove").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        const type = btn.getAttribute("data-type");
+        if (!id || !type || !user) return;
+        firebase.database().ref("users/" + user.uid + "/skills/" + id).remove().then(() => renderCvSkillList());
+      });
+    });
+  });
+}
+
+function addCvItem(type) {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  if (type === "exp") {
+    const title = document.getElementById("cvExpTitle").value.trim();
+    const company = document.getElementById("cvExpCompany").value.trim();
+    const year = document.getElementById("cvExpYear").value.trim();
+    if (!title && !company) return;
+    const ref = firebase.database().ref("users/" + user.uid + "/experiences").push();
+    ref.set({ title, company, location: year, startYear: year, endYear: year }).then(() => {
+      document.getElementById("cvExpTitle").value = "";
+      document.getElementById("cvExpCompany").value = "";
+      document.getElementById("cvExpYear").value = "";
+      renderCvExpList();
+    });
+  } else if (type === "form") {
+    const diploma = document.getElementById("cvFormDiploma").value.trim();
+    const school = document.getElementById("cvFormSchool").value.trim();
+    const year = document.getElementById("cvFormYear").value.trim();
+    if (!diploma && !school) return;
+    const ref = firebase.database().ref("users/" + user.uid + "/formations").push();
+    ref.set({ diploma, school, location: year, startYear: year, endYear: year }).then(() => {
+      document.getElementById("cvFormDiploma").value = "";
+      document.getElementById("cvFormSchool").value = "";
+      document.getElementById("cvFormYear").value = "";
+      renderCvFormList();
+    });
+  } else if (type === "cert") {
+    const name = document.getElementById("cvCertName").value.trim();
+    const issuer = document.getElementById("cvCertIssuer").value.trim();
+    const date = document.getElementById("cvCertDate").value.trim();
+    if (!name) return;
+    const ref = firebase.database().ref("users/" + user.uid + "/certifications").push();
+    ref.set({ name, issuer, date, expiryDate: date }).then(() => {
+      document.getElementById("cvCertName").value = "";
+      document.getElementById("cvCertIssuer").value = "";
+      document.getElementById("cvCertDate").value = "";
+      renderCvCertList();
+    });
+  } else if (type === "skill") {
+    const name = document.getElementById("cvSkillName").value.trim();
+    const level = document.getElementById("cvSkillLevel").value.trim();
+    if (!name) return;
+    const ref = firebase.database().ref("users/" + user.uid + "/skills").push();
+    ref.set({ name, level }).then(() => {
+      document.getElementById("cvSkillName").value = "";
+      document.getElementById("cvSkillLevel").value = "";
+      renderCvSkillList();
+    });
+  }
+}
+
+if (cvModalClose) cvModalClose.addEventListener("click", closeCvModal);
+if (cvModalCancel) cvModalCancel.addEventListener("click", closeCvModal);
+if (cvEditBtn) cvEditBtn.addEventListener("click", openCvModal);
+if (cvModalSave) cvModalSave.addEventListener("click", closeCvModal);
+
+if (cvGenerateBtn) {
+  cvGenerateBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (typeof generateCV === "function") {
+      generateCV();
+      if (cvStatusText) cvStatusText.textContent = "CV généré et téléchargé";
+    }
+  });
+}
+
+if (cvDownloadBtn) {
+  cvDownloadBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (typeof generateCV === "function") {
+      generateCV();
+      if (cvStatusText) cvStatusText.textContent = "CV téléchargé";
+    }
+  });
+}
+
+if (cvModalTabs) {
+  cvModalTabs.addEventListener("click", (e) => {
+    const tab = e.target.closest(".cv-modal-tab");
+    if (!tab) return;
+    const key = tab.dataset.tab;
+    cvModalTabs.querySelectorAll(".cv-modal-tab").forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    cvModalBody.querySelectorAll(".cv-section").forEach((s) => {
+      s.style.display = s.dataset.section === key ? "block" : "none";
+    });
+  });
+}
+
+if (document.getElementById("cvExpAddBtn")) {
+  document.getElementById("cvExpAddBtn").addEventListener("click", () => addCvItem("exp"));
+}
+if (document.getElementById("cvFormAddBtn")) {
+  document.getElementById("cvFormAddBtn").addEventListener("click", () => addCvItem("form"));
+}
+if (document.getElementById("cvCertAddBtn")) {
+  document.getElementById("cvCertAddBtn").addEventListener("click", () => addCvItem("cert"));
+}
+if (document.getElementById("cvSkillAddBtn")) {
+  document.getElementById("cvSkillAddBtn").addEventListener("click", () => addCvItem("skill"));
+}
+
+if (cvEditModal) {
+  cvEditModal.addEventListener("click", (e) => {
+    if (e.target === cvEditModal) closeCvModal();
   });
 }
 
