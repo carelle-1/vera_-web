@@ -1,4 +1,4 @@
-// ============== HELPERS ==============
+﻿// ============== HELPERS ==============
 function escapeHtml(text) {
   if (text === null || text === undefined) return "";
   const str = String(text);
@@ -10,6 +10,302 @@ function escapeHtml(text) {
     "'": '&#039;'
   };
   return str.replace(/[&<>"']/g, (m) => map[m]);
+}
+
+function generateCV() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  firebase.database().ref("users/" + user.uid + "/experiences").once("value").then((expSnap) => {
+    const experiences = expSnap.val() || {};
+    return firebase.database().ref("users/" + user.uid + "/formations").once("value").then((formSnap) => {
+      const formations = formSnap.val() || {};
+      return firebase.database().ref("users/" + user.uid + "/certifications").once("value").then((certSnap) => {
+        const certifications = certSnap.val() || {};
+        return firebase.database().ref("users/" + user.uid + "/skills").once("value").then((skillsSnap) => {
+          const skills = skillsSnap.val() || {};
+          return firebase.database().ref("users/" + user.uid + "/languages").once("value").then((langSnap) => {
+            const languages = langSnap.val() || {};
+            return firebase.database().ref("users/" + user.uid).once("value").then((snap) => {
+              const data = snap.val() || {};
+              return { data, experiences, formations, certifications, skills, languages };
+            });
+          });
+        });
+      });
+    });
+  }).then(({ data, experiences, formations, certifications, skills, languages }) => {
+    const photoURL = data.photoURL || user.photoURL || "";
+    const fullName = (data.fullName || ((data.firstName || "") + " " + (data.lastName || "")).trim() || user.displayName || "Utilisateur").trim();
+    const firstName = data.firstName || "";
+    const lastName = data.lastName || "";
+    const email = data.email || "";
+    const whatsapp = data.whatsapp || "";
+    const linkedin = data.linkedin || "";
+    const residence = data.residence || "";
+    const birthDate = data.birthDate || "";
+    const nationality = data.nationality || "";
+    const maritalStatus = data.maritalStatus || "";
+    const mainLanguage = data.mainLanguage || "";
+    const jobTitle = data.jobTitle || "";
+    const availability = data.availability || "";
+    const contractType = data.contractType || "";
+    const workLocation = data.workLocation || "";
+    const salary = data.salary || "";
+    const about = data.about || "";
+
+    const expItems = Object.keys(experiences).map(id => ({ id, ...experiences[id] })).sort((a, b) => (b.startYear || 0) - (a.startYear || 0));
+    const formItems = Object.keys(formations).map(id => ({ id, ...formations[id] })).sort((a, b) => (b.startYear || 0) - (a.startYear || 0));
+    const certItems = Object.keys(certifications).map(id => ({ id, ...certifications[id] }));
+    const skillItems = Object.keys(skills).map(id => ({ id, ...skills[id] }));
+    const langItems = Object.keys(languages).map(id => ({ id, ...languages[id] }));
+
+    let projectItems = [];
+    if (data.projects && typeof data.projects === "object") {
+      projectItems = Object.keys(data.projects).map(id => ({ id, ...data.projects[id] }));
+    }
+
+    const cvContent = document.createElement("div");
+    cvContent.style.cssText = "font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #111827; max-width: 210mm; margin: 0 auto; background: #ffffff;";
+
+    const accent = "#2563eb";
+    const textPrimary = "#111827";
+    const textSecondary = "#6b7280";
+    const textMuted = "#9ca3af";
+    const bgSidebar = "#f8fafc";
+    const border = "#e5e7eb";
+
+    let html = "";
+
+    html += `<div style="display: flex; flex-direction: column; width: 210mm; min-height: 297mm; margin: 0 auto; background: #ffffff; box-sizing: border-box;">`;
+
+    // ===== HEADER =====
+    html += `<div style="background: #ffffff; border-bottom: 3px solid ${accent}; padding: 28px 32px 22px;">`;
+    html += `<div style="display: flex; align-items: center; gap: 20px;">`;
+
+    if (photoURL) {
+      html += `<img src="${escapeHtml(photoURL)}" style="width: 88px; height: 88px; border-radius: 50%; object-fit: cover; border: 3px solid ${accent}; flex-shrink: 0;">`;
+    }
+
+    html += `<div style="flex: 1; min-width: 0;">`;
+    html += `<h1 style="font-size: 22px; font-weight: 800; color: ${textPrimary}; margin: 0 0 4px; letter-spacing: -0.3px;">${escapeHtml(fullName)}</h1>`;
+    if (jobTitle) {
+      html += `<p style="font-size: 13px; font-weight: 600; color: ${accent}; margin: 0 0 10px;">${escapeHtml(jobTitle)}</p>`;
+    }
+    html += `<div style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 10.5px; color: ${textSecondary}; line-height: 1.5;">`;
+    if (email) html += `<span>${escapeHtml(email)}</span>`;
+    if (whatsapp) html += `<span>${escapeHtml(whatsapp)}</span>`;
+    if (residence) html += `<span>${escapeHtml(residence)}</span>`;
+    if (linkedin) html += `<span>${escapeHtml(linkedin)}</span>`;
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
+
+    // ===== BODY =====
+    html += `<div style="display: flex; flex: 1; min-height: 0;">`;
+
+    // ===== COLONNE PRINCIPALE =====
+    html += `<div style="flex: 1; padding: 24px 28px; min-width: 0;">`;
+
+    if (about) {
+      html += `<section style="margin-bottom: 22px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 8px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Profil professionnel</h2>`;
+      html += `<p style="font-size: 11.5px; color: ${textSecondary}; line-height: 1.6; margin: 0; text-align: justify;">${escapeHtml(about)}</p>`;
+      html += `</section>`;
+    }
+
+    if (expItems.length > 0) {
+      html += `<section style="margin-bottom: 22px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Expériences professionnelles</h2>`;
+      expItems.forEach(exp => {
+        html += `<div style="margin-bottom: 14px; padding-left: 12px; border-left: 3px solid ${accent};">`;
+        html += `<div style="font-weight: 700; font-size: 13px; color: ${textPrimary}; margin-bottom: 2px;">${escapeHtml(exp.title || "Poste")}</div>`;
+        html += `<div style="font-size: 11.5px; color: ${textSecondary}; margin-bottom: 2px;">${escapeHtml(exp.company || "")}${exp.location ? " · " + escapeHtml(exp.location) : ""}</div>`;
+        html += `<div style="font-size: 10.5px; color: ${textMuted}; margin-bottom: 4px;">${exp.startYear || ""}${exp.endYear && exp.endYear !== "Présent" ? " - " + exp.endYear : exp.endYear === "Présent" ? " - Présent" : ""}</div>`;
+        if (exp.description) {
+          html += `<p style="font-size: 11.5px; color: ${textSecondary}; line-height: 1.5; margin: 0;">${escapeHtml(exp.description)}</p>`;
+        }
+        html += `</div>`;
+      });
+      html += `</section>`;
+    }
+
+    if (formItems.length > 0) {
+      html += `<section style="margin-bottom: 22px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Formations</h2>`;
+      formItems.forEach(form => {
+        html += `<div style="margin-bottom: 12px; padding-left: 12px; border-left: 3px solid ${accent};">`;
+        html += `<div style="font-weight: 700; font-size: 13px; color: ${textPrimary}; margin-bottom: 2px;">${escapeHtml(form.diploma || "Diplôme")}</div>`;
+        html += `<div style="font-size: 11.5px; color: ${textSecondary}; margin-bottom: 2px;">${escapeHtml(form.school || "")}${form.location ? " · " + escapeHtml(form.location) : ""}</div>`;
+        html += `<div style="font-size: 10.5px; color: ${textMuted};">${form.startYear || ""}${form.endYear && form.endYear !== "Présent" ? " - " + form.endYear : form.endYear === "Présent" ? " - Présent" : ""}</div>`;
+        html += `</div>`;
+      });
+      html += `</section>`;
+    }
+
+    if (projectItems.length > 0) {
+      html += `<section style="margin-bottom: 22px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Projets</h2>`;
+      projectItems.forEach(project => {
+        html += `<div style="margin-bottom: 12px; padding-left: 12px; border-left: 3px solid ${accent};">`;
+        html += `<div style="font-weight: 700; font-size: 13px; color: ${textPrimary}; margin-bottom: 2px;">${escapeHtml(project.title || project.name || "Projet")}</div>`;
+        if (project.description) {
+          html += `<p style="font-size: 11.5px; color: ${textSecondary}; line-height: 1.5; margin: 0 0 4px;">${escapeHtml(project.description)}</p>`;
+        }
+        if (project.technologies || project.tags || project.skills) {
+          const techs = [project.technologies, project.tags, project.skills].filter(Boolean).join(", ");
+          html += `<div style="font-size: 10.5px; color: ${accent}; font-weight: 600;">${escapeHtml(techs)}</div>`;
+        }
+        html += `</div>`;
+      });
+      html += `</section>`;
+    }
+
+    if (certItems.length > 0) {
+      html += `<section style="margin-bottom: 22px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Certifications</h2>`;
+      certItems.forEach(cert => {
+        html += `<div style="margin-bottom: 10px; padding-left: 12px; border-left: 3px solid ${accent};">`;
+        html += `<div style="font-weight: 700; font-size: 13px; color: ${textPrimary}; margin-bottom: 2px;">${escapeHtml(cert.name || "Certification")}</div>`;
+        html += `<div style="font-size: 11.5px; color: ${textSecondary};">${escapeHtml(cert.issuer || "")}${cert.date ? " · " + escapeHtml(cert.date) : ""}${cert.expiryDate ? " - " + escapeHtml(cert.expiryDate) : ""}</div>`;
+        html += `</div>`;
+      });
+      html += `</section>`;
+    }
+
+    html += `</div>`;
+
+    // ===== COLONNE GAUCHE / SIDEBAR =====
+    html += `<div style="width: 32%; background: ${bgSidebar}; border-left: 1px solid ${border}; padding: 24px 20px; flex-shrink: 0;">`;
+
+    if (skillItems.length > 0) {
+      html += `<section style="margin-bottom: 20px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 10px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Compétences</h2>`;
+      html += `<div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+      skillItems.forEach(skill => {
+        html += `<span style="background: #ffffff; color: ${accent}; border: 1px solid ${border}; padding: 4px 10px; border-radius: 6px; font-size: 10.5px; font-weight: 600;">${escapeHtml(skill.name || "")}${skill.level ? " (" + escapeHtml(skill.level) + ")" : ""}</span>`;
+      });
+      html += `</div>`;
+      html += `</section>`;
+    }
+
+    if (langItems.length > 0) {
+      html += `<section style="margin-bottom: 20px;">`;
+      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 10px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Langues</h2>`;
+      langItems.forEach(lang => {
+        html += `<div style="margin-bottom: 6px; font-size: 11.5px; color: ${textSecondary};">`;
+        html += `<strong style="color: ${textPrimary};">${escapeHtml(lang.name || "")}</strong>`;
+        if (lang.level) html += ` · ${escapeHtml(lang.level)}`;
+        html += `</div>`;
+      });
+      html += `</section>`;
+    }
+
+    html += `<section style="margin-bottom: 20px;">`;
+    html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 10px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Informations</h2>`;
+    html += `<div style="font-size: 10.5px; color: ${textSecondary}; line-height: 1.7;">`;
+    if (nationality) html += `<div><strong style="color: ${textPrimary};">Nationalité:</strong> ${escapeHtml(nationality)}</div>`;
+    if (birthDate) html += `<div><strong style="color: ${textPrimary};">Naissance:</strong> ${escapeHtml(birthDate)}</div>`;
+    if (maritalStatus) html += `<div><strong style="color: ${textPrimary};">Situation:</strong> ${escapeHtml(maritalStatus)}</div>`;
+    if (availability) html += `<div><strong style="color: ${textPrimary};">Disponibilité:</strong> ${escapeHtml(availability)}</div>`;
+    if (contractType) html += `<div><strong style="color: ${textPrimary};">Contrat:</strong> ${escapeHtml(contractType)}</div>`;
+    if (workLocation) html += `<div><strong style="color: ${textPrimary};">Lieu de travail:</strong> ${escapeHtml(workLocation)}</div>`;
+    if (salary) html += `<div><strong style="color: ${textPrimary};">Salaire:</strong> ${escapeHtml(salary)}</div>`;
+    html += `</div>`;
+    html += `</section>`;
+
+    html += `<div style="margin-top: auto; padding-top: 16px; border-top: 1px solid ${border}; font-size: 10px; color: ${textMuted}; text-align: center;">`;
+    html += `Généré depuis VERA · ${new Date().getFullYear()}`;
+    html += `</div>`;
+
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
+
+    cvContent.innerHTML = html;
+
+    const opt = {
+      margin: 0,
+      filename: (fullName.replace(/\s+/g, "_") || "CV") + ".pdf",
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+    };
+
+    html2pdf().set(opt).from(cvContent).save().catch(err => alert("Échec de la génération du PDF : " + (err.message || err.code)));
+  }).catch(err => alert("Échec de la génération du CV : " + (err.message || err.code)));
+}
+
+function generateCoverLetter(job) {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  firebase.database().ref("users/" + user.uid).once("value").then((snap) => {
+    const data = snap.val() || {};
+    const fullName = (data.fullName || ((data.firstName || "") + " " + (data.lastName || "")).trim() || user.displayName || "Candidat").trim();
+    const email = data.email || user.email || "";
+    const whatsapp = data.whatsapp || "";
+    const linkedin = data.linkedin || "";
+    const residence = data.residence || "";
+    const jobTitle = (job && job.title) ? job.title : "le poste";
+    const company = (job && job.company) ? job.company : "";
+
+    const today = new Date();
+    const dateStr = today.toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" });
+
+    const recipient = company ? `Direction des Ressources Humaines\n${company}` : "Direction des Ressources Humaines";
+    const subject = `Candidature au poste de ${jobTitle}`;
+
+    const letterContent = document.createElement("div");
+    letterContent.style.cssText = "font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #111827; max-width: 210mm; margin: 0 auto; background: #ffffff;";
+
+    let html = `<div style="width: 210mm; min-height: 297mm; padding: 32px 36px; box-sizing: border-box; background: #ffffff;">`;
+
+    html += `<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 28px;">`;
+    html += `<div style="flex: 1;">`;
+    html += `<h1 style="font-size: 20px; font-weight: 800; color: #111827; margin: 0 0 6px;">${escapeHtml(fullName)}</h1>`;
+    if (email) html += `<p style="font-size: 11px; color: #6b7280; margin: 0 0 2px;">${escapeHtml(email)}</p>`;
+    if (whatsapp) html += `<p style="font-size: 11px; color: #6b7280; margin: 0 0 2px;">${escapeHtml(whatsapp)}</p>`;
+    if (linkedin) html += `<p style="font-size: 11px; color: #6b7280; margin: 0 0 2px;">${escapeHtml(linkedin)}</p>`;
+    if (residence) html += `<p style="font-size: 11px; color: #6b7280; margin: 0;">${escapeHtml(residence)}</p>`;
+    html += `</div>`;
+    html += `<div style="text-align: right;">`;
+    if (residence) html += `<p style="font-size: 11px; color: #6b7280; margin: 0 0 4px;">${escapeHtml(residence)}</p>`;
+    html += `<p style="font-size: 11px; color: #6b7280; margin: 0;">${escapeHtml(dateStr)}</p>`;
+    html += `</div>`;
+    html += `</div>`;
+
+    html += `<div style="text-align: right; margin-bottom: 16px;">`;
+    html += `<p style="font-size: 12px; font-weight: 700; color: #111827; margin: 0; white-space: pre-line;">${escapeHtml(recipient)}</p>`;
+    html += `</div>`;
+
+    html += `<p style="font-size: 12px; font-weight: 600; color: #111827; margin: 0 0 20px;">Objet : ${escapeHtml(subject)}</p>`;
+
+    html += `<div style="font-size: 12px; color: #374151; line-height: 1.7; text-align: justify;">`;
+    html += `<p>Madame, Monsieur,</p>`;
+    html += `<p>Je vous adresse ma candidature pour le poste de <strong>${escapeHtml(jobTitle)}</strong>${company ? " au sein de <strong>" + escapeHtml(company) + "</strong>" : ""}. Fort de mes compétences et de mon expérience, je suis convaincu de pouvoir apporter une valeur ajoutée à votre équipe. Mon parcours et ma motivation sont en parfaite adéquation avec les exigences de ce poste.</p>`;
+    html += `<p>Je me tiens à votre disposition pour un entretien afin de vous exposer plus en détail mes motivations et mes réalisations. Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.</p>`;
+    html += `</div>`;
+
+    html += `<div style="margin-top: auto; padding-top: 16px; text-align: center;">`;
+    html += `<p style="font-size: 10px; color: #9ca3af; margin: 0;">Lettre générée depuis VERA · ${today.getFullYear()}</p>`;
+    html += `</div>`;
+
+    html += `</div>`;
+
+    letterContent.innerHTML = html;
+
+    const opt = {
+      margin: 0,
+      filename: (fullName.replace(/\s+/g, "_") || "Candidat") + "_Lettre_Motivation.pdf",
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+    };
+
+    html2pdf().set(opt).from(letterContent).save().catch(err => alert("Échec de la génération de la lettre : " + (err.message || err.code)));
+  }).catch(err => alert("Échec de la génération de la lettre : " + (err.message || err.code)));
 }
 
 let currentPage = 1;
@@ -81,7 +377,7 @@ function calculateJobCompatibility(userData, job) {
 }
 
 // ============== GARDE DE SESSION (TABLEAU DE BORD) ==============
-// Si l'utilisateur n'est pas connecté, on le renvoie à la connexion.
+// Si l'utilisateur n'est pas connecté, on le renvoie Ã  la connexion.
 firebase.auth().onAuthStateChanged((user) => {
   if (!user) {
     window.location.replace("/");
@@ -278,7 +574,7 @@ function populateCountryFilter(jobs) {
   });
 
   const currentValue = select.value;
-  select.innerHTML = '<option value="">📍 Tous pays</option>';
+  select.innerHTML = '<option value="">ðŸ“ Tous pays</option>';
   Array.from(countries).sort().forEach((country) => {
     const option = document.createElement("option");
     option.value = country;
@@ -314,7 +610,7 @@ function populateCompanyFilter(jobs) {
   });
 
   const currentValue = select.value;
-  select.innerHTML = '<option value="">🏢 Entreprise</option>';
+  select.innerHTML = '<option value="">ðŸ¢ Entreprise</option>';
   Array.from(companies).sort().forEach((company) => {
     const option = document.createElement("option");
     option.value = company;
@@ -362,7 +658,7 @@ function renderJobsList(topJobs, enrichedUser) {
         <div class="job-logo">${logoHtml}</div>
         <div class="job-info">
           <div class="job-compat">${compatibility}% Compatible</div>
-          <div class="job-title">${escapeHtml(job.title || "Sans titre")} ${job.verified ? '<span class="verified-dot">✓</span>' : ""}</div>
+          <div class="job-title">${escapeHtml(job.title || "Sans titre")} ${job.verified ? '<span class="verified-dot">âœ“</span>' : ""}</div>
           <div class="job-sub">${escapeHtml(job.company || "—")} · <span>${escapeHtml(job.location || "—")}</span> <span class="tag">${escapeHtml(job.contractType || job.status || "")}</span></div>
           <div class="job-tags">${tagsHtml}${tags.length >= 3 && (job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).length > 3 ? `<span>+${(job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).length - 3}</span>` : ""}</div>
         </div>
@@ -414,11 +710,11 @@ function renderIndexScore(data) {
   const badge = document.getElementById("scoreBadgeIndex");
   const text = document.getElementById("scoreTextIndex");
   if (badge) {
-    if (pct >= 100) badge.textContent = "★ Parfait";
-    else if (pct >= 75) badge.textContent = "★ Excellent";
-    else if (pct >= 50) badge.textContent = "★ Très bon";
-    else if (pct > 0) badge.textContent = "★ À améliorer";
-    else badge.textContent = "★ Vide";
+    if (pct >= 100) badge.textContent = "â˜… Parfait";
+    else if (pct >= 75) badge.textContent = "â˜… Excellent";
+    else if (pct >= 50) badge.textContent = "â˜… Très bon";
+    else if (pct > 0) badge.textContent = "â˜… À améliorer";
+    else badge.textContent = "â˜… Vide";
   }
   if (text) {
     if (pct >= 100) text.textContent = "Ton profil est parfait !";
@@ -449,7 +745,7 @@ function renderIndexScore(data) {
 }
 
 // Empêche le bouton "précédent" tant qu'on est connecté :
-// on "re-pousse" la page courante dans l'historique à chaque tentative de retour.
+// on "re-pousse" la page courante dans l'historique Ã  chaque tentative de retour.
 history.pushState(null, null, location.href);
 window.addEventListener("popstate", () => {
   history.pushState(null, null, location.href);
@@ -528,13 +824,13 @@ function openJobDetailModal(job) {
     <div class="detail-row"><span class="detail-label">Type de contrat</span><span class="detail-value">${escapeHtml(job.contractType || job.status || "—")}</span></div>
     <div class="detail-row"><span class="detail-label">Salaire</span><span class="detail-value">${escapeHtml(job.salary || "—")}</span></div>
     <div class="detail-row"><span class="detail-label">Description</span><span class="detail-value">${escapeHtml(job.description || "Aucune description.")}</span></div>
-    <div class="detail-row"><span class="detail-label">Compétences</span><span class="detail-value">${tagsHtml || "—"}</span></div>
-    <div class="detail-row"><span class="detail-label">Date limite</span><span class="detail-value">${escapeHtml(job.deadline || "—")}</span></div>
-    <div class="detail-row"><span class="detail-label">Email de candidature</span><span class="detail-value">${escapeHtml(job.applyEmail || "—")}</span></div>
+    <div class="detail-row"><span class="detail-label">Compétences</span><span class="detail-value">${tagsHtml || "\u2014"}</span></div>
+    <div class="detail-row"><span class="detail-label">Date limite</span><span class="detail-value">${escapeHtml(job.deadline || "\u2014")}</span></div>
+    <div class="detail-row"><span class="detail-label">Email de candidature</span><span class="detail-value">${escapeHtml(job.applyEmail || "\u2014")}</span></div>
     <div class="detail-row"><span class="detail-label">Compatibilité</span><span class="detail-value" id="jobCompatibilityValue">Calcul...</span></div>
     ${job.verified ? '<div class="detail-row"><span class="detail-label">Vérifié</span><span class="detail-value">✓ Oui</span></div>' : ''}
     <div class="detail-actions">
-      <button class="btn-secondary download-docs-btn" data-job-id="${escapeHtml(job.id)}" ${!job.sourceUrl ? 'disabled' : ''}><img class="btn-icon-small" src="/image/download.png" alt="Télécharger"> Télécharger les pièces</button>
+      <button class="btn-secondary download-docs-btn" data-job-id="${escapeHtml(job.id)}"><img class="btn-icon-small" src="/image/download.png" alt="Télécharger"> Télécharger les pièces</button>
       <button class="btn-primary apply-now-btn" data-job-apply="${escapeHtml(job.id)}" ${!job.applyEmail ? 'disabled' : ''}>Postuler maintenant</button>
     </div>
   `;
@@ -545,7 +841,7 @@ function openJobDetailModal(job) {
   const user = firebase.auth().currentUser;
   if (!user) {
     const compatEl = document.getElementById("jobCompatibilityValue");
-    if (compatEl) compatEl.textContent = "—";
+    if (compatEl) compatEl.textContent = "\u2014";
     return;
   }
 
@@ -620,20 +916,23 @@ document.addEventListener("click", (e) => {
     const sourceUrl = (job.sourceUrl || "").toString().trim();
     const company = (job.company || "offre").toString().trim().replace(/[^a-z0-9_-]/gi, "_").substring(0, 50);
 
-    if (!sourceUrl) {
-      alert("Aucun lien de téléchargement disponible pour cette offre.");
-      btn.textContent = "📎 Télécharger les pièces";
-      btn.disabled = false;
-      return;
+    if (sourceUrl) {
+      const link = document.createElement("a");
+      link.href = sourceUrl;
+      link.download = company + ".pdf";
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
-    const link = document.createElement("a");
-    link.href = sourceUrl;
-    link.download = company + ".pdf";
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (typeof generateCV === "function") {
+      generateCV();
+    }
+
+    if (typeof generateCoverLetter === "function") {
+      generateCoverLetter(job);
+    }
 
     btn.textContent = "✓ Téléchargement lancé";
     setTimeout(() => {
@@ -643,7 +942,7 @@ document.addEventListener("click", (e) => {
   }).catch((err) => {
     console.error("[JOBS] erreur téléchargement pièces:", err);
     alert("Impossible de lancer le téléchargement pour le moment.");
-    btn.textContent = "📎 Télécharger les pièces";
+    btn.textContent = "ðŸ“Ž Télécharger les pièces";
     btn.disabled = false;
   });
 });
@@ -739,7 +1038,7 @@ function renderPagination(totalItems) {
   }
 
   let html = "";
-  html += `<button class="page-arrow" data-page="prev" ${currentPage === 1 ? 'disabled' : ''}>←</button>`;
+  html += `<button class="page-arrow" data-page="prev" ${currentPage === 1 ? 'disabled' : ''}>â†</button>`;
   
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
@@ -749,7 +1048,7 @@ function renderPagination(totalItems) {
     }
   }
   
-  html += `<button class="page-arrow" data-page="next" ${currentPage === totalPages ? 'disabled' : ''}>→</button>`;
+  html += `<button class="page-arrow" data-page="next" ${currentPage === totalPages ? 'disabled' : ''}>â†’</button>`;
   
   paginationEl.innerHTML = html;
 
@@ -826,3 +1125,4 @@ function renderPagination(totalItems) {
     }
   });
 })();
+

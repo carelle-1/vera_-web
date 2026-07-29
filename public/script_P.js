@@ -1011,6 +1011,92 @@ function generateCV() {
   }).catch(err => alert("Échec de la génération du CV : " + (err.message || err.code)));
 }
 
+function generateCoverLetter(job) {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  firebase.database().ref("users/" + user.uid).once("value").then((snap) => {
+    const data = snap.val() || {};
+    const fullName = (data.fullName || ((data.firstName || "") + " " + (data.lastName || "")).trim() || user.displayName || "Candidat").trim();
+    const email = data.email || user.email || "";
+    const whatsapp = data.whatsapp || "";
+    const linkedin = data.linkedin || "";
+    const residence = data.residence || "";
+    const jobTitle = (job && job.title) ? job.title : "le poste";
+    const company = (job && job.company) ? job.company : "";
+    const location = (job && job.location) ? job.location : "";
+
+    const today = new Date();
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    const dateStr = today.toLocaleDateString("fr-FR", options);
+
+    const recipient = company ? `Direction des Ressources Humaines\n${company}` : "Direction des Ressources Humaines";
+    const subject = `Candidature au poste de ${jobTitle}`;
+
+    let body = "";
+    body += `<p>Madame, Monsieur,</p>`;
+    body += `<p>Je vous adresse ma candidature pour le poste de <strong>${escapeHtml(jobTitle)}</strong>`;
+    if (company) body += ` au sein de <strong>${escapeHtml(company)}</strong>`;
+    body += `.</p>`;
+    body += `<p>Fort(e) de mes compétences et de mon expérience, je suis convaincu(e) de pouvoir apporter une valeur ajoutée à votre équipe. Mon parcours et ma motivation sont en parfaite adéquation avec les exigences de ce poste.</p>`;
+    body += `<p>Je me tiens à votre disposition pour un entretien afin de vous exposer plus en détail mes motivations et mes réalisations.</p>`;
+    body += `<p>Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.</p>`;
+
+    const letterContent = document.createElement("div");
+    letterContent.style.cssText = "font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #111827; max-width: 210mm; margin: 0 auto; background: #ffffff;";
+
+    let html = `<div style="display: flex; flex-direction: column; height: 297mm; box-shadow: 0 20px 60px rgba(0,0,0,0.18);">`;
+
+    // En-tête de la lettre
+    html += `<div style="padding: 32px 36px 20px; border-bottom: 1px solid #e5e7eb;">`;
+    html += `<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px;">`;
+    html += `<div style="flex: 1;">`;
+    html += `<h1 style="font-size: 20px; font-weight: 800; color: #111827; margin: 0 0 6px;">${escapeHtml(fullName)}</h1>`;
+    if (email) html += `<p style="font-size: 11px; color: #6b7280; margin: 0 0 2px;">${escapeHtml(email)}</p>`;
+    if (whatsapp) html += `<p style="font-size: 11px; color: #6b7280; margin: 0 0 2px;">${escapeHtml(whatsapp)}</p>`;
+    if (linkedin) html += `<p style="font-size: 11px; color: #6b7280; margin: 0 0 2px;">${escapeHtml(linkedin)}</p>`;
+    if (residence) html += `<p style="font-size: 11px; color: #6b7280; margin: 0;">${escapeHtml(residence)}</p>`;
+    html += `</div>`;
+    html += `<div style="text-align: right;">`;
+    html += `<p style="font-size: 11px; color: #6b7280; margin: 0;">${escapeHtml(dateStr)}</p>`;
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
+
+    // Destinataire
+    html += `<div style="padding: 24px 36px 0;">`;
+    html += `<p style="font-size: 12px; font-weight: 700; color: #111827; margin: 0 0 16px; white-space: pre-line;">${escapeHtml(recipient)}</p>`;
+    html += `<p style="font-size: 12px; font-weight: 600; color: #111827; margin: 0 0 20px;">Objet : ${escapeHtml(subject)}</p>`;
+    html += `</div>`;
+
+    // Corps de la lettre
+    html += `<div style="padding: 0 36px 32px; flex: 1;">`;
+    html += `<div style="font-size: 12px; color: #374151; line-height: 1.7; text-align: justify;">`;
+    html += body;
+    html += `</div>`;
+    html += `</div>`;
+
+    // Pied de page
+    html += `<div style="padding: 14px 36px; border-top: 1px solid #e5e7eb; text-align: center;">`;
+    html += `<p style="font-size: 10px; color: #9ca3af; margin: 0;">Lettre générée depuis VERA · ${today.getFullYear()}</p>`;
+    html += `</div>`;
+
+    html += `</div>`;
+
+    letterContent.innerHTML = html;
+
+    const opt = {
+      margin: 0,
+      filename: (fullName.replace(/\s+/g, "_") || "Candidat") + "_Lettre_Motivation.pdf",
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+    };
+
+    html2pdf().set(opt).from(letterContent).save().catch(err => alert("Échec de la génération de la lettre : " + (err.message || err.code)));
+  }).catch(err => alert("Échec de la génération de la lettre : " + (err.message || err.code)));
+}
+
 const generateCvBtn = document.getElementById("generateCvBtn");
 if (generateCvBtn) {
   generateCvBtn.addEventListener("click", (e) => {
