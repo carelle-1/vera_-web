@@ -12,11 +12,11 @@ function escapeHtml(text) {
   return str.replace(/[&<>"']/g, (m) => map[m]);
 }
 
-function generateCV() {
+function generateCV(returnBlob) {
   const user = firebase.auth().currentUser;
-  if (!user) return;
+  if (!user) return Promise.reject(new Error("Non connecté"));
 
-  firebase.database().ref("users/" + user.uid + "/experiences").once("value").then((expSnap) => {
+  return firebase.database().ref("users/" + user.uid + "/experiences").once("value").then((expSnap) => {
     const experiences = expSnap.val() || {};
     return firebase.database().ref("users/" + user.uid + "/formations").once("value").then((formSnap) => {
       const formations = formSnap.val() || {};
@@ -66,7 +66,7 @@ function generateCV() {
     }
 
     const cvContent = document.createElement("div");
-    cvContent.style.cssText = "font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #111827; max-width: 210mm; margin: 0 auto; background: #ffffff;";
+    cvContent.style.cssText = "font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #111827; width: 210mm; min-height: 297mm; margin: 0 auto; background: #ffffff; box-sizing: border-box; padding: 28px 32px;";
 
     const accent = "#2563eb";
     const textPrimary = "#111827";
@@ -77,151 +77,142 @@ function generateCV() {
 
     let html = "";
 
-    html += `<div style="display: flex; flex-direction: column; width: 210mm; min-height: 297mm; margin: 0 auto; background: #ffffff; box-sizing: border-box;">`;
-
-    // ===== HEADER =====
-    html += `<div style="background: #ffffff; border-bottom: 3px solid ${accent}; padding: 28px 32px 22px;">`;
-    html += `<div style="display: flex; align-items: center; gap: 20px;">`;
-
+    html += '<div style="width: 100%; border-bottom: 3px solid ' + accent + '; padding-bottom: 16px; margin-bottom: 20px;">';
+    html += '<div style="display: flex; align-items: center; gap: 16px;">';
     if (photoURL) {
-      html += `<img src="${escapeHtml(photoURL)}" style="width: 88px; height: 88px; border-radius: 50%; object-fit: cover; border: 3px solid ${accent}; flex-shrink: 0;">`;
+      html += '<img src="' + escapeHtml(photoURL) + '" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid ' + accent + '; flex-shrink: 0;">';
     }
-
-    html += `<div style="flex: 1; min-width: 0;">`;
-    html += `<h1 style="font-size: 22px; font-weight: 800; color: ${textPrimary}; margin: 0 0 4px; letter-spacing: -0.3px;">${escapeHtml(fullName)}</h1>`;
+    html += '<div style="flex: 1; min-width: 0;">';
+    html += '<h1 style="font-size: 22px; font-weight: 800; color: ' + textPrimary + '; margin: 0 0 4px;">' + escapeHtml(fullName) + '</h1>';
     if (jobTitle) {
-      html += `<p style="font-size: 13px; font-weight: 600; color: ${accent}; margin: 0 0 10px;">${escapeHtml(jobTitle)}</p>`;
+      html += '<p style="font-size: 13px; font-weight: 600; color: ' + accent + '; margin: 0 0 8px;">' + escapeHtml(jobTitle) + '</p>';
     }
-    html += `<div style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 10.5px; color: ${textSecondary}; line-height: 1.5;">`;
-    if (email) html += `<span>${escapeHtml(email)}</span>`;
-    if (whatsapp) html += `<span>${escapeHtml(whatsapp)}</span>`;
-    if (residence) html += `<span>${escapeHtml(residence)}</span>`;
-    if (linkedin) html += `<span>${escapeHtml(linkedin)}</span>`;
-    html += `</div>`;
-    html += `</div>`;
-    html += `</div>`;
-    html += `</div>`;
+    html += '<div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 10.5px; color: ' + textSecondary + '; line-height: 1.5;">';
+    if (email) html += '<span>' + escapeHtml(email) + '</span>';
+    if (whatsapp) html += '<span>' + escapeHtml(whatsapp) + '</span>';
+    if (residence) html += '<span>' + escapeHtml(residence) + '</span>';
+    if (linkedin) html += '<span>' + escapeHtml(linkedin) + '</span>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
 
-    // ===== BODY =====
-    html += `<div style="display: flex; flex: 1; min-height: 0;">`;
+    html += '<div style="display: flex; gap: 20px;">';
 
-    // ===== COLONNE PRINCIPALE =====
-    html += `<div style="flex: 1; padding: 24px 28px; min-width: 0;">`;
+    html += '<div style="flex: 1; min-width: 0;">';
 
     if (about) {
-      html += `<section style="margin-bottom: 22px;">`;
-      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 8px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Profil professionnel</h2>`;
-      html += `<p style="font-size: 11.5px; color: ${textSecondary}; line-height: 1.6; margin: 0; text-align: justify;">${escapeHtml(about)}</p>`;
-      html += `</section>`;
+      html += '<section style="margin-bottom: 18px;">';
+      html += '<h2 style="font-size: 11px; font-weight: 800; color: ' + accent + '; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 6px; padding-bottom: 4px; border-bottom: 1px solid ' + border + ';">Profil professionnel</h2>';
+      html += '<p style="font-size: 11px; color: ' + textSecondary + '; line-height: 1.6; margin: 0; text-align: justify;">' + escapeHtml(about) + '</p>';
+      html += '</section>';
     }
 
     if (expItems.length > 0) {
-      html += `<section style="margin-bottom: 22px;">`;
-      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Expériences professionnelles</h2>`;
+      html += '<section style="margin-bottom: 18px;">';
+      html += '<h2 style="font-size: 11px; font-weight: 800; color: ' + accent + '; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px; padding-bottom: 4px; border-bottom: 1px solid ' + border + ';">Expériences professionnelles</h2>';
       expItems.forEach(exp => {
-        html += `<div style="margin-bottom: 14px; padding-left: 12px; border-left: 3px solid ${accent};">`;
-        html += `<div style="font-weight: 700; font-size: 13px; color: ${textPrimary}; margin-bottom: 2px;">${escapeHtml(exp.title || "Poste")}</div>`;
-        html += `<div style="font-size: 11.5px; color: ${textSecondary}; margin-bottom: 2px;">${escapeHtml(exp.company || "")}${exp.location ? " · " + escapeHtml(exp.location) : ""}</div>`;
-        html += `<div style="font-size: 10.5px; color: ${textMuted}; margin-bottom: 4px;">${exp.startYear || ""}${exp.endYear && exp.endYear !== "Présent" ? " - " + exp.endYear : exp.endYear === "Présent" ? " - Présent" : ""}</div>`;
+        html += '<div style="margin-bottom: 10px; padding-left: 10px; border-left: 2px solid ' + accent + ';">';
+        html += '<div style="font-weight: 700; font-size: 12px; color: ' + textPrimary + '; margin-bottom: 2px;">' + escapeHtml(exp.title || "Poste") + '</div>';
+        html += '<div style="font-size: 11px; color: ' + textSecondary + '; margin-bottom: 2px;">' + escapeHtml(exp.company || "") + (exp.location ? " · " + escapeHtml(exp.location) : "") + '</div>';
+        html += '<div style="font-size: 10px; color: ' + textMuted + '; margin-bottom: 3px;">' + (exp.startYear || "") + (exp.endYear && exp.endYear !== "Présent" ? " - " + exp.endYear : exp.endYear === "Présent" ? " - Présent" : "") + '</div>';
         if (exp.description) {
-          html += `<p style="font-size: 11.5px; color: ${textSecondary}; line-height: 1.5; margin: 0;">${escapeHtml(exp.description)}</p>`;
+          html += '<p style="font-size: 11px; color: ' + textSecondary + '; line-height: 1.45; margin: 0;">' + escapeHtml(exp.description) + '</p>';
         }
-        html += `</div>`;
+        html += '</div>';
       });
-      html += `</section>`;
+      html += '</section>';
     }
 
     if (formItems.length > 0) {
-      html += `<section style="margin-bottom: 22px;">`;
-      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Formations</h2>`;
+      html += '<section style="margin-bottom: 18px;">';
+      html += '<h2 style="font-size: 11px; font-weight: 800; color: ' + accent + '; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px; padding-bottom: 4px; border-bottom: 1px solid ' + border + ';">Formations</h2>';
       formItems.forEach(form => {
-        html += `<div style="margin-bottom: 12px; padding-left: 12px; border-left: 3px solid ${accent};">`;
-        html += `<div style="font-weight: 700; font-size: 13px; color: ${textPrimary}; margin-bottom: 2px;">${escapeHtml(form.diploma || "Diplôme")}</div>`;
-        html += `<div style="font-size: 11.5px; color: ${textSecondary}; margin-bottom: 2px;">${escapeHtml(form.school || "")}${form.location ? " · " + escapeHtml(form.location) : ""}</div>`;
-        html += `<div style="font-size: 10.5px; color: ${textMuted};">${form.startYear || ""}${form.endYear && form.endYear !== "Présent" ? " - " + form.endYear : form.endYear === "Présent" ? " - Présent" : ""}</div>`;
-        html += `</div>`;
+        html += '<div style="margin-bottom: 10px; padding-left: 10px; border-left: 2px solid ' + accent + ';">';
+        html += '<div style="font-weight: 700; font-size: 12px; color: ' + textPrimary + '; margin-bottom: 2px;">' + escapeHtml(form.diploma || "Diplôme") + '</div>';
+        html += '<div style="font-size: 11px; color: ' + textSecondary + '; margin-bottom: 2px;">' + escapeHtml(form.school || "") + (form.location ? " · " + escapeHtml(form.location) : "") + '</div>';
+        html += '<div style="font-size: 10px; color: ' + textMuted + ';">' + (form.startYear || "") + (form.endYear && form.endYear !== "Présent" ? " - " + form.endYear : form.endYear === "Présent" ? " - Présent" : "") + '</div>';
+        html += '</div>';
       });
-      html += `</section>`;
+      html += '</section>';
     }
 
     if (projectItems.length > 0) {
-      html += `<section style="margin-bottom: 22px;">`;
-      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Projets</h2>`;
+      html += '<section style="margin-bottom: 18px;">';
+      html += '<h2 style="font-size: 11px; font-weight: 800; color: ' + accent + '; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px; padding-bottom: 4px; border-bottom: 1px solid ' + border + ';">Projets</h2>';
       projectItems.forEach(project => {
-        html += `<div style="margin-bottom: 12px; padding-left: 12px; border-left: 3px solid ${accent};">`;
-        html += `<div style="font-weight: 700; font-size: 13px; color: ${textPrimary}; margin-bottom: 2px;">${escapeHtml(project.title || project.name || "Projet")}</div>`;
+        html += '<div style="margin-bottom: 10px; padding-left: 10px; border-left: 2px solid ' + accent + ';">';
+        html += '<div style="font-weight: 700; font-size: 12px; color: ' + textPrimary + '; margin-bottom: 2px;">' + escapeHtml(project.title || project.name || "Projet") + '</div>';
         if (project.description) {
-          html += `<p style="font-size: 11.5px; color: ${textSecondary}; line-height: 1.5; margin: 0 0 4px;">${escapeHtml(project.description)}</p>`;
+          html += '<p style="font-size: 11px; color: ' + textSecondary + '; line-height: 1.45; margin: 0 0 3px;">' + escapeHtml(project.description) + '</p>';
         }
         if (project.technologies || project.tags || project.skills) {
           const techs = [project.technologies, project.tags, project.skills].filter(Boolean).join(", ");
-          html += `<div style="font-size: 10.5px; color: ${accent}; font-weight: 600;">${escapeHtml(techs)}</div>`;
+          html += '<div style="font-size: 10px; color: ' + accent + '; font-weight: 600;">' + escapeHtml(techs) + '</div>';
         }
-        html += `</div>`;
+        html += '</div>';
       });
-      html += `</section>`;
+      html += '</section>';
     }
 
     if (certItems.length > 0) {
-      html += `<section style="margin-bottom: 22px;">`;
-      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 12px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Certifications</h2>`;
+      html += '<section style="margin-bottom: 18px;">';
+      html += '<h2 style="font-size: 11px; font-weight: 800; color: ' + accent + '; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px; padding-bottom: 4px; border-bottom: 1px solid ' + border + ';">Certifications</h2>';
       certItems.forEach(cert => {
-        html += `<div style="margin-bottom: 10px; padding-left: 12px; border-left: 3px solid ${accent};">`;
-        html += `<div style="font-weight: 700; font-size: 13px; color: ${textPrimary}; margin-bottom: 2px;">${escapeHtml(cert.name || "Certification")}</div>`;
-        html += `<div style="font-size: 11.5px; color: ${textSecondary};">${escapeHtml(cert.issuer || "")}${cert.date ? " · " + escapeHtml(cert.date) : ""}${cert.expiryDate ? " - " + escapeHtml(cert.expiryDate) : ""}</div>`;
-        html += `</div>`;
+        html += '<div style="margin-bottom: 8px; padding-left: 10px; border-left: 2px solid ' + accent + ';">';
+        html += '<div style="font-weight: 700; font-size: 12px; color: ' + textPrimary + '; margin-bottom: 2px;">' + escapeHtml(cert.name || "Certification") + '</div>';
+        html += '<div style="font-size: 11px; color: ' + textSecondary + ';">' + escapeHtml(cert.issuer || "") + (cert.date ? " · " + escapeHtml(cert.date) : "") + (cert.expiryDate ? " - " + escapeHtml(cert.expiryDate) : "") + '</div>';
+        html += '</div>';
       });
-      html += `</section>`;
+      html += '</section>';
     }
 
-    html += `</div>`;
+    html += '</div>';
 
-    // ===== COLONNE GAUCHE / SIDEBAR =====
-    html += `<div style="width: 32%; background: ${bgSidebar}; border-left: 1px solid ${border}; padding: 24px 20px; flex-shrink: 0;">`;
+    html += '<div style="width: 32%; background: ' + bgSidebar + '; border-left: 1px solid ' + border + '; padding: 20px; flex-shrink: 0;">';
 
     if (skillItems.length > 0) {
-      html += `<section style="margin-bottom: 20px;">`;
-      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 10px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Compétences</h2>`;
-      html += `<div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+      html += '<section style="margin-bottom: 18px;">';
+      html += '<h2 style="font-size: 11px; font-weight: 800; color: ' + accent + '; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px; padding-bottom: 4px; border-bottom: 1px solid ' + border + ';">Compétences</h2>';
+      html += '<div style="display: flex; flex-wrap: wrap; gap: 6px;">';
       skillItems.forEach(skill => {
-        html += `<span style="background: #ffffff; color: ${accent}; border: 1px solid ${border}; padding: 4px 10px; border-radius: 6px; font-size: 10.5px; font-weight: 600;">${escapeHtml(skill.name || "")}${skill.level ? " (" + escapeHtml(skill.level) + ")" : ""}</span>`;
+        html += '<span style="background: #ffffff; color: ' + accent + '; border: 1px solid ' + border + '; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600;">' + escapeHtml(skill.name || "") + (skill.level ? " (" + escapeHtml(skill.level) + ")" : "") + '</span>';
       });
-      html += `</div>`;
-      html += `</section>`;
+      html += '</div>';
+      html += '</section>';
     }
 
     if (langItems.length > 0) {
-      html += `<section style="margin-bottom: 20px;">`;
-      html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 10px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Langues</h2>`;
+      html += '<section style="margin-bottom: 18px;">';
+      html += '<h2 style="font-size: 11px; font-weight: 800; color: ' + accent + '; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px; padding-bottom: 4px; border-bottom: 1px solid ' + border + ';">Langues</h2>';
       langItems.forEach(lang => {
-        html += `<div style="margin-bottom: 6px; font-size: 11.5px; color: ${textSecondary};">`;
-        html += `<strong style="color: ${textPrimary};">${escapeHtml(lang.name || "")}</strong>`;
-        if (lang.level) html += ` · ${escapeHtml(lang.level)}`;
-        html += `</div>`;
+        html += '<div style="margin-bottom: 5px; font-size: 11px; color: ' + textSecondary + ';">';
+        html += '<strong style="color: ' + textPrimary + ';">' + escapeHtml(lang.name || "") + '</strong>';
+        if (lang.level) html += ' · ' + escapeHtml(lang.level);
+        html += '</div>';
       });
-      html += `</section>`;
+      html += '</section>';
     }
 
-    html += `<section style="margin-bottom: 20px;">`;
-    html += `<h2 style="font-size: 11px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 10px; padding-bottom: 5px; border-bottom: 1px solid ${border};">Informations</h2>`;
-    html += `<div style="font-size: 10.5px; color: ${textSecondary}; line-height: 1.7;">`;
-    if (nationality) html += `<div><strong style="color: ${textPrimary};">Nationalité:</strong> ${escapeHtml(nationality)}</div>`;
-    if (birthDate) html += `<div><strong style="color: ${textPrimary};">Naissance:</strong> ${escapeHtml(birthDate)}</div>`;
-    if (maritalStatus) html += `<div><strong style="color: ${textPrimary};">Situation:</strong> ${escapeHtml(maritalStatus)}</div>`;
-    if (availability) html += `<div><strong style="color: ${textPrimary};">Disponibilité:</strong> ${escapeHtml(availability)}</div>`;
-    if (contractType) html += `<div><strong style="color: ${textPrimary};">Contrat:</strong> ${escapeHtml(contractType)}</div>`;
-    if (workLocation) html += `<div><strong style="color: ${textPrimary};">Lieu de travail:</strong> ${escapeHtml(workLocation)}</div>`;
-    if (salary) html += `<div><strong style="color: ${textPrimary};">Salaire:</strong> ${escapeHtml(salary)}</div>`;
-    html += `</div>`;
-    html += `</section>`;
+    html += '<section style="margin-bottom: 18px;">';
+    html += '<h2 style="font-size: 11px; font-weight: 800; color: ' + accent + '; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px; padding-bottom: 4px; border-bottom: 1px solid ' + border + ';">Informations</h2>';
+    html += '<div style="font-size: 10px; color: ' + textSecondary + '; line-height: 1.6;">';
+    if (nationality) html += '<div><strong style="color: ' + textPrimary + ';">Nationalité:</strong> ' + escapeHtml(nationality) + '</div>';
+    if (birthDate) html += '<div><strong style="color: ' + textPrimary + ';">Naissance:</strong> ' + escapeHtml(birthDate) + '</div>';
+    if (maritalStatus) html += '<div><strong style="color: ' + textPrimary + ';">Situation:</strong> ' + escapeHtml(maritalStatus) + '</div>';
+    if (availability) html += '<div><strong style="color: ' + textPrimary + ';">Disponibilité:</strong> ' + escapeHtml(availability) + '</div>';
+    if (contractType) html += '<div><strong style="color: ' + textPrimary + ';">Contrat:</strong> ' + escapeHtml(contractType) + '</div>';
+    if (workLocation) html += '<div><strong style="color: ' + textPrimary + ';">Lieu de travail:</strong> ' + escapeHtml(workLocation) + '</div>';
+    if (salary) html += '<div><strong style="color: ' + textPrimary + ';">Salaire:</strong> ' + escapeHtml(salary) + '</div>';
+    html += '</div>';
+    html += '</section>';
 
-    html += `<div style="margin-top: auto; padding-top: 16px; border-top: 1px solid ${border}; font-size: 10px; color: ${textMuted}; text-align: center;">`;
-    html += `Généré depuis VERA · ${new Date().getFullYear()}`;
-    html += `</div>`;
+    html += '<div style="margin-top: auto; padding-top: 12px; border-top: 1px solid ' + border + '; font-size: 9px; color: ' + textMuted + '; text-align: center;">';
+    html += 'Généré depuis VERA · ' + new Date().getFullYear();
+    html += '</div>';
 
-    html += `</div>`;
-    html += `</div>`;
-    html += `</div>`;
+    html += '</div>';
+    html += '</div>';
 
     cvContent.innerHTML = html;
 
@@ -233,15 +224,22 @@ function generateCV() {
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
     };
 
-    html2pdf().set(opt).from(cvContent).save().catch(err => alert("Échec de la génération du PDF : " + (err.message || err.code)));
-  }).catch(err => alert("Échec de la génération du CV : " + (err.message || err.code)));
+    const pdfPromise = (returnBlob ? html2pdf().set(opt).from(cvContent).output('blob') : html2pdf().set(opt).from(cvContent).save());
+    return pdfPromise.catch(err => {
+      alert("Échec de la génération du PDF : " + (err.message || err.code));
+      throw err;
+    });
+  }).catch(err => {
+    alert("Échec de la génération du CV : " + (err.message || err.code));
+    throw err;
+  });
 }
 
-function generateCoverLetter(job) {
+function generateCoverLetter(job, returnBlob) {
   const user = firebase.auth().currentUser;
-  if (!user) return;
+  if (!user) return Promise.reject(new Error("Non connecté"));
 
-  firebase.database().ref("users/" + user.uid).once("value").then((snap) => {
+  return firebase.database().ref("users/" + user.uid).once("value").then((snap) => {
     const data = snap.val() || {};
     const fullName = (data.fullName || ((data.firstName || "") + " " + (data.lastName || "")).trim() || user.displayName || "Candidat").trim();
     const email = data.email || user.email || "";
@@ -254,45 +252,43 @@ function generateCoverLetter(job) {
     const today = new Date();
     const dateStr = today.toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" });
 
-    const recipient = company ? `Direction des Ressources Humaines\n${company}` : "Direction des Ressources Humaines";
-    const subject = `Candidature au poste de ${jobTitle}`;
+    const recipient = company ? "Direction des Ressources Humaines\n" + company : "Direction des Ressources Humaines";
+    const subject = "Candidature au poste de " + jobTitle;
 
     const letterContent = document.createElement("div");
-    letterContent.style.cssText = "font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #111827; max-width: 210mm; margin: 0 auto; background: #ffffff;";
+    letterContent.style.cssText = "font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #111827; width: 210mm; min-height: 297mm; margin: 0 auto; background: #ffffff; box-sizing: border-box; padding: 32px 36px;";
 
-    let html = `<div style="width: 210mm; min-height: 297mm; padding: 32px 36px; box-sizing: border-box; background: #ffffff;">`;
+    let html = "";
 
-    html += `<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 28px;">`;
-    html += `<div style="flex: 1;">`;
-    html += `<h1 style="font-size: 20px; font-weight: 800; color: #111827; margin: 0 0 6px;">${escapeHtml(fullName)}</h1>`;
-    if (email) html += `<p style="font-size: 11px; color: #6b7280; margin: 0 0 2px;">${escapeHtml(email)}</p>`;
-    if (whatsapp) html += `<p style="font-size: 11px; color: #6b7280; margin: 0 0 2px;">${escapeHtml(whatsapp)}</p>`;
-    if (linkedin) html += `<p style="font-size: 11px; color: #6b7280; margin: 0 0 2px;">${escapeHtml(linkedin)}</p>`;
-    if (residence) html += `<p style="font-size: 11px; color: #6b7280; margin: 0;">${escapeHtml(residence)}</p>`;
-    html += `</div>`;
-    html += `<div style="text-align: right;">`;
-    if (residence) html += `<p style="font-size: 11px; color: #6b7280; margin: 0 0 4px;">${escapeHtml(residence)}</p>`;
-    html += `<p style="font-size: 11px; color: #6b7280; margin: 0;">${escapeHtml(dateStr)}</p>`;
-    html += `</div>`;
-    html += `</div>`;
+    html += '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 24px;">';
+    html += '<div style="flex: 1;">';
+    html += '<h1 style="font-size: 20px; font-weight: 800; color: #111827; margin: 0 0 6px;">' + escapeHtml(fullName) + '</h1>';
+    if (email) html += '<p style="font-size: 11px; color: #6b7280; margin: 0 0 2px;">' + escapeHtml(email) + '</p>';
+    if (whatsapp) html += '<p style="font-size: 11px; color: #6b7280; margin: 0 0 2px;">' + escapeHtml(whatsapp) + '</p>';
+    if (linkedin) html += '<p style="font-size: 11px; color: #6b7280; margin: 0 0 2px;">' + escapeHtml(linkedin) + '</p>';
+    if (residence) html += '<p style="font-size: 11px; color: #6b7280; margin: 0;">' + escapeHtml(residence) + '</p>';
+    html += '</div>';
+    html += '<div style="text-align: right;">';
+    if (residence) html += '<p style="font-size: 11px; color: #6b7280; margin: 0 0 4px;">' + escapeHtml(residence) + '</p>';
+    html += '<p style="font-size: 11px; color: #6b7280; margin: 0;">' + escapeHtml(dateStr) + '</p>';
+    html += '</div>';
+    html += '</div>';
 
-    html += `<div style="text-align: right; margin-bottom: 16px;">`;
-    html += `<p style="font-size: 12px; font-weight: 700; color: #111827; margin: 0; white-space: pre-line;">${escapeHtml(recipient)}</p>`;
-    html += `</div>`;
+    html += '<div style="text-align: right; margin-bottom: 16px;">';
+    html += '<p style="font-size: 12px; font-weight: 700; color: #111827; margin: 0; white-space: pre-line;">' + escapeHtml(recipient) + '</p>';
+    html += '</div>';
 
-    html += `<p style="font-size: 12px; font-weight: 600; color: #111827; margin: 0 0 20px;">Objet : ${escapeHtml(subject)}</p>`;
+    html += '<p style="font-size: 12px; font-weight: 600; color: #111827; margin: 0 0 18px;">Objet : ' + escapeHtml(subject) + '</p>';
 
-    html += `<div style="font-size: 12px; color: #374151; line-height: 1.7; text-align: justify;">`;
-    html += `<p>Madame, Monsieur,</p>`;
-    html += `<p>Je vous adresse ma candidature pour le poste de <strong>${escapeHtml(jobTitle)}</strong>${company ? " au sein de <strong>" + escapeHtml(company) + "</strong>" : ""}. Fort de mes compétences et de mon expérience, je suis convaincu de pouvoir apporter une valeur ajoutée à votre équipe. Mon parcours et ma motivation sont en parfaite adéquation avec les exigences de ce poste.</p>`;
-    html += `<p>Je me tiens à votre disposition pour un entretien afin de vous exposer plus en détail mes motivations et mes réalisations. Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.</p>`;
-    html += `</div>`;
+    html += '<div style="font-size: 12px; color: #374151; line-height: 1.7; text-align: justify;">';
+    html += '<p>Madame, Monsieur,</p>';
+    html += '<p>Je vous adresse ma candidature pour le poste de <strong>' + escapeHtml(jobTitle) + '</strong>' + (company ? " au sein de <strong>" + escapeHtml(company) + "</strong>" : "") + ". Fort de mes compétences et de mon expérience, je suis convaincu de pouvoir apporter une valeur ajoutée à votre équipe. Mon parcours et ma motivation sont en parfaite adéquation avec les exigences de ce poste.</p>";
+    html += '<p>Je me tiens à votre disposition pour un entretien afin de vous exposer plus en détail mes motivations et mes réalisations. Je vous prie d\'agréer, Madame, Monsieur, l\'expression de mes salutations distinguées.</p>';
+    html += '</div>';
 
-    html += `<div style="margin-top: auto; padding-top: 16px; text-align: center;">`;
-    html += `<p style="font-size: 10px; color: #9ca3af; margin: 0;">Lettre générée depuis VERA · ${today.getFullYear()}</p>`;
-    html += `</div>`;
-
-    html += `</div>`;
+    html += '<div style="margin-top: auto; padding-top: 16px; text-align: right;">';
+    html += '<p style="font-size: 10px; color: #9ca3af; margin: 0;">' + escapeHtml(fullName) + '</p>';
+    html += '</div>';
 
     letterContent.innerHTML = html;
 
@@ -304,8 +300,15 @@ function generateCoverLetter(job) {
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
     };
 
-    html2pdf().set(opt).from(letterContent).save().catch(err => alert("Échec de la génération de la lettre : " + (err.message || err.code)));
-  }).catch(err => alert("Échec de la génération de la lettre : " + (err.message || err.code)));
+    const pdfPromise = (returnBlob ? html2pdf().set(opt).from(letterContent).output('blob') : html2pdf().set(opt).from(letterContent).save());
+    return pdfPromise.catch(err => {
+      alert("Échec de la génération de la lettre : " + (err.message || err.code));
+      throw err;
+    });
+  }).catch(err => {
+    alert("Échec de la génération de la lettre : " + (err.message || err.code));
+    throw err;
+  });
 }
 
 let currentPage = 1;
@@ -963,19 +966,92 @@ document.addEventListener("click", (e) => {
   const jobId = btn.getAttribute("data-job-apply");
   if (!jobId) return;
 
+  btn.textContent = "Préparation...";
+  btn.disabled = true;
+
   firebase.database().ref("jobs/" + jobId).once("value").then((snap) => {
     const job = snap.val() || {};
     const email = (job.applyEmail || "").toString().trim();
     if (!email) {
       alert("Aucune adresse email de candidature disponible pour cette offre.");
+      btn.textContent = "Postuler maintenant";
+      btn.disabled = false;
       return;
     }
-    window.location.href = "mailto:" + email;
+
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      alert("Vous devez être connecté pour postuler.");
+      btn.textContent = "Postuler maintenant";
+      btn.disabled = false;
+      return;
+    }
+
+    const fullName = (user.displayName || "Candidat").trim();
+    const cvFileName = (fullName.replace(/\s+/g, "_") || "CV") + ".pdf";
+    const letterFileName = (fullName.replace(/\s+/g, "_") || "Candidat") + "_Lettre_Motivation.pdf";
+
+    btn.textContent = "Génération du CV...";
+    return generateCV(true).then((cvBlob) => {
+      btn.textContent = "Génération de la lettre...";
+      return generateCoverLetter(job, true).then((letterBlob) => {
+        btn.textContent = "Envoi en cours...";
+        return Promise.all([
+          blobToBase64(cvBlob),
+          blobToBase64(letterBlob)
+        ]).then(([cvB64, letterB64]) => {
+          return sendApplicationEmailBase64(email, fullName, (job.title || "le poste"), (job.company || ""), cvB64, letterB64, cvFileName, letterFileName);
+        });
+      });
+    });
+  }).then(() => {
+    btn.textContent = "✓ Candidature envoyée";
+    setTimeout(() => {
+      btn.textContent = "Postuler maintenant";
+      btn.disabled = false;
+    }, 3000);
   }).catch((err) => {
     console.error("[JOBS] erreur postuler:", err);
-    alert("Impossible de traiter votre candidature pour le moment.");
+    btn.textContent = "Postuler maintenant";
+    btn.disabled = false;
   });
 });
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function sendApplicationEmailBase64(applyEmail, userName, jobTitle, company, cvBase64, coverLetterBase64, cvFileName, letterFileName) {
+  return fetch("/send-application-email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    },
+    body: JSON.stringify({
+      apply_email: applyEmail,
+      user_name: userName,
+      job_title: jobTitle,
+      company: company,
+      cv_file: cvBase64,
+      cover_letter_file: coverLetterBase64,
+      cv_file_name: cvFileName,
+      cover_letter_file_name: letterFileName,
+    }),
+  }).then((res) => {
+    if (!res.ok) {
+      return res.json().then((err) => { throw new Error(err.message || "Erreur serveur"); }).catch(() => { throw new Error("Erreur serveur"); });
+    }
+    return res.json();
+  }).then((data) => {
+    if (!data.success) throw new Error(data.message || "Échec de l'envoi");
+  });
+}
 
 const contractFilter = document.getElementById("contractFilter");
 if (contractFilter) {
@@ -1125,4 +1201,9 @@ function renderPagination(totalItems) {
     }
   });
 })();
+
+
+
+
+
 
