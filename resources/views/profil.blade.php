@@ -22,7 +22,7 @@
           <img id="profileAvatar" src="" alt="Photo de profil" style="display:none;">
           <div id="profileInitial" class="avatar-initial">?</div>
           <div id="avatarSpinner" class="avatar-spinner">⏳</div>
-          <button class="avatar-edit" id="avatarEditBtn" title="Changer la photo">📷</button>
+          <button class="avatar-edit" id="avatarEditBtn" title="Changer la photo"><img src="/image/3917317.png" alt="Changer la photo" style="width:16px;height:16px;object-fit:contain;filter:invert(1);"></button>
           <input type="file" id="avatarInput" accept="image/*" style="display:none;">
         </div>
         <div id="avatarError" class="avatar-input-error" style="display:none;"></div>
@@ -176,7 +176,7 @@
               <li><span class="info-icon"><img src="/image/3917505.png" alt="Situation matrimoniale"></span><span class="info-label">Situation matrimoniale</span><span class="info-value" data-field="maritalStatus" data-input="select" data-options="Célibataire|Marié(e)|Divorcé(e)|Veuf(ve)|En concubinage">Célibataire</span></li>
               <li><span class="info-icon"><img src="/image/3917561.png" alt="Nationalité"></span><span class="info-label">Nationalité</span><span class="info-value" data-field="nationality">Camerounaise</span></li>
               <li><span class="info-icon"><img src="/image/3916880.png" alt="Lieu de résidence"></span><span class="info-label">Lieu de résidence</span><span class="info-value" data-field="residence">Douala, Cameroun</span></li>
-              <li><span class="info-icon">📱</span><span class="info-label">Numéro WhatsApp</span><span class="info-value" data-field="whatsapp">+237 6 12 34 56 78</span></li>
+              <li><span class="info-icon"><img src="/image/contact.png" alt="Numéro WhatsApp"></span><span class="info-label">Numéro WhatsApp</span><span class="info-value" data-field="whatsapp">+237 6 12 34 56 78</span></li>
               <li><span class="info-icon"><img src="/image/3917561.png" alt="Langue principale"></span><span class="info-label">Langue principale</span><span class="info-value" data-field="mainLanguage" data-input="tags">Français</span></li>
               <li><span class="info-icon"><img src="/image/3916670.png" alt="Profil GitHub"></span><span class="info-label">Profil GitHub</span><span class="info-value" data-field="linkedin">github.com/...</span></li>
             </ul>
@@ -289,7 +289,7 @@
                 </div>
               </li>
               <li class="info-item">
-                <span class="info-icon">📱</span>
+                <span class="info-icon"><img src="/image/contact.png" alt="Numéro WhatsApp"></span>
                 <div class="info-item-body">
                   <span class="info-label">Numéro WhatsApp</span>
                   <span class="info-value" data-field="whatsapp">+237 6 93929597</span>

@@ -154,7 +154,9 @@ a{color:inherit;}
 .avatar-edit{
   position:absolute;bottom:0;right:0;width:28px;height:28px;border-radius:50%;
   background:var(--blue);border:2px solid #fff;color:#fff;font-size:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;padding:0;overflow:hidden;
 }
+.avatar-edit img{filter:invert(1);}
 .profile-info{flex:1;min-width:220px;}
 .profile-name-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px;}
 .profile-name-row h2{font-size:19px;font-weight:800;}

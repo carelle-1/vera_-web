@@ -245,9 +245,9 @@
         </div>
 
         <div class="card actions-card">
-          <div class="card-head">🎯 Actions prioritaires</div>
+          <div class="card-head"><img src="/image/mission.png" alt="Actions prioritaires" style="width:18px;height:18px;object-fit:contain;margin-right:6px;vertical-align:middle;"> Actions prioritaires</div>
           <div class="action-item" id="actionAddSkill">
-            <div class="action-icon blue">📝</div>
+            <div class="action-icon blue"><img src="/image/3917361.png" alt="Compétence" style="width:20px;height:20px;object-fit:contain;"></div>
             <div class="action-text">
               <div>Ajoute une nouvelle compétence clé</div>
               <div class="action-sub">+12% sur ton score</div>
@@ -255,7 +255,7 @@
             <span class="chev">›</span>
           </div>
           <div class="action-item" id="actionValidateExp">
-            <div class="action-icon orange">🏅</div>
+            <div class="action-icon orange"><img src="/image/3914133.png" alt="Formation" style="width:20px;height:20px;object-fit:contain;"></div>
             <div class="action-text">
               <div>Valide ton expérience actuelle</div>
               <div class="action-sub">+8% sur ton score</div>
