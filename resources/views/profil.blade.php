@@ -33,15 +33,15 @@
           </div>
           <div class="profile-role" id="profileRole">Non renseigné</div>
           <div class="profile-meta">
-            <span>📍 <span id="profileResidence">Non renseigné</span></span>
+            <span><img src="/image/3916880.png" alt="Résidence" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span id="profileResidence">Non renseigné</span></span>
             <span class="dot-sep">•</span>
             <span class="avail-dot"></span>
             <span id="profileAvailability">Non renseigné</span>
           </div>
           <div class="profile-contacts">
-            <span>💬 <span id="profileWhatsapp">Non renseigné</span></span>
-            <span>✉ <span id="profileEmail">Non renseigné</span></span>
-            <span>💻 <span id="profileLinkedin">Non renseigné</span></span>
+            <span><img src="/image/contact.png" alt="WhatsApp" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span id="profileWhatsapp">Non renseigné</span></span>
+            <span><img src="/image/mail.png" alt="Email" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span id="profileEmail">Non renseigné</span></span>
+            <span><img src="/image/7653263.png" alt="GitHub" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span id="profileLinkedin">Non renseigné</span></span>
           </div>
         </div>
         <div class="profile-completion">
@@ -91,7 +91,7 @@
 
           <!-- ANALYSE IA -->
           <div class="card ai-card">
-            <div class="card-head-row"><span>✨ Analyse IA de mon profil</span></div>
+            <div class="card-head-row"><span> Analyse IA de mon profil</span></div>
 
             <div class="ai-grid">
               <div class="ai-col">
@@ -169,27 +169,27 @@
           <div class="card" data-section="personal">
             <div class="card-head-row"><span>Informations personnelles</span><button class="btn-outline-sm btn-edit-section" type="button">Modifier</button></div>
             <ul class="info-list">
-              <li><span class="info-icon">👤</span><span class="info-label">Prénom</span><span class="info-value" data-field="firstName">Junior</span></li>
-              <li><span class="info-icon">👤</span><span class="info-label">Nom</span><span class="info-value" data-field="lastName">Tchouaka</span></li>
-              <li><span class="info-icon">✉</span><span class="info-label">Adresse email</span><span class="info-value" data-field="email" data-input="email">junior.tchouaka@gmail.com</span></li>
-              <li><span class="info-icon">🎂</span><span class="info-label">Date de naissance</span><span class="info-value" data-field="birthDate" data-input="date">12 Mars 1997</span></li>
-              <li><span class="info-icon">💍</span><span class="info-label">Situation matrimoniale</span><span class="info-value" data-field="maritalStatus" data-input="select" data-options="Célibataire|Marié(e)|Divorcé(e)|Veuf(ve)|En concubinage">Célibataire</span></li>
-              <li><span class="info-icon">🌍</span><span class="info-label">Nationalité</span><span class="info-value" data-field="nationality">Camerounaise</span></li>
-              <li><span class="info-icon">📍</span><span class="info-label">Lieu de résidence</span><span class="info-value" data-field="residence">Douala, Cameroun</span></li>
+              <li><span class="info-icon"><img src="/image/user.png" alt="Prénom"></span><span class="info-label">Prénom</span><span class="info-value" data-field="firstName">Junior</span></li>
+              <li><span class="info-icon"><img src="/image/user.png" alt="Nom"></span><span class="info-label">Nom</span><span class="info-value" data-field="lastName">Tchouaka</span></li>
+              <li><span class="info-icon"><img src="/image/mail.png" alt="Adresse email"></span><span class="info-label">Adresse email</span><span class="info-value" data-field="email" data-input="email">junior.tchouaka@gmail.com</span></li>
+              <li><span class="info-icon"><img src="/image/3917292.png" alt="Date de naissance"></span><span class="info-label">Date de naissance</span><span class="info-value" data-field="birthDate" data-input="date">12 Mars 1997</span></li>
+              <li><span class="info-icon"><img src="/image/3917505.png" alt="Situation matrimoniale"></span><span class="info-label">Situation matrimoniale</span><span class="info-value" data-field="maritalStatus" data-input="select" data-options="Célibataire|Marié(e)|Divorcé(e)|Veuf(ve)|En concubinage">Célibataire</span></li>
+              <li><span class="info-icon"><img src="/image/3917561.png" alt="Nationalité"></span><span class="info-label">Nationalité</span><span class="info-value" data-field="nationality">Camerounaise</span></li>
+              <li><span class="info-icon"><img src="/image/3916880.png" alt="Lieu de résidence"></span><span class="info-label">Lieu de résidence</span><span class="info-value" data-field="residence">Douala, Cameroun</span></li>
               <li><span class="info-icon">📱</span><span class="info-label">Numéro WhatsApp</span><span class="info-value" data-field="whatsapp">+237 6 12 34 56 78</span></li>
-              <li><span class="info-icon">🗣</span><span class="info-label">Langue principale</span><span class="info-value" data-field="mainLanguage" data-input="tags">Français</span></li>
-              <li><span class="info-icon">💻</span><span class="info-label">Profil GitHub</span><span class="info-value" data-field="linkedin">github.com/...</span></li>
+              <li><span class="info-icon"><img src="/image/3917561.png" alt="Langue principale"></span><span class="info-label">Langue principale</span><span class="info-value" data-field="mainLanguage" data-input="tags">Français</span></li>
+              <li><span class="info-icon"><img src="/image/3916670.png" alt="Profil GitHub"></span><span class="info-label">Profil GitHub</span><span class="info-value" data-field="linkedin">github.com/...</span></li>
             </ul>
           </div>
 
           <div class="card" data-section="availability">
             <div class="card-head-row"><span>Disponibilité &amp; Préférences</span><button class="btn-outline-sm btn-edit-section" type="button">Modifier</button></div>
             <ul class="info-list">
-              <li><span class="info-icon">💼</span><span class="info-label">Fonction de l'utilisateur</span><span class="info-value" data-field="jobTitle">Non renseigné</span></li>
-              <li><span class="info-icon">🕐</span><span class="info-label">Disponibilité</span><span class="info-value" data-field="availability" data-input="select" data-options="Immédiatement|Dans 1 mois|Dans 3 mois|Dans 6 mois|Pas disponible">Immédiatement</span></li>
-              <li><span class="info-icon">📄</span><span class="info-label">Type de contrat souhaité</span><span class="info-value" data-field="contractType" data-input="select" data-options="CDI|CDD|Freelance|Stage|Intérim|Remote|CDI, Remote">CDI, Remote</span></li>
-              <li><span class="info-icon">🌐</span><span class="info-label">Lieu de travail préféré</span><span class="info-value" data-field="workLocation">Remote / Monde entier</span></li>
-              <li><span class="info-icon">💰</span><span class="info-label">Salaire souhaité</span><span class="info-value" data-field="salary" data-input="salary">2 000 – 3 000 $ / mois</span></li>
+              <li><span class="info-icon"><img src="/image/3916670.png" alt="Fonction de l'utilisateur"></span><span class="info-label">Fonction de l'utilisateur</span><span class="info-value" data-field="jobTitle">Non renseigné</span></li>
+              <li><span class="info-icon"><img src="/image/7602640.png" alt="Disponibilité"></span><span class="info-label">Disponibilité</span><span class="info-value" data-field="availability" data-input="select" data-options="Immédiatement|Dans 1 mois|Dans 3 mois|Dans 6 mois|Pas disponible">Immédiatement</span></li>
+              <li><span class="info-icon"><img src="/image/3917505.png" alt="Type de contrat souhaité"></span><span class="info-label">Type de contrat souhaité</span><span class="info-value" data-field="contractType" data-input="select" data-options="CDI|CDD|Freelance|Stage|Intérim|Remote|CD, Remote">CDI, Remote</span></li>
+              <li><span class="info-icon"><img src="/image/3917561.png" alt="Lieu de travail préféré"></span><span class="info-label">Lieu de travail préféré</span><span class="info-value" data-field="workLocation">Remote / Monde entier</span></li>
+              <li><span class="info-icon"><img src="/image/7928164.png" alt="Salaire souhaité"></span><span class="info-label">Salaire souhaité</span><span class="info-value" data-field="salary" data-input="salary">2 000 – 3 000 $ / mois</span></li>
             </ul>
           </div>
 
@@ -240,49 +240,49 @@
             <div class="card-head-row"><span>Informations personnelles</span></div>
             <ul class="info-grid">
               <li class="info-item">
-                <span class="info-icon">👤</span>
+                <span class="info-icon"><img src="/image/user.png" alt="Prénom"></span>
                 <div class="info-item-body">
                   <span class="info-label">Prénom</span>
                   <span class="info-value" data-field="firstName">Carelle</span>
                 </div>
               </li>
               <li class="info-item">
-                <span class="info-icon">👤</span>
+                <span class="info-icon"><img src="/image/user.png" alt="Nom"></span>
                 <div class="info-item-body">
                   <span class="info-label">Nom</span>
                   <span class="info-value" data-field="lastName">Djeuwou</span>
                 </div>
               </li>
               <li class="info-item">
-                <span class="info-icon">✉</span>
+                <span class="info-icon"><img src="/image/mail.png" alt="Adresse email"></span>
                 <div class="info-item-body">
                   <span class="info-label">Adresse email</span>
                   <span class="info-value" data-field="email" data-input="email">carelledjeuwou@gmail.com</span>
                 </div>
               </li>
               <li class="info-item">
-                <span class="info-icon">🎂</span>
+                <span class="info-icon"><img src="/image/3917292.png" alt="Date de naissance"></span>
                 <div class="info-item-body">
                   <span class="info-label">Date de naissance</span>
                   <span class="info-value" data-field="birthDate" data-input="date">10 Août 1999</span>
                 </div>
               </li>
               <li class="info-item">
-                <span class="info-icon">💍</span>
+                <span class="info-icon"><img src="/image/3917505.png" alt="Situation matrimoniale"></span>
                 <div class="info-item-body">
                   <span class="info-label">Situation matrimoniale</span>
                   <span class="info-value" data-field="maritalStatus" data-input="select" data-options="Célibataire|Marié(e)|Divorcé(e)|Veuf(ve)|En concubinage">Célibataire</span>
                 </div>
               </li>
               <li class="info-item">
-                <span class="info-icon">🌍</span>
+                <span class="info-icon"><img src="/image/3917561.png" alt="Nationalité"></span>
                 <div class="info-item-body">
                   <span class="info-label">Nationalité</span>
                   <span class="info-value" data-field="nationality">Camerounaise</span>
                 </div>
               </li>
               <li class="info-item">
-                <span class="info-icon">📍</span>
+                <span class="info-icon"><img src="/image/3916880.png" alt="Lieu de résidence"></span>
                 <div class="info-item-body">
                   <span class="info-label">Lieu de résidence</span>
                   <span class="info-value" data-field="residence">yaoundé, Cameroun</span>
@@ -296,14 +296,14 @@
                 </div>
               </li>
               <li class="info-item">
-                <span class="info-icon">🗣</span>
+                <span class="info-icon"><img src="/image/3917561.png" alt="Langue principale"></span>
                 <div class="info-item-body">
                   <span class="info-label">Langue principale</span>
                   <span class="info-value" data-field="mainLanguage" data-input="tags">français, anglais, italie</span>
                 </div>
               </li>
               <li class="info-item">
-                <span class="info-icon">💻</span>
+                <span class="info-icon"><img src="/image/3916670.png" alt="Profil GitHub"></span>
                 <div class="info-item-body">
                   <span class="info-label">Profil GitHub</span>
                   <span class="info-value" data-field="linkedin">linkedin.com/in/...</span>

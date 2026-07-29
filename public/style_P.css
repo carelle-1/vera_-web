@@ -167,7 +167,7 @@ a{color:inherit;}
 .profile-meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:10px;flex-wrap:wrap;}
 .dot-sep{color:#c8cede;}
 .avail-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;}
-.profile-contacts{display:flex;gap:16px;font-size:12px;color:var(--muted);flex-wrap:wrap;}
+.profile-contacts{display:flex;gap:16px;font-size:12px;color:var(--muted);flex-wrap:wrap;margin-top:6px;}
 
 .profile-completion{min-width:220px;text-align:right;}
 .completion-label{font-size:11.5px;color:var(--muted);margin-bottom:2px;}
@@ -234,8 +234,9 @@ a{color:inherit;}
 .info-item:nth-last-child(-n+2){border-bottom:none;}
 .info-icon{
   width:42px;height:42px;flex-shrink:0;border-radius:12px;
-  background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:18px;
+  background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;
 }
+.info-icon img{width:22px;height:22px;object-fit:contain;}
 .info-item-body{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;}
 .info-label{font-size:11.5px;color:var(--muted);font-weight:600;}
 .info-value{font-size:13.5px;font-weight:700;color:var(--text);word-break:break-word;}
