@@ -57,10 +57,11 @@ table{border-collapse:collapse;width:100%;}
 .nav-label:first-child{margin-top:0;}
 .nav-item{
   display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
-  color:#000;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:2px;
+  color:#fff;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:2px;
   transition:background .15s ease,color .15s ease;
 }
 .nav-icon{font-size:14px;width:18px;text-align:center;}
+.nav-item .nav-icon img{filter:invert(1);}
 .nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;}
 .nav-item.active{
   /* background:linear-gradient(90deg,var(--mint-light),var(--sky));color:#052a2f; */

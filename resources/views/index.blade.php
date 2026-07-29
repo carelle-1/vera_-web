@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/image/vera1.png">
 <title>VERA - Tableau de bord</title>
 <link rel="stylesheet" href="/styleI.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,47 +24,47 @@
     </div>
 
     <nav class="nav">
-      <a class="nav-item active" href="#">
-        <svg viewBox="0 0 24 24"><path d="M4 11L12 4l8 7"/><path d="M6 10v9h5v-6h2v6h5v-9"/></svg>
+      <a class="nav-item active" href="/tableau-de-bord">
+        <img class="nav-icon" src="/image/home.png" alt="Tableau de bord">
         Tableau de bord
       </a>
       <a class="nav-item" href="/oppotunite">
-        <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <img class="nav-icon" src="/image/3916670.png" alt="Opportunités">
         Opportunités
       </a>
-      <a class="nav-item" href="#">
-        <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+      <a class="nav-item" href="/candidatures">
+        <img class="nav-icon" src="/image/3917512.png" alt="Candidatures">
         Candidatures
       </a>
       <a class="nav-item" href="/profil">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        <img class="nav-icon" src="/image/user.png" alt="Profil">
         Profil
         <span class="pill">100%</span>
       </a>
       <a class="nav-item" href="/coaching">
-        <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>
+        <img class="nav-icon" src="/image/3917385.png" alt="Coaching & Carrière">
         Coaching &amp; Carrière
       </a>
       <a class="nav-item" href="/formations">
-        <svg viewBox="0 0 24 24"><path d="M2 8l10-5 10 5-10 5z"/><path d="M6 10.5V16c0 1.5 2.5 3 6 3s6-1.5 6-3v-5.5"/></svg>
+        <img class="nav-icon" src="/image/3914133.png" alt="Formations">
         Formations
       </a>
       <a class="nav-item" href="/messages">
-        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+        <img class="nav-icon" src="/image/discussion.png" alt="Messages">
         Messages
         <span class="pill blue">12</span>
       </a>
       <a class="nav-item" href="/notifications">
-        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <img class="nav-icon" src="/image/3917270.png" alt="Notifications">
         Notifications
         <span class="pill red">8</span>
       </a>
       <a class="nav-item" href="/favoris">
-        <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+        <img class="nav-icon" src="/image/3916579.png" alt="Favoris">
         Favoris
       </a>
       <a class="nav-item" href="/parametre">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0 1.6-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1-.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.6 1z"/></svg>
+        <img class="nav-icon" src="/image/3917058.png" alt="Paramètres">
         Paramètres
       </a>
     </nav>
@@ -76,7 +77,7 @@
     </div>
 
     <div class="help">
-      <div class="help-icon">🎧</div>
+      <div class="help-icon"><img src="/image/3917604.png" alt="Besoin d'aide" style="width:100%;height:100%;object-fit:contain;"></div>
       <div>
         <div class="help-title">Besoin d'aide ?</div>
         <div class="help-sub">Chattez avec notre support</div>
@@ -101,14 +102,14 @@
             <img src="/image/3917270.png" alt="" style="width:20px;height:20px;object-fit:contain;">
             <span class="badge">8</span>
           </button>
-          <div class="lang"><img src="/image/3917561.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;"> FR ⌄</div>
+          <!-- <div class="lang"><img src="/image/3917561.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;"> FR </div> -->
           <div class="user">
             <img id="userAvatar" src="https://i.pravatar.cc/64?img=13" alt="avatar">
             <div class="user-text">
               <div id="userGreeting"></div>
               <!-- <div class="verified">Profil vérifié ✓</div> -->
             </div>
-            <span class="chev">⌄</span>
+            <span class="chev"></span>
           </div>
           <button id="logoutBtn" style="margin-left:12px;background:none;border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;">Déconnexion</button>
         </div>
@@ -128,7 +129,7 @@
 
             <div class="hero-stats">
               <div class="stat">
-                <div class="stat-icon blue">💼</div>
+                <div class="stat-icon blue"><img src="/image/3916670.png" alt="Opportunités"></div>
                 <div>
                   <div class="stat-label">Opportunités trouvées</div>
                   <div class="stat-value">128 <span class="up">↗ 23%</span></div>
@@ -136,7 +137,7 @@
                 </div>
               </div>
               <div class="stat">
-                <div class="stat-icon teal">📨</div>
+                <div class="stat-icon teal"><img src="/image/3917512.png" alt="Candidatures"></div>
                 <div>
                   <div class="stat-label">Candidatures envoyées</div>
                   <div class="stat-value">16 <span class="up">↗ 40%</span></div>
@@ -144,7 +145,7 @@
                 </div>
               </div>
               <div class="stat">
-                <div class="stat-icon purple">👁</div>
+                <div class="stat-icon purple"><img src="/image/oeil.png" alt="Vues"></div>
                 <div>
                   <div class="stat-label">Vues de ton profil</div>
                   <div class="stat-value">342 <span class="up">↗ 18%</span></div>
@@ -161,14 +162,14 @@
         <!-- RECOMMENDATIONS -->
         <section class="reco">
           <div class="reco-head">
-            <h2>Opportunités recommandées pour toi ✨</h2>
+            <h2>Opportunités recommandées pour toi</h2>
             <a href="#" class="see-all">Voir toutes les offres →</a>
           </div>
 
           <div class="filters">
-            <button class="chip active" data-filter="all">☰ Tout</button>
-            <select class="chip contract-filter" id="contractFilter">
-              <option value="">📄 Type de contrat</option>
+            <button class="chip active" data-filter="all"><img class="chip-icon" src="/image/list2.png" alt="Tout"> Tout</button>
+            <select class="chip contract-filter" id="contractFilter" style="display:none;">
+              <option value=""></option>
               <option value="CDI">CDI</option>
               <option value="CDD">CDD</option>
               <option value="Freelance">Freelance</option>
@@ -176,12 +177,45 @@
               <option value="Alternance">Alternance</option>
               <option value="Remote">Remote</option>
             </select>
-            <select class="chip country-filter" id="countryFilter">
-              <option value="">📍 Tous pays</option>
+            <div class="custom-select" id="contractFilterCustom" data-target="contractFilter">
+              <div class="custom-select-trigger">
+                <img class="chip-icon" src="/image/3917512.png" alt="Type de contrat"> <span class="custom-text">Type de contrat</span>
+                <span class="chev">⌄</span>
+              </div>
+              <div class="custom-select-options">
+                <div class="custom-select-option" data-value=""><img class="chip-icon" src="/image/3917512.png" alt="Type de contrat"> <span>Type de contrat</span></div>
+                <div class="custom-select-option" data-value="CDI"><span>CDI</span></div>
+                <div class="custom-select-option" data-value="CDD"><span>CDD</span></div>
+                <div class="custom-select-option" data-value="Freelance"><span>Freelance</span></div>
+                <div class="custom-select-option" data-value="Stage"><span>Stage</span></div>
+                <div class="custom-select-option" data-value="Alternance"><span>Alternance</span></div>
+                <div class="custom-select-option" data-value="Remote"><span>Remote</span></div>
+              </div>
+            </div>
+            <select class="chip country-filter" id="countryFilter" style="display:none;">
+              <option value=""></option>
             </select>
-            <select class="chip company-filter" id="companyFilter">
-              <option value="">🏢 Entreprise</option>
+            <div class="custom-select" id="countryFilterCustom" data-target="countryFilter">
+              <div class="custom-select-trigger">
+                <img class="chip-icon" src="/image/3916880.png" alt="Tous pays"> <span class="custom-text">Tous pays</span>
+                <span class="chev">⌄</span>
+              </div>
+              <div class="custom-select-options">
+                <div class="custom-select-option" data-value=""><img class="chip-icon" src="/image/3916880.png" alt="Tous pays"> <span>Tous pays</span></div>
+              </div>
+            </div>
+            <select class="chip company-filter" id="companyFilter" style="display:none;">
+              <option value=""></option>
             </select>
+            <div class="custom-select" id="companyFilterCustom" data-target="companyFilter">
+              <div class="custom-select-trigger">
+                <img class="chip-icon" src="/image/3914425.png" alt="Entreprise"> <span class="custom-text">Entreprise</span>
+                <span class="chev">⌄</span>
+              </div>
+              <div class="custom-select-options">
+                <div class="custom-select-option" data-value=""><img class="chip-icon" src="/image/3914425.png" alt="Entreprise"> <span>Entreprise</span></div>
+              </div>
+            </div>
           </div>
 
           <div class="jobs" id="jobsContainer">

@@ -144,7 +144,7 @@ a{color:inherit;text-decoration:none;}
   position:absolute;left:12px;top:50%;transform:translateY(-50%);
   display:flex;align-items:center;justify-content:center;
   width:30px;height:30px;border-radius:50%;
-  background:#bfe3f7;pointer-events:none;
+  background:#bff7d4;pointer-events:none;
 }
 .input-wrap .input-icon img{
   width:16px;height:16px;object-fit:contain;

@@ -286,6 +286,21 @@ function populateCountryFilter(jobs) {
     select.appendChild(option);
   });
   select.value = currentValue;
+
+  const countryCustom = document.getElementById('countryFilterCustom');
+  if (countryCustom) {
+    const optionsContainer = countryCustom.querySelector('.custom-select-options');
+    const firstOption = optionsContainer.querySelector('.custom-select-option');
+    optionsContainer.innerHTML = '';
+    if (firstOption) optionsContainer.appendChild(firstOption);
+    Array.from(countries).sort().forEach((country) => {
+      const div = document.createElement('div');
+      div.className = 'custom-select-option';
+      div.setAttribute('data-value', country);
+      div.innerHTML = '<span>' + country + '</span>';
+      optionsContainer.appendChild(div);
+    });
+  }
 }
 
 function populateCompanyFilter(jobs) {
@@ -307,6 +322,21 @@ function populateCompanyFilter(jobs) {
     select.appendChild(option);
   });
   select.value = currentValue;
+
+  const companyCustom = document.getElementById('companyFilterCustom');
+  if (companyCustom) {
+    const optionsContainer = companyCustom.querySelector('.custom-select-options');
+    const firstOption = optionsContainer.querySelector('.custom-select-option');
+    optionsContainer.innerHTML = '';
+    if (firstOption) optionsContainer.appendChild(firstOption);
+    Array.from(companies).sort().forEach((company) => {
+      const div = document.createElement('div');
+      div.className = 'custom-select-option';
+      div.setAttribute('data-value', company);
+      div.innerHTML = '<span>' + company + '</span>';
+      optionsContainer.appendChild(div);
+    });
+  }
 }
 
 function renderJobsList(topJobs, enrichedUser) {
@@ -637,6 +667,21 @@ if (allChip) {
     if (companyFilterEl) companyFilterEl.value = "";
     currentPage = 1;
     renderRecommendedJobs();
+
+    document.querySelectorAll('.custom-select').forEach(cs => {
+      const textEl = cs.querySelector('.custom-text');
+      const imgEl = cs.querySelector('.custom-select-trigger img');
+      const options = cs.querySelectorAll('.custom-select-option');
+      const defaultOption = options.length ? options[0] : null;
+      const defaultText = defaultOption ? (defaultOption.querySelector('span') ? defaultOption.querySelector('span').textContent.trim() : defaultOption.textContent.trim()) : '';
+      const defaultImg = defaultOption ? defaultOption.querySelector('img') : null;
+
+      if (textEl) textEl.textContent = defaultText;
+      if (imgEl && defaultImg) {
+        imgEl.src = defaultImg.src;
+        imgEl.alt = defaultImg.alt || '';
+      }
+    });
   });
 }
 
@@ -680,3 +725,61 @@ function renderPagination(totalItems) {
     });
   });
 }
+
+(function initCustomSelects() {
+  const customSelects = document.querySelectorAll('.custom-select');
+  if (!customSelects.length) return;
+
+  function openSelect(select) {
+    customSelects.forEach(s => { if (s !== select) s.classList.remove('open'); });
+    select.classList.add('open');
+  }
+
+  function closeAllSelects() {
+    customSelects.forEach(s => s.classList.remove('open'));
+  }
+
+  customSelects.forEach(select => {
+    const trigger = select.querySelector('.custom-select-trigger');
+    const targetId = select.getAttribute('data-target');
+    const hiddenSelect = document.getElementById(targetId);
+    const optionsContainer = select.querySelector('.custom-select-options');
+
+    if (!trigger || !hiddenSelect || !optionsContainer) return;
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = select.classList.contains('open');
+      closeAllSelects();
+      if (!isOpen) openSelect(select);
+    });
+
+    optionsContainer.addEventListener('click', (e) => {
+      const optionEl = e.target.closest('.custom-select-option');
+      if (!optionEl) return;
+
+      const value = optionEl.getAttribute('data-value') || '';
+      const textEl = select.querySelector('.custom-text');
+      const imgEl = select.querySelector('.custom-select-trigger img');
+      const optionImg = optionEl.querySelector('img');
+      const optionText = optionEl.querySelector('span') ? optionEl.querySelector('span').textContent.trim() : optionEl.textContent.trim();
+
+      hiddenSelect.value = value;
+      if (textEl) textEl.textContent = optionText || hiddenSelect.options[0]?.textContent || '';
+      if (imgEl && optionImg) {
+        imgEl.src = optionImg.src;
+        imgEl.alt = optionImg.alt || '';
+      }
+
+      closeAllSelects();
+      const event = new Event('change', { bubbles: true });
+      hiddenSelect.dispatchEvent(event);
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.custom-select')) {
+      closeAllSelects();
+    }
+  });
+})();

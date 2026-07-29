@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/image/vera1.png">
 <title>@yield('title', 'VERA')</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -24,46 +25,46 @@
 
     <nav class="nav">
       <a class="nav-item" href="/tableau-de-bord">
-        <svg viewBox="0 0 24 24"><path d="M4 11L12 4l8 7"/><path d="M6 10v9h5v-6h2v6h5v-9"/></svg>
+        <img class="nav-icon" src="/image/home.png" alt="Tableau de bord">
         Tableau de bord
       </a>
       <a class="nav-item {{ request()->is('oppotunite') ? 'active' : '' }}" href="/oppotunite">
-        <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <img class="nav-icon" src="/image/3916670.png" alt="Opportunités">
         Opportunités
       </a>
       <a class="nav-item {{ request()->is('candidatures') ? 'active' : '' }}" href="/candidatures">
-        <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+        <img class="nav-icon" src="/image/3917512.png" alt="Candidatures">
         Candidatures
       </a>
       <a class="nav-item {{ request()->is('profil') ? 'active' : '' }}" href="/profil">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        <img class="nav-icon" src="/image/user.png" alt="Profil">
         Profil
         <span class="pill" id="profilePill">0%</span>
       </a>
       <a class="nav-item {{ request()->is('coaching') ? 'active' : '' }}" href="/coaching">
-        <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>
+        <img class="nav-icon" src="/image/3917385.png" alt="Coaching & Carrière">
         Coaching &amp; Carrière
       </a>
       <a class="nav-item" href="/formations">
-        <svg viewBox="0 0 24 24"><path d="M2 8l10-5 10 5-10 5z"/><path d="M6 10.5V16c0 1.5 2.5 3 6 3s6-1.5 6-3v-5.5"/></svg>
+        <img class="nav-icon" src="/image/3914133.png" alt="Formations">
         Formations
       </a>
       <a class="nav-item {{ request()->is('messages') ? 'active' : '' }}" href="/messages">
-        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+        <img class="nav-icon" src="/image/discussion.png" alt="Messages">
         Messages
         <span class="pill blue" id="navMsgUnread">0</span>
       </a>
       <a class="nav-item" href="/notifications">
-        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <img class="nav-icon" src="/image/3917270.png" alt="Notifications">
         Notifications
         <span class="pill red">8</span>
       </a>
       <a class="nav-item" href="/favoris">
-        <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+        <img class="nav-icon" src="/image/3916579.png" alt="Favoris">
         Favoris
       </a>
       <a class="nav-item {{ request()->is('parametre') ? 'active' : '' }}" href="/parametre">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9V9a1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.6 1z"/></svg>
+        <img class="nav-icon" src="/image/3917058.png" alt="Paramètres">
         Paramètres
       </a>
       <a class="nav-item" href="/admin" id="adminNavItem" style="display:none;">
@@ -80,7 +81,7 @@
     </div>
 
     <div class="help">
-      <div class="help-icon">🎧</div>
+      <div class="help-icon"><img src="/image/3917604.png" alt="Besoin d'aide" style="width:100%;height:100%;object-fit:contain;"></div>
       <div>
         <div class="help-title">Besoin d'aide ?</div>
         <div class="help-sub">Chattez avec notre support</div>

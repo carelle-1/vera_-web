@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/image/vera1.png">
 <title>VERA Admin - Tableau de bord</title>
 <link rel="stylesheet" href="styleAD.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
