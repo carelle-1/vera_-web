@@ -52,12 +52,12 @@
       <a class="nav-item" href="/messages">
         <img class="nav-icon" src="/image/discussion.png" alt="Messages">
         Messages
-        <span class="pill blue">12</span>
+        <span class="pill blue" id="navMsgUnread">12</span>
       </a>
       <a class="nav-item" href="/notifications">
         <img class="nav-icon" src="/image/3917270.png" alt="Notifications">
         Notifications
-        <span class="pill red">8</span>
+        <span class="pill red" id="navNotifUnread">8</span>
       </a>
       <a class="nav-item" href="/favoris">
         <img class="nav-icon" src="/image/3916579.png" alt="Favoris">
@@ -100,7 +100,7 @@
       <div class="top-actions">
           <button class="icon-btn">
             <img src="/image/3917270.png" alt="" style="width:20px;height:20px;object-fit:contain;">
-            <span class="badge">8</span>
+            <span class="badge" id="topNotifUnread">8</span>
           </button>
           <!-- <div class="lang"><img src="/image/3917561.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;"> FR </div> -->
           <div class="user">
@@ -311,5 +311,48 @@
 <script src="salutation.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="scriptI.js"></script>
+<script>
+  firebase.auth().onAuthStateChanged((user) => {
+    if (!user) return;
+    firebase.database().ref("users/" + user.uid).once("value").then((snap) => {
+      const data = snap.val() || {};
+      const role = (data.role || "").toString().toLowerCase();
+      const adminNav = document.getElementById("adminNavItem");
+      if (adminNav) {
+        adminNav.style.display = role === "admin" ? "flex" : "none";
+      }
+    });
+
+    const notifRef = firebase.database().ref("users/" + user.uid + "/notifications");
+    notifRef.on("value", (snap) => {
+      const raw = snap.val() || {};
+      let unread = 0;
+      Object.values(raw).forEach((n) => {
+        if (n && n.unread) unread++;
+      });
+      const sidebarBadge = document.getElementById("navNotifUnread");
+      const topBadge = document.getElementById("topNotifUnread");
+      if (sidebarBadge) {
+        sidebarBadge.textContent = unread > 0 ? unread : "0";
+      }
+      if (topBadge) {
+        topBadge.textContent = unread > 0 ? unread : "0";
+      }
+    });
+
+    const convRef = firebase.database().ref("conversations/" + user.uid);
+    convRef.on("value", (snap) => {
+      const convs = snap.val() || {};
+      let msgUnread = 0;
+      Object.values(convs).forEach((c) => {
+        if (c && c.unread) msgUnread++;
+      });
+      const msgBadge = document.getElementById("navMsgUnread");
+      if (msgBadge) {
+        msgBadge.textContent = msgUnread > 0 ? msgUnread : "0";
+      }
+    });
+  });
+</script>
 </body>
 </html>

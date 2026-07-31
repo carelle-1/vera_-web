@@ -1,7 +1,18 @@
 // ============== HELPERS ==============
 async function getFirebaseIdToken() {
   try {
-    const user = firebase.auth().currentUser;
+    let user = firebase.auth().currentUser;
+    if (!user) {
+      await new Promise((resolve) => {
+        const timeout = setTimeout(resolve, 3000);
+        const unsubscribe = firebase.auth().onAuthStateChanged((u) => {
+          clearTimeout(timeout);
+          unsubscribe();
+          resolve();
+        });
+      });
+      user = firebase.auth().currentUser;
+    }
     if (!user) return null;
     return await user.getIdToken();
   } catch (e) {
@@ -46,6 +57,7 @@ async function loadNotificationsData() {
       notifications = data.notifications || [];
       updateCounts(data.counts || {});
       updateSummary(data.summary || {});
+      updateNavBadges();
     } else {
       notifications = [];
     }
@@ -55,6 +67,54 @@ async function loadNotificationsData() {
   }
 
   renderNotifications();
+}
+
+async function ensureNotifRealtimeListener() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  try {
+    const notifRef = firebase.database().ref("users/" + user.uid + "/notifications");
+    notifRef.on("value", (snap) => {
+      const raw = snap.val() || {};
+      const items = Object.entries(raw).map(([id, n]) => ({
+        id,
+        group: (n.group || "Autre").toString(),
+        type: (n.type || "systeme").toString(),
+        unread: n.unread !== false,
+        icon: (n.icon || "🔔").toString(),
+        iconBg: (n.iconBg || "#94a3b8").toString(),
+        tag: (n.tag || "Notification").toString(),
+        tagClass: (n.tagClass || "gray").toString(),
+        title: (n.title || "").toString(),
+        desc: (n.desc || "").toString(),
+        chips: Array.isArray(n.chips) ? n.chips : [],
+        time: (n.time || "").toString(),
+        createdAt: (n.createdAt || "").toString(),
+      }));
+
+      items.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+
+      notifications = items;
+      renderNotifications();
+      updateCountsFromData();
+    });
+  } catch (e) {
+    console.error("[NOTIFICATIONS] realtime listener error", e);
+  }
+}
+
+function attachNotifRealtimeIfReady() {
+  const user = firebase.auth().currentUser;
+  if (user) {
+    ensureNotifRealtimeListener();
+  }
+}
+
+if (document.readyState === "complete" || document.readyState === "interactive") {
+  attachNotifRealtimeIfReady();
+} else {
+  document.addEventListener("DOMContentLoaded", attachNotifRealtimeIfReady);
 }
 
 function updateCounts(counts) {
@@ -149,6 +209,15 @@ function updateCountsFromData() {
     systeme: notifications.filter(n => n.type === "systeme").length,
   };
   updateCounts(counts);
+  updateNavBadges();
+}
+
+function updateNavBadges() {
+  const unread = notifications.filter(n => n.unread).length;
+  const sidebarBadge = document.getElementById("navNotifUnread");
+  const topBadge = document.getElementById("topNotifUnread");
+  if (sidebarBadge) sidebarBadge.textContent = unread > 0 ? unread : "0";
+  if (topBadge) topBadge.textContent = unread > 0 ? unread : "0";
 }
 
 // ============== TABS / FILTRES ==============
@@ -190,4 +259,6 @@ document.getElementById("dndToggle").addEventListener("change", function () {
 });
 
 // ============== INIT ==============
-loadNotificationsData();
+loadNotificationsData().then(() => {
+  ensureNotifRealtimeListener();
+});

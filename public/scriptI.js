@@ -1000,11 +1000,34 @@ document.addEventListener("click", (e) => {
           blobToBase64(cvBlob),
           blobToBase64(letterBlob)
         ]).then(([cvB64, letterB64]) => {
-          return sendApplicationEmailBase64(email, fullName, (job.title || "le poste"), (job.company || ""), cvB64, letterB64, cvFileName, letterFileName);
+          return sendApplicationEmailBase64(email, fullName, (job.title || "le poste"), (job.company || ""), cvB64, letterB64, cvFileName, letterFileName, (user ? user.uid : ""));
         });
       });
     });
   }).then(() => {
+    const user = firebase.auth().currentUser;
+    if (user) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+      const dateStr = now.toISOString();
+      firebase.database().ref("users/" + user.uid + "/notifications").push({
+        group: "Candidatures",
+        type: "candidatures",
+        unread: true,
+        icon: "📄",
+        iconBg: "#10b981",
+        tag: "Candidature",
+        tagClass: "green",
+        title: "Candidature envoyée",
+        desc: "Vous avez postulé à " + ((job && job.title) ? job.title : "cette offre") + (job.company ? " chez " + job.company : "") + ".",
+        chips: ["Postulé", job.company || "Offre"],
+        time: timeStr,
+        createdAt: dateStr,
+      }).catch((err) => {
+        console.error("[JOBS] erreur notification:", err);
+      });
+    }
+
     btn.textContent = "✓ Candidature envoyée";
     setTimeout(() => {
       btn.textContent = "Postuler maintenant";
@@ -1026,7 +1049,7 @@ function blobToBase64(blob) {
   });
 }
 
-function sendApplicationEmailBase64(applyEmail, userName, jobTitle, company, cvBase64, coverLetterBase64, cvFileName, letterFileName) {
+function sendApplicationEmailBase64(applyEmail, userName, jobTitle, company, cvBase64, coverLetterBase64, cvFileName, letterFileName, userId) {
   return fetch("/send-application-email", {
     method: "POST",
     headers: {
@@ -1042,6 +1065,7 @@ function sendApplicationEmailBase64(applyEmail, userName, jobTitle, company, cvB
       cover_letter_file: coverLetterBase64,
       cv_file_name: cvFileName,
       cover_letter_file_name: letterFileName,
+      user_id: userId || "",
     }),
   }).then((res) => {
     if (!res.ok) {

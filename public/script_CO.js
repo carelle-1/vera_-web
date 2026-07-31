@@ -289,7 +289,7 @@ async function loadAiSection(section) {
     console.log("[COACH] section=" + section + " status=" + response.status, data);
 
     if (data.success && data.reply) {
-      el.innerHTML = formatAiReply(data.reply);
+      el.innerHTML = formatAiReply(data.reply, section);
       const goalEl = document.getElementById("planGoalValue");
       if (goalEl && data.objective && data.objective.title) {
         goalEl.textContent = data.objective.title;
@@ -307,8 +307,11 @@ async function loadAiSection(section) {
   }
 }
 
-function formatAiReply(text) {
+function formatAiReply(text, section) {
   if (!text) return "";
+  if (section === "conseils") {
+    return renderAdviceCards(text);
+  }
   return escapeHtml(text)
     .split('\n')
     .map(line => {
@@ -326,6 +329,59 @@ function formatAiReply(text) {
       return "<p style=\"margin:0 0 8px;line-height:1.6;\">" + trimmed + "</p>";
     })
     .join("");
+}
+
+function renderAdviceCards(text) {
+  if (!text) return "";
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const items = [];
+  let current = null;
+
+  const flush = () => {
+    if (current) {
+      items.push(current);
+      current = null;
+    }
+  };
+
+  lines.forEach(line => {
+    const numberedMatch = line.match(/^(\d+)[\.\)]\s*(.+)$/);
+    const bulletMatch = line.match(/^[-•]\s*(.+)$/);
+
+    if (numberedMatch || bulletMatch) {
+      flush();
+      const title = (numberedMatch ? numberedMatch[2] : bulletMatch[1]).trim();
+      current = { title, body: [] };
+    } else if (current) {
+      current.body.push(line);
+    } else {
+      flush();
+      current = { title: line, body: [] };
+    }
+  });
+
+  flush();
+
+  if (items.length === 0) {
+    return "<p style=\"margin:0 0 8px;line-height:1.6;\">" + escapeHtml(text) + "</p>";
+  }
+
+  return '<div class="conseils-grid">' + items.map((item, idx) => {
+    const body = item.body.join('<br>');
+    return `
+      <div class="advice-card-item">
+        <div class="advice-card-header">
+          <div class="advice-card-num">${idx + 1}</div>
+          <div class="advice-card-title">${escapeHtml(item.title)}</div>
+        </div>
+        ${body ? '<div class="advice-card-body">' + escapeHtml(body) + '</div>' : ''}
+        <div class="advice-card-footer">
+          <span class="advice-card-tag">Conseil IA</span>
+          <span class="advice-card-icon">&#10024;</span>
+        </div>
+      </div>
+    `;
+  }).join('') + '</div>';
 }
 
 function getUserRef() {
@@ -652,11 +708,11 @@ async function loadOverviewHighlights() {
       if (!data.success) continue;
 
       if (section === "skills" && skillsEl) {
-        skillsEl.innerHTML = formatAiReply(data.reply);
+        skillsEl.innerHTML = formatAiReply(data.reply, section);
       } else if (section === "conseils" && adviceEl) {
-        adviceEl.innerHTML = formatAiReply(data.reply);
+        adviceEl.innerHTML = formatAiReply(data.reply, section);
       } else if (section === "insights" && insightsEl) {
-        insightsEl.innerHTML = formatAiReply(data.reply);
+        insightsEl.innerHTML = formatAiReply(data.reply, section);
       }
     }
   } catch (e) {

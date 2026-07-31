@@ -52,6 +52,7 @@ class ApplyEmailController extends Controller
             'user_name' => 'required|string|max:255',
             'job_title' => 'required|string|max:255',
             'company' => 'nullable|string|max:255',
+            'user_id' => 'nullable|string|max:255',
         ]);
 
         $cvPath = null;
@@ -85,6 +86,11 @@ class ApplyEmailController extends Controller
             @unlink($cvPath);
             @unlink($letterPath);
 
+            $uid = $request->input('user_id');
+            if ($uid) {
+                $this->createApplicationNotification($uid, $request->input('job_title'), $request->input('company', ''));
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Candidature envoyée avec succès.',
@@ -105,6 +111,43 @@ class ApplyEmailController extends Controller
                 'success' => false,
                 'message' => 'Erreur lors de l\'envoi de la candidature: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    private function createApplicationNotification(string $uid, string $jobTitle, string $company): void
+    {
+        try {
+            $db = app('firebase.database');
+            
+            $now = new \DateTime();
+            $timeStr = $now->format('H:i');
+            $dateStr = $now->format('Y-m-d\TH:i:s');
+
+            $db->getReference('users/' . $uid . '/notifications')->push([
+                'group' => 'Candidatures',
+                'type' => 'candidatures',
+                'unread' => true,
+                'icon' => '📄',
+                'iconBg' => '#10b981',
+                'tag' => 'Candidature',
+                'tagClass' => 'green',
+                'title' => 'Candidature envoyée',
+                'desc' => 'Vous avez postulé à ' . $jobTitle . ($company ? ' chez ' . $company : '') . '.',
+                'chips' => ['Postulé', $company ?: 'Offre'],
+                'time' => $timeStr,
+                'createdAt' => $dateStr,
+            ]);
+            
+            \Log::info('[NOTIFICATIONS] notification created', [
+                'uid' => $uid,
+                'jobTitle' => $jobTitle,
+                'company' => $company,
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning('[NOTIFICATIONS] create notification failed', [
+                'error' => $e->getMessage(),
+                'uid' => $uid,
+            ]);
         }
     }
 
