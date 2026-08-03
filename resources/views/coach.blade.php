@@ -154,7 +154,7 @@
           <div class="card advice-card">
             <div class="card-head-row"><span>Conseils de votre coach IA &#10024;</span></div>
             <div id="adviceAiContent" class="ai-text-content">Sauvegardez votre objectif pour recevoir des conseils personnalisés.</div>
-            <div class="robot-mini">&#129302;</div>
+            <div class="robot-mini"><img src="/image/1.png" alt="VERA" style="width:34px;height:34px;object-fit:contain;"></div>
             <button class="btn-white-outline full" id="adviceCardBtn">Voir mes recommandations personnalisées &rarr;</button>
           </div>
 

@@ -6,7 +6,7 @@
 <link rel="icon" href="/image/vera1.png">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>VERA - Connexion / Inscription</title>
-<link rel="stylesheet" href="style_L.css">
+<link rel="stylesheet" href="/style_L.css?v=8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
@@ -17,7 +17,7 @@
   <!-- LEFT PANEL -->
   <aside class="brand-panel">
     <div class="brand-panel-content">
-      <div class="brand" style="flex-direction:column;align-items:center;text-align:center;">
+        <div class="brand" style="flex-direction:column;align-items:center;text-align:center;">
         <div class="brand-logo" style="background:none;border:none;border-radius:0;backdrop-filter:none;width:224px;height:140px; margin: 0 10px -58px -27px;"><img src="/image/veras1.png" alt="VERA" style="width:100%;height:100%;object-fit:contain;"></div>
         <div>
           <div class="brand-name">VERA</div>
@@ -25,12 +25,12 @@
         </div>
       </div>
 
-      <h1>Ta prochaine opportunité<br>commence ici.</h1>
-      <p>VERA analyse ton profil 24h/24 et te connecte aux meilleures opportunités, formations et coachs pour booster ta carrière.</p>
+      <h1>Ton avenir commence ici.</h1>
+      <p>VERA analyse ton profil et trouve les opportunités adaptées à ton profil pour booster ta carrière 24h/24, 7j/7 .</p>
 
       <ul class="feature-list">
         <li><span class="feature-icon"><img src="/image/mission.png" alt="" style="width:18px;height:18px;object-fit:contain;"></span> Des offres qui correspondent vraiment à ton profil</li>
-        <li><span class="feature-icon"><img src="/image/3914260.png" alt="" style="width:18px;height:18px;object-fit:contain;"></span> Candidatures automatiques boostées par l'IA</li>
+        <li><span class="feature-icon"><img src="/image/3914260.png" alt="" style="width:18px;height:18px;object-fit:contain;"></span> Les offres d'emploi boostées automatiquement pas l'IA par l'IA</li>
         <li><span class="feature-icon"><img src="/image/3916740.png" alt="" style="width:18px;height:18px;object-fit:contain;"></span> Un coaching carrière personnalisé</li>
       </ul>
 

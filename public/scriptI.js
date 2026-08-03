@@ -798,6 +798,161 @@ if (actionFollowTraining) {
   });
 }
 
+// ============== MODAL DÉTAILS ENTREPRISE ==============
+function normalizeCompanyKey(name) {
+  return (name || "").toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+}
+
+function openCompanyDetailModal(companyName) {
+  if (!companyName) return;
+
+  const overlay = document.getElementById("companyDetailOverlay");
+  const modal = document.getElementById("companyDetailModal");
+  const title = document.getElementById("companyDetailTitle");
+  const body = document.getElementById("companyDetailBody");
+  const closeBtn = document.getElementById("companyDetailClose");
+
+  if (!overlay || !modal || !body || !title) return;
+
+  title.textContent = "Détails de l'entreprise";
+  body.innerHTML = '<div style="text-align:center;padding:30px;"><div class="spinner"></div><p style="margin-top:10px;color:var(--muted);">Chargement des informations...</p></div>';
+  overlay.classList.add("active");
+
+  const key = normalizeCompanyKey(companyName);
+
+  const ref = firebase.database().ref("companies/" + key);
+  ref.once("value").then((snap) => {
+    const data = snap.val();
+    if (data) {
+      renderCompanyDetail(body, data, companyName);
+    } else {
+      const altRef = firebase.database().ref("companies").orderByChild("name").equalTo(companyName.trim());
+      altRef.once("value").then((snap2) => {
+        const found = snap2.val();
+        if (found && Object.keys(found).length > 0) {
+          const firstKey = Object.keys(found)[0];
+          renderCompanyDetail(body, found[firstKey], companyName);
+        } else {
+          body.innerHTML = '<div class="empty-state"><p>Aucune information détaillée disponible pour cette entreprise.</p><p style="color:var(--muted);font-size:12px;margin-top:6px;">Recherche: <strong>' + escapeHtml(companyName) + '</strong> (clé: ' + escapeHtml(key) + ')</p></div>';
+        }
+      }).catch((err) => {
+        console.error("[COMPANY] erreur recherche:", err);
+        body.innerHTML = '<div class="empty-state"><p>Impossible de charger les informations.</p></div>';
+      });
+    }
+  }).catch((err) => {
+    console.error("[COMPANY] erreur chargement:", err);
+    body.innerHTML = '<div class="empty-state"><p>Erreur lors du chargement des informations de l\'entreprise.</p></div>';
+  });
+}
+
+function renderCompanyDetail(container, data, companyName) {
+  const logoUrl = data.logoURL || data.logo || data.image || "";
+  const logoHtml = logoUrl
+    ? '<img src="' + escapeHtml(logoUrl) + '" alt="' + escapeHtml(companyName) + '" style="width:80px;height:80px;object-fit:contain;border-radius:14px;border:1px solid var(--border);">'
+    : '<div style="width:80px;height:80px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:28px;">' + escapeHtml((companyName || "?").charAt(0).toUpperCase()) + '</div>';
+
+  const sections = [
+    { label: "Informations générales", icon: "🏢", fields: [
+      { key: "name", label: "Nom de l'entreprise" },
+      { key: "slogan", label: "Slogan" },
+      { key: "description", label: "Description complète" },
+      { key: "shortDescription", label: "Description courte" },
+      { key: "foundedYear", label: "Année de création" },
+      { key: "type", label: "Type d'entreprise" },
+      { key: "sector", label: "Secteur d'activité" },
+      { key: "subSector", label: "Sous-secteur d'activité" },
+      { key: "size", label: "Taille de l\'entreprise" },
+      { key: "legalStatus", label: "Statut juridique" },
+      { key: "registrationNumber", label: "Numéro d\'immatriculation / RCCM" },
+      { key: "taxNumber", label: "Numéro d\'identification fiscale" },
+      { key: "website", label: "Site web" },
+    ]},
+    { label: "Localisation", icon: "📍", fields: [
+      { key: "country", label: "Pays" },
+      { key: "region", label: "Région" },
+      { key: "city", label: "Ville" },
+      { key: "neighborhood", label: "Quartier" },
+      { key: "address", label: "Adresse complète" },
+      { key: "postBox", label: "Boîte postale" },
+      { key: "latitude", label: "Coordonnées GPS (Latitude)" },
+      { key: "longitude", label: "Coordonnées GPS (Longitude)" },
+    ]},
+    { label: "Coordonnées", icon: "📞", fields: [
+      { key: "email", label: "Adresse e-mail professionnelle" },
+      { key: "phone", label: "Numéro de téléphone" },
+      { key: "whatsapp", label: "WhatsApp professionnel" },
+      { key: "phoneSecondary", label: "Téléphone secondaire" },
+      { key: "hrContact", label: "Contact du service RH" },
+      { key: "recruitmentEmail", label: "E-mail du service recrutement" },
+      { key: "openingHours", label: "Horaires d\'ouverture" },
+    ]},
+    { label: "Activités", icon: "💼", fields: [
+      { key: "products", label: "Produits proposés" },
+      { key: "services", label: "Services proposés" },
+      { key: "expertise", label: "Domaines d\'expertise" },
+      { key: "technologies", label: "Technologies utilisées" },
+      { key: "markets", label: "Principaux marchés" },
+      { key: "geographicZone", label: "Zone géographique d\'intervention" },
+      { key: "targetClients", label: "Clients ciblés" },
+      { key: "projects", label: "Projets réalisés" },
+      { key: "achievements", label: "Réalisations importantes" },
+    ]}
+  ];
+
+  html = '<div class="company-detail-header">' + logoHtml + '<div><div class="company-detail-name">' + escapeHtml(companyName) + '</div>';
+
+  if (data.slogan) {
+    html += '<div class="company-detail-slogan">' + escapeHtml(data.slogan) + '</div>';
+  }
+  if (data.type || data.sector) {
+    html += '<div class="company-detail-tags">' +
+      (data.type ? '<span class="company-tag">' + escapeHtml(data.type) + '</span>' : '') +
+      (data.sector ? '<span class="company-tag">' + escapeHtml(data.sector) + '</span>' : '') +
+      '</div>';
+  }
+  html += '</div></div>';
+
+  if (data.description) {
+    html += '<div class="company-detail-section"><h4 style="font-size:14px;font-weight:700;margin-bottom:8px;">À propos</h4><p style="font-size:12.5px;color:var(--muted);line-height:1.6;">' + escapeHtml(data.description) + '</p></div>';
+  }
+
+  sections.forEach((section) => {
+    const visibleFields = section.fields.filter((f) => data[f.key] && data[f.key].toString().trim() !== "");
+    if (visibleFields.length === 0) return;
+    html += '<div class="company-detail-section"><h4>' + section.icon + " " + section.label + '</h4><div class="company-detail-grid">';
+    visibleFields.forEach((f) => {
+      const val = data[f.key];
+      const displayVal = typeof val === "object" && val !== null ? JSON.stringify(val) : String(val || "");
+      html += '<div class="company-detail-field"><span class="company-field-label">' + escapeHtml(f.label) + '</span><span class="company-field-value">' + escapeHtml(displayVal) + '</span></div>';
+    });
+    html += '</div></div>';
+  });
+
+  if (data.website) {
+    html += '<div class="company-detail-website"><a href="' + escapeHtml(data.website) + '" target="_blank" rel="noopener noreferrer">🌐 Visiter le site web</a></div>';
+  }
+
+  container.innerHTML = html;
+}
+
+function closeCompanyDetailModal() {
+  const overlay = document.getElementById("companyDetailOverlay");
+  if (overlay) overlay.classList.remove("active");
+}
+
+// Close handlers for company modal
+const companyDetailOverlay = document.getElementById("companyDetailOverlay");
+const companyDetailClose = document.getElementById("companyDetailClose");
+if (companyDetailClose) {
+  companyDetailClose.addEventListener("click", closeCompanyDetailModal);
+}
+if (companyDetailOverlay) {
+  companyDetailOverlay.addEventListener("click", (e) => {
+    if (e.target === companyDetailOverlay) closeCompanyDetailModal();
+  });
+}
+
 // ============== MODAL DÉTAILS OFFRE ==============
 const jobDetailOverlay = document.getElementById("jobDetailOverlay");
 const jobDetailModal = document.getElementById("jobDetailModal");
@@ -834,6 +989,7 @@ function openJobDetailModal(job) {
     ${job.verified ? '<div class="detail-row"><span class="detail-label">Vérifié</span><span class="detail-value">✓ Oui</span></div>' : ''}
     <div class="detail-actions">
       <button class="btn-secondary download-docs-btn" data-job-id="${escapeHtml(job.id)}"><img class="btn-icon-small" src="/image/download.png" alt="Télécharger"> Télécharger les pièces</button>
+      <button class="btn-secondary company-detail-btn" data-company-name="${escapeHtml(job.company || '')}"><img class="btn-icon-small" src="/image/3914425.png" alt="Entreprise"> Voir l'entreprise</button>
       <button class="btn-primary apply-now-btn" data-job-apply="${escapeHtml(job.id)}" ${!job.applyEmail ? 'disabled' : ''}>Postuler maintenant</button>
     </div>
   `;
@@ -948,6 +1104,14 @@ document.addEventListener("click", (e) => {
     btn.textContent = "ðŸ“Ž Télécharger les pièces";
     btn.disabled = false;
   });
+});
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".company-detail-btn");
+  if (!btn) return;
+  const companyName = btn.getAttribute("data-company-name");
+  if (!companyName) return;
+  openCompanyDetailModal(companyName.trim());
 });
 
 document.addEventListener("click", (e) => {

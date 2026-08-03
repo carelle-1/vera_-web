@@ -9,7 +9,7 @@
 
       <!-- PAGE HEAD -->
       <div class="page-head">
-        <h1>Favoris <span class="heart">♡</span> <span class="sparkle">✨</span></h1>
+        <h1>Favoris <span class="heart">♡</span> <span class="sparkle"></span></h1>
         <p>Retrouvez tous les emplois, entreprises et formations que vous avez enregistrés.</p>
       </div>
 
@@ -104,7 +104,7 @@
           </div>
 
           <div class="card advice-card">
-            <div class="card-head-row"><span>Conseil VERA ✨</span></div>
+            <div class="card-head-row"><span>Conseil VERA</span></div>
             <p>Activez les alertes pour être informé en temps réel des nouvelles opportunités similaires.</p>
             <button class="btn-white-outline full">🔔 Créer une alerte</button>
           </div>

@@ -274,7 +274,7 @@
 
         <div class="card coach-card">
           <div class="coach-head">
-            <span>🤖 Coach IA VERA</span>
+            <span><img src="/image/1.png" alt="VERA" style="width:50px;height:50px;object-fit:contain;vertical-align:middle;margin-right:6px;"> Coach IA VERA</span>
           </div>
           <p>Voici ce que je te recommande aujourd'hui :</p>
           <ul>
@@ -300,6 +300,17 @@
       <button class="modal-close" id="jobDetailClose" type="button">×</button>
     </div>
     <div class="modal-body" id="jobDetailBody"></div>
+  </div>
+</div>
+
+<!-- ============== MODAL DÉTAILS ENTREPRISE ============== -->
+<div class="modal-overlay" id="companyDetailOverlay">
+  <div class="modal-card company-detail-modal" id="companyDetailModal">
+    <div class="modal-head">
+      <div class="modal-title" id="companyDetailTitle">Détails de l'entreprise</div>
+      <button class="modal-close" id="companyDetailClose" type="button">×</button>
+    </div>
+    <div class="modal-body" id="companyDetailBody"></div>
   </div>
 </div>
 
