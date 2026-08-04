@@ -9,7 +9,7 @@
 
       <!-- PAGE HEAD -->
       <div class="page-head">
-        <h1>Notifications <span class="sparkle"></span></h1>
+        <h1 style="color: #12b3c9;">Notifications <span class="sparkle"></span></h1>
         <p>Restez informé de tout ce qui compte pour votre carrière.</p>
       </div>
 

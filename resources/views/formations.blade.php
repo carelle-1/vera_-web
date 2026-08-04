@@ -10,7 +10,7 @@
       <!-- PAGE HEAD -->
       <div class="page-head">
         <div>
-          <h1>Formations <span class="cap">🎓</span></h1>
+          <h1 style="color: #12b3c9;">Formations <span class="cap">🎓</span></h1>
           <p>Développez vos compétences et boostez votre carrière avec des formations adaptées à vos objectifs.</p>
         </div>
         <button class="btn-primary" id="coachSearchBtn">✨ Rechercher avec coach IA</button>

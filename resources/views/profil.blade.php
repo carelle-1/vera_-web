@@ -10,7 +10,7 @@
       <!-- PAGE HEAD -->
       <div class="page-head">
         <div>
-          <h1>Mon Profil <span class="verif-badge">✓</span></h1>
+          <h1 style="color: #12b3c9;">Mon Profil <span class="verif-badge">✓</span></h1>
           <p>Gérez vos informations et améliorez votre profil pour plus d'opportunités.</p>
         </div>
         <button class="btn-outline">👁 Voir mon profil public</button>

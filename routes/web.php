@@ -7,6 +7,8 @@ Route::get('/', function () {
     return view('login');
 });
 
+Route::get('/login-stats', [App\Http\Controllers\StatsController::class, 'data'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+
 // Route de synchronisation Firebase -> Laravel (sans protection d'auth)
 Route::post('/sync-firebase-auth', [AuthController::class, 'syncFirebaseAuth'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 

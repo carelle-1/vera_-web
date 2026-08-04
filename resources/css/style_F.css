@@ -74,8 +74,8 @@ select{font-family:inherit;}
   box-shadow:0 4px 14px rgba(59,107,245,0.4);
 }
 .pill{margin-left:auto;font-size:10px;font-weight:700;background:#eef1fb;padding:2px 7px;border-radius:20px;color: #000;}
-.pill.blue{background:#12b3c9;}
-.pill.red{background:var(--red);}
+.pill.blue{background:#12b3c9;color:#fff;}
+.pill.red{background:var(--red);color:#fff;}
 
 .premium-card{
   background:linear-gradient(160deg,#16a34a, #16a34a);

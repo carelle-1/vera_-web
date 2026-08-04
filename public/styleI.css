@@ -90,8 +90,8 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke
   background:#eef1fb;padding:2px 7px;border-radius:20px;
   color: #0a1030;
 }
-.pill.blue{background:#12b3c9;}   
-.pill.red{background:var(--red);}
+.pill.blue{background:#12b3c9;color:#fff;}   
+.pill.red{background:var(--red);color:#fff;}
 
 .premium-card{
   background:linear-gradient(160deg,#16a34a, #16a34a);
@@ -359,8 +359,8 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke
 .score-ring svg{width:100%;height:100%;transform:rotate(-90deg);}
 .ring-bg{fill:none;stroke:#eef1fb;stroke-width:10;}
 .ring-fg{
-  fill:none;stroke:var(--blue);stroke-width:10;stroke-linecap:round;
-  stroke-dasharray:326.7; stroke-dashoffset:45.7; /* 86/100 */
+  fill:none;stroke:#12b3c9;stroke-width:10;stroke-linecap:round;
+  stroke-dasharray:326.85;stroke-dashoffset:326.85;
 }
 .score-num{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;

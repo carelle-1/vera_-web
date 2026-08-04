@@ -9,7 +9,7 @@
 
       <!-- PAGE HEAD -->
       <div class="page-head">
-        <h1>Param&eacute;tres <span class="gear">&#x2699;</span></h1>
+        <h1 style="color: #12b3c9;">Param&eacute;tres <span class="gear">&#x2699;</span></h1>
         <p>G&eacute;rez votre compte, vos pr&eacute;f&eacute;rences et optimisez votre exp&eacute;rience sur VERA.</p>
       </div>
 

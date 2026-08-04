@@ -35,9 +35,9 @@
       </ul>
 
       <div class="stats-row">
-        <div class="stat-block"><strong>120K+</strong><span>Membres actifs</span></div>
-        <div class="stat-block"><strong>8 500+</strong><span>Entreprises partenaires</span></div>
-        <div class="stat-block"><strong>92%</strong><span>Taux de satisfaction</span></div>
+        <div class="stat-block"><strong id="statMembers">0</strong><span>Membres actifs</span></div>
+        <div class="stat-block"><strong id="statCompanies">0</strong><span>Entreprises partenaires</span></div>
+        <div class="stat-block"><strong id="statSatisfaction">0%</strong><span>Taux de satisfaction</span></div>
       </div>
     </div>
 
@@ -222,5 +222,19 @@
 <script src="firebase-init.js"></script>
 
 <script src="script_L.js?v=2"></script>
+<script>
+  fetch('/login-stats').then(function(r){return r.json();}).then(function(data){
+    var m = document.getElementById('statMembers');
+    var c = document.getElementById('statCompanies');
+    var s = document.getElementById('statSatisfaction');
+    if(m) m.textContent = data.members >= 1000 ? Math.round(data.members/1000) + 'K+' : data.members + '+';
+    if(c) c.textContent = data.companies >= 1000 ? Math.round(data.companies/1000) + 'K+' : data.companies + '+';
+    if(s) s.textContent = data.satisfaction + '%';
+  }).catch(function(){
+    var m = document.getElementById('statMembers'); if(m) m.textContent = '120K+';
+    var c = document.getElementById('statCompanies'); if(c) c.textContent = '8 500+';
+    var s = document.getElementById('statSatisfaction'); if(s) s.textContent = '92%';
+  });
+</script>
 </body>
 </html>

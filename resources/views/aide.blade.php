@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'VERA - Besoin d'aide ?')
+@section('title', 'VERA - Besoin d\'aide ?')
 @section('styles')
 <link rel="stylesheet" href="style_A.css">
 @endsection

@@ -9,7 +9,7 @@
 
       <!-- PAGE HEAD -->
       <div class="page-head">
-        <h1>Favoris <span class="heart">♡</span> <span class="sparkle"></span></h1>
+        <h1 style="color: #12b3c9;">Favoris <span class="heart">♡</span> <span class="sparkle"></span></h1>
         <p>Retrouvez tous les emplois, entreprises et formations que vous avez enregistrés.</p>
       </div>
 

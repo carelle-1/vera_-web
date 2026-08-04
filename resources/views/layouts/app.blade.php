@@ -106,7 +106,6 @@
             <img src="/image/3917270.png" alt="" style="width:20px;height:20px;object-fit:contain;">
             <span class="badge" id="topNotifUnread">8</span>
           </button>
-          <div class="lang"><img src="/image/3917561.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;"> FR ⌄</div>
           <div class="user">
             <div class="user-avatar-wrap">
               <img id="userAvatar" src="https://i.pravatar.cc/64?img=13" alt="avatar">
@@ -116,7 +115,6 @@
               <div id="userGreeting"></div>
               <!-- <div class="verified">Profil vérifié ✓</div> -->
             </div>
-            <span class="chev">⌄</span>
           </div>
           <button id="logoutBtn" style="margin-left:12px;background:none;border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;">Déconnexion</button>
         </div>
@@ -135,7 +133,7 @@
 <script src="firebase-init.js"></script>
 <script src="salutation.js"></script>
 <script src="avatar.js"></script>
-<script src="scriptI.js"></script>
+<script src="scriptI.js?v={{ time() }}"></script>
 <script>
   firebase.auth().onAuthStateChanged((user) => {
     if (!user) return;

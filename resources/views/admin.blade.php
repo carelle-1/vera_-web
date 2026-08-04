@@ -94,9 +94,8 @@
         <button class="icon-btn">✉<span class="badge green">3</span></button>
         <div class="env-tag">Production</div>
         <div class="user">
-          <img src="https://i.pravatar.cc/64?img=32" alt="admin">
-          <span class="chev">⌄</span>
-        </div>
+           <img src="https://i.pravatar.cc/64?img=32" alt="admin">
+         </div>
       </div>
     </header>
 

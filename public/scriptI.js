@@ -380,7 +380,7 @@ function calculateJobCompatibility(userData, job) {
 }
 
 // ============== GARDE DE SESSION (TABLEAU DE BORD) ==============
-// Si l'utilisateur n'est pas connecté, on le renvoie Ã  la connexion.
+// Si l'utilisateur n'est pas connecté, on le renvoie à la connexion.
 firebase.auth().onAuthStateChanged((user) => {
   if (!user) {
     window.location.replace("/");
@@ -577,7 +577,7 @@ function populateCountryFilter(jobs) {
   });
 
   const currentValue = select.value;
-  select.innerHTML = '<option value="">ðŸ“ Tous pays</option>';
+  select.innerHTML = '<option value="">\uD83D\uDCCD Tous pays</option>';
   Array.from(countries).sort().forEach((country) => {
     const option = document.createElement("option");
     option.value = country;
@@ -613,7 +613,7 @@ function populateCompanyFilter(jobs) {
   });
 
   const currentValue = select.value;
-  select.innerHTML = '<option value="">ðŸ¢ Entreprise</option>';
+  select.innerHTML = '<option value="">\uD83C\uDFE2 Entreprise</option>';
   Array.from(companies).sort().forEach((company) => {
     const option = document.createElement("option");
     option.value = company;
@@ -661,7 +661,7 @@ function renderJobsList(topJobs, enrichedUser) {
         <div class="job-logo">${logoHtml}</div>
         <div class="job-info">
           <div class="job-compat">${compatibility}% Compatible</div>
-          <div class="job-title">${escapeHtml(job.title || "Sans titre")} ${job.verified ? '<span class="verified-dot">âœ“</span>' : ""}</div>
+          <div class="job-title">${escapeHtml(job.title || "Sans titre")} ${job.verified ? '<span class="verified-dot">\u2713</span>' : ""}</div>
           <div class="job-sub">${escapeHtml(job.company || "—")} · <span>${escapeHtml(job.location || "—")}</span> <span class="tag">${escapeHtml(job.contractType || job.status || "")}</span></div>
           <div class="job-tags">${tagsHtml}${tags.length >= 3 && (job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).length > 3 ? `<span>+${(job.skills || "").split(",").map((s) => s.trim()).filter(Boolean).length - 3}</span>` : ""}</div>
         </div>
@@ -713,11 +713,11 @@ function renderIndexScore(data) {
   const badge = document.getElementById("scoreBadgeIndex");
   const text = document.getElementById("scoreTextIndex");
   if (badge) {
-    if (pct >= 100) badge.textContent = "â˜… Parfait";
-    else if (pct >= 75) badge.textContent = "â˜… Excellent";
-    else if (pct >= 50) badge.textContent = "â˜… Très bon";
-    else if (pct > 0) badge.textContent = "â˜… À améliorer";
-    else badge.textContent = "â˜… Vide";
+    if (pct >= 100) badge.textContent = "\u2605 Parfait";
+    else if (pct >= 75) badge.textContent = "\u2605 Excellent";
+    else if (pct >= 50) badge.textContent = "\u2605 Très bon";
+    else if (pct > 0) badge.textContent = "\u2605 À améliorer";
+    else badge.textContent = "\u2605 Vide";
   }
   if (text) {
     if (pct >= 100) text.textContent = "Ton profil est parfait !";
@@ -748,7 +748,7 @@ function renderIndexScore(data) {
 }
 
 // Empêche le bouton "précédent" tant qu'on est connecté :
-// on "re-pousse" la page courante dans l'historique Ã  chaque tentative de retour.
+// on "re-pousse" la page courante dans l'historique à chaque tentative de retour.
 history.pushState(null, null, location.href);
 window.addEventListener("popstate", () => {
   history.pushState(null, null, location.href);
@@ -1101,7 +1101,7 @@ document.addEventListener("click", (e) => {
   }).catch((err) => {
     console.error("[JOBS] erreur téléchargement pièces:", err);
     alert("Impossible de lancer le téléchargement pour le moment.");
-    btn.textContent = "ðŸ“Ž Télécharger les pièces";
+       btn.textContent = "\uD83D\uDCCE Télécharger les pièces";
     btn.disabled = false;
   });
 });
@@ -1165,33 +1165,46 @@ document.addEventListener("click", (e) => {
           blobToBase64(letterBlob)
         ]).then(([cvB64, letterB64]) => {
           return sendApplicationEmailBase64(email, fullName, (job.title || "le poste"), (job.company || ""), cvB64, letterB64, cvFileName, letterFileName, (user ? user.uid : ""));
+        }).then(() => {
+          const now = new Date();
+          const timeStr = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+          const dateStr = now.toISOString();
+          firebase.database().ref("candidatures").push({
+            userId: user.uid,
+            jobId: jobId,
+            title: job.title || "Sans titre",
+            company: job.company || "—",
+            status: "sent",
+            statusLabel: "Candidature envoyée",
+            date: timeStr,
+            sourceUrl: job.sourceUrl || "",
+            logo: job.logo || "",
+            logoURL: job.logoURL || "",
+            logoBg: job.logoBg || "#e5e7eb",
+            createdAt: now.getTime()
+          }).catch((err) => {
+            console.error("[CAND] erreur sauvegarde candidature:", err);
+          });
+          firebase.database().ref("users/" + user.uid + "/notifications").push({
+            group: "Candidatures",
+            type: "candidatures",
+            unread: true,
+            icon: "\uD83D\uDCC4",
+            iconBg: "#10b981",
+            tag: "Candidature",
+            tagClass: "green",
+            title: "Candidature envoyée",
+            desc: "Vous avez postulé à " + ((job && job.title) ? job.title : "cette offre") + (job.company ? " chez " + job.company : "") + ".",
+            chips: ["Postulé", job.company || "Offre"],
+            time: timeStr,
+            createdAt: dateStr,
+          }).catch((err) => {
+            console.error("[JOBS] erreur notification:", err);
+          });
         });
       });
     });
   }).then(() => {
-    const user = firebase.auth().currentUser;
-    if (user) {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-      const dateStr = now.toISOString();
-      firebase.database().ref("users/" + user.uid + "/notifications").push({
-        group: "Candidatures",
-        type: "candidatures",
-        unread: true,
-        icon: "📄",
-        iconBg: "#10b981",
-        tag: "Candidature",
-        tagClass: "green",
-        title: "Candidature envoyée",
-        desc: "Vous avez postulé à " + ((job && job.title) ? job.title : "cette offre") + (job.company ? " chez " + job.company : "") + ".",
-        chips: ["Postulé", job.company || "Offre"],
-        time: timeStr,
-        createdAt: dateStr,
-      }).catch((err) => {
-        console.error("[JOBS] erreur notification:", err);
-      });
-    }
-
     btn.textContent = "✓ Candidature envoyée";
     setTimeout(() => {
       btn.textContent = "Postuler maintenant";
@@ -1302,7 +1315,7 @@ function renderPagination(totalItems) {
   }
 
   let html = "";
-  html += `<button class="page-arrow" data-page="prev" ${currentPage === 1 ? 'disabled' : ''}>â†</button>`;
+   html += `<button class="page-arrow" data-page="prev" ${currentPage === 1 ? 'disabled' : ''}>\u2190</button>`;
   
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
@@ -1312,7 +1325,7 @@ function renderPagination(totalItems) {
     }
   }
   
-  html += `<button class="page-arrow" data-page="next" ${currentPage === totalPages ? 'disabled' : ''}>â†’</button>`;
+   html += `<button class="page-arrow" data-page="next" ${currentPage === totalPages ? 'disabled' : ''}>\u2192</button>`;
   
   paginationEl.innerHTML = html;
 

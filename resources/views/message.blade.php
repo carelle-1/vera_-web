@@ -8,7 +8,7 @@
     <!-- PAGE HEAD -->
     <div class="page-head">
       <div>
-        <h1>Messages <span class="cap">💬</span></h1>
+        <h1 style="color: #12b3c9;">Messages <span class="cap">💬</span></h1>
         <p>&Eacute;changez avec l'assistant VERA et notre &eacute;quipe. Nous sommes là pour vous accompagner.</p>
       </div>
       <button class="btn-primary" id="newMsgBtn">✉ Nouveau message</button>

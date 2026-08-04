@@ -384,6 +384,12 @@ function renderDetail() {
       applyBtn.disabled = true;
 
       const user = firebase.auth().currentUser;
+      if (!user) {
+        applyBtn.textContent = "Postuler";
+        applyBtn.disabled = false;
+        alert("Vous devez être connecté pour postuler.");
+        return;
+      }
       const candidature = {
         jobId: job.id,
         title: job.title || "Sans titre",
@@ -694,9 +700,12 @@ document.getElementById("refreshBtn").addEventListener("click", () => {
 });
 
 // ============== INIT ==============
-loadJobsFromFirebase().then(() => {
-  const user = firebase.auth().currentUser;
-  if (user) {
+firebase.auth().onAuthStateChanged((user) => {
+  if (!user) {
+    window.location.replace("/");
+    return;
+  }
+  loadJobsFromFirebase().then(() => {
     return firebase.database().ref("users/" + user.uid).once("value").then((userSnap) => {
       const userData = userSnap.val() || {};
       const skillsPromise = firebase.database().ref("users/" + user.uid + "/skills").once("value");
@@ -724,13 +733,12 @@ loadJobsFromFirebase().then(() => {
       jobs.forEach((job) => { job.compatibility = job.match || 0; });
       filteredJobs = [...jobs];
     });
-  }
   }).then(() => {
-  renderJobs();
-  renderDetail();
-  renderRecommendedJobs();
-  
-  triggerAutoScrape();
+    renderJobs();
+    renderDetail();
+    renderRecommendedJobs();
+    triggerAutoScrape();
+  });
 });
 
 function triggerAutoScrape() {

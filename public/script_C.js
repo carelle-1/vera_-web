@@ -12,15 +12,20 @@ const statusClass = {
 
 let currentStatus = "all";
 let currentSearch = "";
-let currentPage = 1;
+let candCurrentPage = 1;
 const CAND_PER_PAGE = 5;
 
 // ============== FIREBASE ==============
-function loadCandidaturesFromFirebase() {
-  return firebase.database().ref("candidatures").once("value").then((snapshot) => {
+function loadCandidaturesFromFirebase(user) {
+  if (!user || !user.uid) {
+    console.warn("[CAND] utilisateur non connecté");
+    candidatures = [];
+    allCandidatures = [];
+    return Promise.resolve([]);
+  }
+  const uid = user.uid;
+  return firebase.database().ref("candidatures").orderByChild("userId").equalTo(uid).once("value").then((snapshot) => {
     const data = snapshot.val() || {};
-    const user = firebase.auth().currentUser;
-    const uid = user ? user.uid : null;
 
     allCandidatures = Object.keys(data).map((id) => {
       const c = data[id];
@@ -31,19 +36,34 @@ function loadCandidaturesFromFirebase() {
       };
     });
 
-    if (uid) {
-      allCandidatures = allCandidatures.filter(c => c.userId === uid);
-    }
-
     allCandidatures.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     candidatures = [...allCandidatures];
-    console.log("[CAND] candidatures chargées:", candidatures.length);
+    console.log("[CAND] candidatures chargées:", candidatures.length, "pour userId:", uid);
     return candidatures;
   }).catch((err) => {
-    console.error("[CAND] erreur chargement:", err);
-    allCandidatures = [];
-    candidatures = [];
-    return [];
+    console.error("[CAND] erreur chargement query:", err);
+    console.log("[CAND] tentative fallback: chargement complet");
+    return firebase.database().ref("candidatures").once("value").then((snapshot) => {
+      const data = snapshot.val() || {};
+      allCandidatures = Object.keys(data).map((id) => {
+        const c = data[id];
+        return {
+          id,
+          ...c,
+          createdAt: typeof c.createdAt === "number" ? c.createdAt : Date.now()
+        };
+      });
+      allCandidatures = allCandidatures.filter(c => c.userId === uid);
+      allCandidatures.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      candidatures = [...allCandidatures];
+      console.log("[CAND] candidatures (fallback):", candidatures.length);
+      return candidatures;
+    }).catch((err2) => {
+      console.error("[CAND] erreur fallback:", err2);
+      allCandidatures = [];
+      candidatures = [];
+      return [];
+    });
   });
 }
 
@@ -77,8 +97,8 @@ function renderList() {
   }
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / CAND_PER_PAGE));
-  if (currentPage > totalPages) currentPage = totalPages;
-  const start = (currentPage - 1) * CAND_PER_PAGE;
+  if (candCurrentPage > totalPages) candCurrentPage = totalPages;
+  const start = (candCurrentPage - 1) * CAND_PER_PAGE;
   const pageItems = filtered.slice(start, start + CAND_PER_PAGE);
 
   pageItems.forEach(c => {
@@ -131,29 +151,29 @@ function renderPagination(totalPages) {
   }
 
   let html = "";
-  html += `<button class="page-arrow" data-page="prev" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+  html += `<button class="page-arrow" data-page="prev" ${candCurrentPage === 1 ? 'disabled' : ''}>‹</button>`;
   
   for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-      html += `<button class="page-num ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
-    } else if (i === currentPage - 2 || i === currentPage + 2) {
+    if (i === 1 || i === totalPages || (i >= candCurrentPage - 1 && i <= candCurrentPage + 1)) {
+      html += `<button class="page-num ${i === candCurrentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    } else if (i === candCurrentPage - 2 || i === candCurrentPage + 2) {
       html += `<span class="page-dots">...</span>`;
     }
   }
   
-  html += `<button class="page-arrow" data-page="next" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+  html += `<button class="page-arrow" data-page="next" ${candCurrentPage === totalPages ? 'disabled' : ''}>›</button>`;
   
   paginationEl.innerHTML = html;
 
   paginationEl.querySelectorAll(".page-num, .page-arrow").forEach((btn) => {
     btn.addEventListener("click", () => {
       const page = btn.getAttribute("data-page");
-      if (page === "prev" && currentPage > 1) {
-        currentPage--;
-      } else if (page === "next" && currentPage < totalPages) {
-        currentPage++;
+      if (page === "prev" && candCurrentPage > 1) {
+        candCurrentPage--;
+      } else if (page === "next" && candCurrentPage < totalPages) {
+        candCurrentPage++;
       } else if (page !== "prev" && page !== "next") {
-        currentPage = parseInt(page);
+        candCurrentPage = parseInt(page);
       }
       renderList();
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -167,7 +187,7 @@ document.querySelectorAll(".tab").forEach(tab => {
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
     currentStatus = tab.dataset.status;
-    currentPage = 1;
+    candCurrentPage = 1;
     renderList();
   });
 });
@@ -175,7 +195,7 @@ document.querySelectorAll(".tab").forEach(tab => {
 // ============== RECHERCHE ==============
 document.getElementById("searchInput")?.addEventListener("input", (e) => {
   currentSearch = e.target.value;
-  currentPage = 1;
+  candCurrentPage = 1;
   renderList();
 });
 
@@ -265,8 +285,14 @@ function renderDonut() {
 }
 
 // ============== INIT ==============
-loadCandidaturesFromFirebase().then(() => {
-  renderList();
-  renderDonut();
-  updateHeroStats();
+firebase.auth().onAuthStateChanged((user) => {
+  if (!user) {
+    window.location.replace("/");
+    return;
+  }
+  loadCandidaturesFromFirebase(user).then(() => {
+    renderList();
+    renderDonut();
+    updateHeroStats();
+  });
 });

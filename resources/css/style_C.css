@@ -48,7 +48,7 @@ button{font-family:inherit;}
 .sidebar.collapsed .help{display:none;}
 .sidebar.collapsed .nav{align-items:center;width:100%;}
 .sidebar.collapsed .nav-item{justify-content:center;font-size:0;padding:12px 0;width:100%;}
-.sidebar.collapsed .nav-item svg{width:22px;height:22px;}
+.sidebar.collapsed .nav-item .nav-icon{width:22px;height:22px;object-fit:contain;}
 .sidebar.collapsed .pill{display:none;}
 .brand{display:flex;align-items:center;gap:10px;padding:0 6px;}
 .brand-logo{
@@ -62,18 +62,18 @@ button{font-family:inherit;}
 .nav{display:flex;flex-direction:column;gap:2px;flex:1;}
 .nav-item{
   display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;
-  color:#0b1130;text-decoration:none;font-size:13.5px;font-weight:500;
+  color:#fff;text-decoration:none;font-size:13.5px;font-weight:500;
   transition:background .15s ease,color .15s ease;
 }
-.nav-item svg{width:17px;height:17px;flex-shrink:0;}
+.nav-item .nav-icon{width:17px;height:17px;flex-shrink:0;object-fit:contain;filter:invert(1);}
 .nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;}
 .nav-item.active{
   background:linear-gradient(90deg,#12b3c9, #12b3c9);color:#fff;
   box-shadow:0 4px 14px rgba(59,107,245,0.4);
 }
 .pill{margin-left:auto;font-size:10px;font-weight:700;background:#eef1fb;padding:2px 7px;border-radius:20px;color: #000;}
-.pill.blue{background:#12b3c9;}
-.pill.red{background:var(--red);}  
+.pill.blue{background:#12b3c9;color:#fff;}
+.pill.red{background:var(--red);color:#fff;}  
 .pill.green{background:var(--green);}
 
 .premium-card{
@@ -86,7 +86,8 @@ button{font-family:inherit;}
 .premium-btn{width:100%;background:#fff;color:var(--navy);border:none;padding:10px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;}
 
 .help{display:flex;align-items:center;gap:10px;padding:6px;}
-.help-icon{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.help-icon{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;overflow:hidden;}
+.help-icon img{width:100%;height:100%;object-fit:contain;}
 .help-title{font-size:12px;font-weight:600;}
 .help-sub{font-size:10.5px;color:#fff;}
 
@@ -251,7 +252,6 @@ button{font-family:inherit;}
 }
 @media (max-width:820px){
   .sidebar{display:none;}
-  transition:width .2s ease;
 }
 
   .page-head{flex-direction:column;gap:12px;}

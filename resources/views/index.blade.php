@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -70,10 +70,10 @@
     </nav>
 
     <div class="premium-card">
-      <div class="premium-crown">👑</div>
+      <div class="premium-crown">&#128081;</div>
       <div class="premium-title">Passez à Premium</div>
       <div class="premium-text">Débloquez toutes les fonctionnalités et multipliez vos opportunités</div>
-      <button class="premium-btn">Passer Premium ✨</button>
+      <button class="premium-btn">Passer Premium &#10024;</button>
     </div>
 
     <div class="help">
@@ -132,7 +132,7 @@
                 <div class="stat-icon blue"><img src="/image/3916670.png" alt="Opportunités"></div>
                 <div>
                   <div class="stat-label">Opportunités trouvées</div>
-                  <div class="stat-value">128 <span class="up">↗ 23%</span></div>
+                  <div class="stat-value">128 <span class="up">&#8599; 23%</span></div>
                   <div class="stat-period">Cette semaine</div>
                 </div>
               </div>
@@ -140,7 +140,7 @@
                 <div class="stat-icon teal"><img src="/image/3917512.png" alt="Candidatures"></div>
                 <div>
                   <div class="stat-label">Candidatures envoyées</div>
-                  <div class="stat-value">16 <span class="up">↗ 40%</span></div>
+                  <div class="stat-value">16 <span class="up">&#8599; 40%</span></div>
                   <div class="stat-period">Cette semaine</div>
                 </div>
               </div>
@@ -148,7 +148,7 @@
                 <div class="stat-icon purple"><img src="/image/oeil.png" alt="Vues"></div>
                 <div>
                   <div class="stat-label">Vues de ton profil</div>
-                  <div class="stat-value">342 <span class="up">↗ 18%</span></div>
+                  <div class="stat-value">342 <span class="up">&#8599; 18%</span></div>
                   <div class="stat-period">Cette semaine</div>
                 </div>
               </div>
@@ -163,7 +163,7 @@
         <section class="reco">
           <div class="reco-head">
             <h2>Opportunités recommandées pour toi</h2>
-            <a href="#" class="see-all">Voir toutes les offres →</a>
+            <a href="#" class="see-all">Voir toutes les offres &#8594;</a>
           </div>
 
           <div class="filters">
@@ -180,7 +180,7 @@
             <div class="custom-select" id="contractFilterCustom" data-target="contractFilter">
               <div class="custom-select-trigger">
                 <img class="chip-icon" src="/image/3917512.png" alt="Type de contrat"> <span class="custom-text">Type de contrat</span>
-                <span class="chev">⌄</span>
+                <span class="chev">&#8964;</span>
               </div>
               <div class="custom-select-options">
                 <div class="custom-select-option" data-value=""><img class="chip-icon" src="/image/3917512.png" alt="Type de contrat"> <span>Type de contrat</span></div>
@@ -198,7 +198,7 @@
             <div class="custom-select" id="countryFilterCustom" data-target="countryFilter">
               <div class="custom-select-trigger">
                 <img class="chip-icon" src="/image/3916880.png" alt="Tous pays"> <span class="custom-text">Tous pays</span>
-                <span class="chev">⌄</span>
+                <span class="chev">&#8964;</span>
               </div>
               <div class="custom-select-options">
                 <div class="custom-select-option" data-value=""><img class="chip-icon" src="/image/3916880.png" alt="Tous pays"> <span>Tous pays</span></div>
@@ -210,7 +210,7 @@
             <div class="custom-select" id="companyFilterCustom" data-target="companyFilter">
               <div class="custom-select-trigger">
                 <img class="chip-icon" src="/image/3914425.png" alt="Entreprise"> <span class="custom-text">Entreprise</span>
-                <span class="chev">⌄</span>
+                <span class="chev">&#8964;</span>
               </div>
               <div class="custom-select-options">
                 <div class="custom-select-option" data-value=""><img class="chip-icon" src="/image/3914425.png" alt="Entreprise"> <span>Entreprise</span></div>
@@ -231,7 +231,7 @@
       <div class="col-right">
 
         <div class="card score-card">
-          <div class="score-head">Score VERA <span class="info">ⓘ</span></div>
+          <div class="score-head">Score VERA <span class="info">&#9432;</span></div>
           <div class="score-ring">
             <svg viewBox="0 0 120 120">
               <circle cx="60" cy="60" r="52" class="ring-bg"></circle>
@@ -239,9 +239,9 @@
             </svg>
             <div class="score-num" id="scoreNumIndex">0<span>/100</span></div>
           </div>
-          <div class="score-badge" id="scoreBadgeIndex">★ —</div>
+          <div class="score-badge" id="scoreBadgeIndex">&#9733; —</div>
           <div class="score-text" id="scoreTextIndex">—</div>
-          <button class="btn-primary full" id="improveScoreBtn">↗ Améliorer encore</button>
+          <button class="btn-primary full" id="improveScoreBtn">&#8599; Améliorer encore</button>
         </div>
 
         <div class="card actions-card">
@@ -252,7 +252,7 @@
               <div>Ajoute une nouvelle compétence clé</div>
               <div class="action-sub">+12% sur ton score</div>
             </div>
-            <span class="chev">›</span>
+            <span class="chev">&#8250;</span>
           </div>
           <div class="action-item" id="actionValidateExp">
             <div class="action-icon orange"><img src="/image/3914133.png" alt="Formation" style="width:20px;height:20px;object-fit:contain;"></div>
@@ -260,15 +260,15 @@
               <div>Valide ton expérience actuelle</div>
               <div class="action-sub">+8% sur ton score</div>
             </div>
-            <span class="chev">›</span>
+            <span class="chev">&#8250;</span>
           </div>
           <div class="action-item" id="actionFollowTraining">
-            <div class="action-icon green">🎓</div>
+            <div class="action-icon green">&#127891;</div>
             <div class="action-text">
               <div>Suis une formation recommandée</div>
               <div class="action-sub">+15% sur ton score</div>
             </div>
-            <span class="chev">›</span>
+            <span class="chev">&#8250;</span>
           </div>
         </div>
 
@@ -278,12 +278,12 @@
           </div>
           <p>Voici ce que je te recommande aujourd'hui :</p>
           <ul>
-            <li>✔ Améliorer ton profil Linkedin</li>
-            <li>✔ Développer la compétence Docker</li>
-            <li>✔ Postuler à 5 nouvelles offres</li>
+            <li>&#10004; Améliorer ton profil Linkedin</li>
+            <li>&#10004; Développer la compétence Docker</li>
+            <li>&#10004; Postuler à 5 nouvelles offres</li>
           </ul>
           <div class="coach-logo">V</div>
-          <button class="btn-white full">Discuter avec VERA →</button>
+          <button class="btn-white full" onclick="window.location.href='/messages'">Discuter avec VERA &#8594;</button>
         </div>
 
       </div>
@@ -297,7 +297,7 @@
   <div class="modal-card" id="jobDetailModal">
     <div class="modal-head">
       <div class="modal-title" id="jobDetailTitle">Détails de l'offre</div>
-      <button class="modal-close" id="jobDetailClose" type="button">×</button>
+      <button class="modal-close" id="jobDetailClose" type="button">&#215;</button>
     </div>
     <div class="modal-body" id="jobDetailBody"></div>
   </div>
@@ -308,7 +308,7 @@
   <div class="modal-card company-detail-modal" id="companyDetailModal">
     <div class="modal-head">
       <div class="modal-title" id="companyDetailTitle">Détails de l'entreprise</div>
-      <button class="modal-close" id="companyDetailClose" type="button">×</button>
+      <button class="modal-close" id="companyDetailClose" type="button">&#215;</button>
     </div>
     <div class="modal-body" id="companyDetailBody"></div>
   </div>

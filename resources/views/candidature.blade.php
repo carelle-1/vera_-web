@@ -1,14 +1,14 @@
 @extends('layouts.app')
-@section('title', 'VERA - Mes candidatures')
+@section('title', 'VERA - Mes candidatures') 
 @section('styles')
-<link rel="stylesheet" href="style_C.css">
+<link rel="stylesheet" href="style_C.css?v={{ time() }}">
 @endsection
 
 @section('content')
 <!-- PAGE HEAD -->
     <div class="page-head">
       <div>
-        <h1>Mes candidatures</h1>
+        <h1 style="color: #12b3c9;">Mes candidatures</h1>
         <p>Suis toutes tes candidatures et découvre de nouvelles opportunités.</p>
       </div>
       <button class="btn-outline-dark" id="exportBtn">⇩ Exporter le rapport</button>
@@ -101,5 +101,5 @@
     </div>
 @endsection
 @section('scripts')
-<script src="script_C.js"></script>
+<script src="script_C.js?v={{ time() }}"></script>
 @endsection

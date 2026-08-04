@@ -10,7 +10,7 @@
       <!-- PAGE HEAD -->
       <div class="page-head">
         <div>
-          <h1>Coaching &amp; Carrière <span class="cap">&#127891;</span></h1>
+          <h1 style="color: #12b3c9;">Coaching &amp; Carrière <span class="cap">&#127891;</span></h1>
           <p>Développez vos compétences, atteignez vos objectifs et construisez la carrière que vous méritez.</p>
         </div>
         <button class="btn-primary" id="coachBtn">&#10024; Discuter avec coach IA</button>
