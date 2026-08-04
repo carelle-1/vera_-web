@@ -15,6 +15,38 @@ let currentSearch = "";
 let candCurrentPage = 1;
 const CAND_PER_PAGE = 5;
 
+function escapeHtml(value) {
+  return (value ?? "").toString().replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[char]));
+}
+
+function normalizeSkills(skills) {
+  if (Array.isArray(skills)) return skills.map((skill) => (skill && skill.name) ? skill.name : skill).filter(Boolean);
+  if (typeof skills === "string") return skills.split(",").map((skill) => skill.trim()).filter(Boolean);
+  if (skills && typeof skills === "object") return Object.values(skills).map((skill) => (skill && skill.name) ? skill.name : skill).filter(Boolean);
+  return [];
+}
+
+function renderDetailRow(label, value) {
+  return `<div class="detail-row"><span class="detail-label">${escapeHtml(label)}</span><span class="detail-value">${value ? escapeHtml(value) : "\u2014"}</span></div>`;
+}
+
+function loadLinkedJob(candidature) {
+  if (!candidature || !candidature.jobId) return Promise.resolve(null);
+  return firebase.database().ref("jobs/" + candidature.jobId).once("value").then((snapshot) => {
+    if (!snapshot.exists()) return null;
+    return { id: candidature.jobId, ...snapshot.val() };
+  }).catch((err) => {
+    console.error("[CAND] erreur chargement offre liee:", err);
+    return null;
+  });
+}
+
 // ============== FIREBASE ==============
 function loadCandidaturesFromFirebase(user) {
   if (!user || !user.uid) {
@@ -104,16 +136,19 @@ function renderList() {
   pageItems.forEach(c => {
     const row = document.createElement("article");
     row.className = "cand-row";
-    const logoText = c.logo || (c.company || "?").charAt(0).toUpperCase();
+    const isLogoUrl = c.logo && (c.logo.startsWith("http://") || c.logo.startsWith("https://"));
+    const logoHtml = isLogoUrl
+      ? `<img src="${c.logo}" alt="${c.company || "logo"}" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">`
+      : (c.logo || (c.company || "?").charAt(0).toUpperCase());
     row.innerHTML = `
-      <div class="cand-logo" style="background:${c.logoBg || "#e5e7eb"}">${logoText}</div>
+      <div class="cand-logo" style="background:${c.logoBg || "#e5e7eb"}">${logoHtml}</div>
       <div class="cand-info">
         <div class="cand-title">${c.title || "Sans titre"}</div>
-        <div class="cand-company">${c.company || "—"}</div>
+        <div class="cand-company">${c.company || "\u2014"}</div>
       </div>
       <span class="cand-status ${statusClass[c.status] || "status-pending"}">${c.statusLabel || c.status || ""}</span>
-      <span class="cand-date">${c.date || "—"}</span>
-      <a class="btn-primary-sm" href="${c.sourceUrl || '#'}" target="_blank">Voir détails</a>
+      <span class="cand-date">${c.date || "\u2014"}</span>
+      <button class="btn-primary-sm cand-detail-btn" data-cand-id="${c.id}">Voir détails</button>
     `;
     list.appendChild(row);
   });
@@ -284,6 +319,102 @@ function renderDonut() {
   `).join("");
 }
 
+// ============== MODAL DÉTAILS CANDIDATURE ==============
+function openCandidatureModal(candidature) {
+  const overlay = document.getElementById("candDetailOverlay");
+  const body = document.getElementById("candDetailBody");
+  const title = document.getElementById("candDetailTitle");
+  if (!overlay || !body || !title) return;
+
+  const isLogoUrl = candidature.logo && (candidature.logo.startsWith("http://") || candidature.logo.startsWith("https://"));
+  const logoHtml = isLogoUrl
+    ? `<img src="${candidature.logo}" alt="${candidature.company || "logo"}" class="detail-logo">`
+    : `<div class="detail-logo" style="display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;background:${candidature.logoBg || "#e5e7eb"};color:#fff;">${candidature.logo || (candidature.company || "?").charAt(0).toUpperCase()}</div>`;
+
+  body.innerHTML = `
+    ${logoHtml}
+    <div class="detail-company">${candidature.company || "\u2014"}</div>
+    <div class="detail-sub">${candidature.title || "Sans titre"}</div>
+    <div class="detail-row"><span class="detail-label">Statut</span><span class="detail-value"><span class="cand-status ${statusClass[candidature.status] || "status-pending"}">${candidature.statusLabel || candidature.status || ""}</span></span></div>
+    <div class="detail-row"><span class="detail-label">Date de candidature</span><span class="detail-value">${candidature.date || "\u2014"}</span></div>
+    <div class="detail-row"><span class="detail-label">Offre ciblée</span><span class="detail-value">${candidature.jobId || "\u2014"}</span></div>
+    ${candidature.sourceUrl ? `<div class="detail-row"><span class="detail-label">Source</span><span class="detail-value"><a href="${candidature.sourceUrl}" target="_blank" rel="noopener">${candidature.sourceName || candidature.sourceUrl}</a></span></div>` : ""}
+    <div class="detail-actions" style="display:none;"></div>
+  `;
+
+  title.textContent = "Détails de la candidature";
+  overlay.classList.add("active");
+}
+
+function closeCandidatureModal() {
+  const overlay = document.getElementById("candDetailOverlay");
+  if (overlay) overlay.classList.remove("active");
+}
+
+function openOfferDetailModal(candidature) {
+  const overlay = document.getElementById("candDetailOverlay");
+  const body = document.getElementById("candDetailBody");
+  const title = document.getElementById("candDetailTitle");
+  if (!overlay || !body || !title) return;
+
+  title.textContent = "Détails de l'offre";
+  body.innerHTML = `<div class="empty-state">Chargement des détails de l'offre...</div>`;
+  overlay.classList.add("active");
+
+  loadLinkedJob(candidature).then((job) => {
+    const detail = { ...candidature, ...(job || {}) };
+    const logoValue = detail.logoURL || detail.logo || "";
+    const isLogoUrl = logoValue && (logoValue.startsWith("http://") || logoValue.startsWith("https://"));
+    const logoHtml = isLogoUrl
+      ? `<img src="${escapeHtml(logoValue)}" alt="${escapeHtml(detail.company || "logo")}" class="detail-logo">`
+      : `<div class="detail-logo" style="display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;background:${escapeHtml(detail.logoBg || "#e5e7eb")};color:#fff;">${escapeHtml(detail.logo || (detail.company || "?").charAt(0).toUpperCase())}</div>`;
+
+    const skills = normalizeSkills(detail.skills).slice(0, 8);
+    const skillsHtml = skills.length
+      ? skills.map((skill) => `<span class="detail-tag">${escapeHtml(skill)}</span>`).join("")
+      : "\u2014";
+    const sourceUrl = (detail.sourceUrl || "").toString().trim();
+
+    body.innerHTML = `
+      ${logoHtml}
+      <div class="detail-company">${escapeHtml(detail.company || "\u2014")}</div>
+      <div class="detail-sub">${escapeHtml(detail.title || "Sans titre")} · ${escapeHtml(detail.location || detail.country || "\u2014")}</div>
+      <div class="detail-row"><span class="detail-label">Statut candidature</span><span class="detail-value"><span class="cand-status ${statusClass[candidature.status] || "status-pending"}">${escapeHtml(candidature.statusLabel || candidature.status || "")}</span></span></div>
+      ${renderDetailRow("Date de candidature", candidature.date)}
+      ${renderDetailRow("Type de contrat", detail.contractType || detail.type || detail.status)}
+      ${renderDetailRow("Salaire", detail.salary)}
+      ${renderDetailRow("Date limite", detail.deadline)}
+      ${renderDetailRow("Email de candidature", detail.applyEmail)}
+      <div class="detail-row"><span class="detail-label">Description</span><span class="detail-value">${escapeHtml(detail.description || "Aucune description disponible.")}</span></div>
+      <div class="detail-row"><span class="detail-label">Compétences</span><span class="detail-value detail-tags">${skillsHtml}</span></div>
+      ${sourceUrl ? `<div class="detail-row"><span class="detail-label">Source</span><span class="detail-value"><a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(detail.sourceName || sourceUrl)}</a></span></div>` : ""}
+      ${!job ? `<div class="detail-note">L'offre complète n'a pas été retrouvée dans la base. Les informations affichées viennent de la candidature enregistrée.</div>` : ""}
+    `;
+  });
+}
+
+document.getElementById("candList").addEventListener("click", (e) => {
+  const btn = e.target.closest(".cand-detail-btn");
+  if (!btn) return;
+  const id = btn.getAttribute("data-cand-id");
+  const candidature = allCandidatures.find(c => c.id === id);
+  if (candidature) {
+    openOfferDetailModal(candidature);
+  }
+});
+
+const candDetailClose = document.getElementById("candDetailClose");
+if (candDetailClose) {
+  candDetailClose.addEventListener("click", closeCandidatureModal);
+}
+
+const candDetailOverlay = document.getElementById("candDetailOverlay");
+if (candDetailOverlay) {
+  candDetailOverlay.addEventListener("click", (e) => {
+    if (e.target === candDetailOverlay) closeCandidatureModal();
+  });
+}
+
 // ============== INIT ==============
 firebase.auth().onAuthStateChanged((user) => {
   if (!user) {
@@ -294,5 +425,10 @@ firebase.auth().onAuthStateChanged((user) => {
     renderList();
     renderDonut();
     updateHeroStats();
+    const jobId = new URLSearchParams(window.location.search).get("jobId");
+    if (jobId) {
+      const candidature = allCandidatures.find((c) => c.jobId === jobId);
+      if (candidature) openOfferDetailModal(candidature);
+    }
   });
 });

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'VERA - Mes candidatures') 
 @section('styles')
-<link rel="stylesheet" href="style_C.css?v={{ time() }}">
+<link rel="stylesheet" href="/style_C.css?v={{ time() }}">
 @endsection
 
 @section('content')
@@ -99,7 +99,18 @@
       </aside>
 
     </div>
+
+    <!-- MODAL DÉTAILS CANDIDATURE -->
+    <div class="modal-overlay" id="candDetailOverlay" style="display:none;position:fixed;inset:0;z-index:9999;">
+      <div class="modal-card" id="candDetailModal" style="position:relative;">
+        <div class="modal-head">
+          <div class="modal-title" id="candDetailTitle">Détails de la candidature</div>
+          <button class="modal-close" id="candDetailClose" type="button">&#215;</button>
+        </div>
+        <div class="modal-body" id="candDetailBody"></div>
+      </div>
+    </div>
 @endsection
 @section('scripts')
-<script src="script_C.js?v={{ time() }}"></script>
+<script src="/script_C.js?v={{ time() }}"></script>
 @endsection

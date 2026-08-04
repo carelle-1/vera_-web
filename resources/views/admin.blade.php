@@ -26,41 +26,41 @@
     <nav class="nav" id="sideNav">
       <div class="nav-label">Général</div>
       <a class="nav-item active" data-panel="dashboard">
-        <span class="nav-icon">📊</span> Tableau de bord
+        <img class="nav-icon" src="/image/home.png" alt="Tableau de bord"> Tableau de bord
       </a>
       <a class="nav-item" data-panel="utilisateurs">
-        <span class="nav-icon">👥</span> Utilisateurs <span class="nav-count" data-count-path="users">0</span>
+        <img class="nav-icon" src="/image/users.png" alt="Utilisateurs"> Utilisateurs <span class="nav-count" data-count-path="users">0</span>
       </a>
       <a class="nav-item" data-panel="entreprises">
-        <span class="nav-icon">🏢</span> Entreprises <span class="nav-count" data-count-path="companies">0</span>
+        <img class="nav-icon" src="/image/3914425.png" alt="Entreprises"> Entreprises <span class="nav-count" data-count-path="companies">0</span>
       </a>
       <a class="nav-item" data-panel="offres">
-        <span class="nav-icon">💼</span> Offres d'emploi <span class="nav-count" data-count-path="jobs">0</span>
+        <img class="nav-icon" src="/image/3916670.png" alt="Offres d'emploi"> Offres d'emploi <span class="nav-count" data-count-path="jobs">0</span>
       </a>
       <a class="nav-item" data-panel="sites">
-        <span class="nav-icon">🌐</span> Sites <span class="nav-count" data-count-path="sites">0</span>
+        <img class="nav-icon" src="/image/3917561.png" alt="Sites"> Sites <span class="nav-count" data-count-path="sites">0</span>
       </a>
 
       <div class="nav-label">Contenu</div>
       <a class="nav-item" data-panel="candidatures">
-        <span class="nav-icon">📄</span> Candidatures
+        <img class="nav-icon" src="/image/3917505.png" alt="Candidatures"> Candidatures
       </a>
       <a class="nav-item" data-panel="formations">
-        <span class="nav-icon">🎓</span> Formations
+        <img class="nav-icon" src="/image/3914133.png" alt="Formations"> Formations
       </a>
       <a class="nav-item" data-panel="moderation">
-        <span class="nav-icon">🛡</span> Modération <span class="nav-count alert" data-count-path="moderation">0</span>
+        <img class="nav-icon" src="/image/3917385.png" alt="Modération"> Modération <span class="nav-count alert" data-count-path="moderation">0</span>
       </a>
 
       <div class="nav-label">Gestion</div>
       <a class="nav-item" data-panel="paiements">
-        <span class="nav-icon">💳</span> Paiements
+        <img class="nav-icon" src="/image/7928164.png" alt="Paiements"> Paiements
       </a>
       <a class="nav-item" data-panel="rapports">
-        <span class="nav-icon">📈</span> Rapports
+        <img class="nav-icon" src="/image/3917512.png" alt="Rapports"> Rapports
       </a>
       <a class="nav-item" data-panel="parametres">
-        <span class="nav-icon">⚙</span> Paramètres
+        <img class="nav-icon" src="/image/3917058.png" alt="Paramètres"> Paramètres
       </a>
     </nav>
 
@@ -84,14 +84,14 @@
 
     <!-- TOPBAR -->
     <header class="topbar">
-      <button class="hamburger">☰</button>
+      <!-- <button class="hamburger">☰</button> -->
       <div class="search">
         <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2"/></svg>
         <input type="text" placeholder="Rechercher un utilisateur, une entreprise, une offre...">
       </div>
       <div class="top-actions">
-        <button class="icon-btn">🔔<span class="badge">5</span></button>
-        <button class="icon-btn">✉<span class="badge green">3</span></button>
+         <button class="icon-btn"><img class="icon-dark" src="/image/3917270.png" alt="Notifications"><span class="badge">5</span></button>
+         <button class="icon-btn"><img class="icon-dark" src="/image/discussion.png" alt="Messages"><span class="badge green">3</span></button>
         <div class="env-tag">Production</div>
         <div class="user">
            <img src="https://i.pravatar.cc/64?img=32" alt="admin">
