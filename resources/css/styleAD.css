@@ -129,6 +129,11 @@ table{border-collapse:collapse;width:100%;}
 }
 .kpi-top{display:flex;justify-content:space-between;align-items:center;}
 .kpi-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.kpi-icon img{width:20px;height:20px;object-fit:contain;filter:brightness(0) invert(0);}
+.kpi-icon.blue{background:#e7effe;color:var(--blue);}
+.kpi-icon.mint{background:#ecfdf5;color:var(--mint-dark);}
+.kpi-icon.purple{background:#f3ecff;color:var(--purple);}
+.kpi-icon.green{background:#e6f7ec;color:var(--mint-dark);}
 .kpi-trend{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;}
 .kpi-trend.up{background:var(--mint-pale);color:var(--mint-dark);}
 .kpi-trend.down{background:#fee2e2;color:var(--red);}

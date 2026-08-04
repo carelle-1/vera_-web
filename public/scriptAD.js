@@ -100,17 +100,17 @@ firebase.auth().onAuthStateChanged((user) => {
 
 function initAdminPanel(data) {
   renderAdminKPIs();
-  renderAdminUsers();
+  renderAllAdminUsers();
   renderAdminCharts();
   updateNavCounts();
 }
 
 function renderAdminKPIs() {
   const kpis = [
-    { label: "Utilisateurs", value: "4 218", sub: "+12% ce mois", icon: "👥", color: "blue" },
-    { label: "Offres publiées", value: "1 546", sub: "+8% ce mois", icon: "💼", color: "mint" },
-    { label: "Candidatures", value: "8 932", sub: "+15% ce mois", icon: "📄", color: "purple" },
-    { label: "Revenus", value: "124 500 €", sub: "+22% ce mois", icon: "💳", color: "green" }
+    { label: "Utilisateurs", value: "4 218", sub: "+12% ce mois", icon: "/image/users.png", color: "blue" },
+    { label: "Offres publiées", value: "1 546", sub: "+8% ce mois", icon: "/image/3916670.png", color: "mint" },
+    { label: "Candidatures", value: "8 932", sub: "+15% ce mois", icon: "/image/3917505.png", color: "purple" },
+    { label: "Revenus", value: "124 500 €", sub: "+22% ce mois", icon: "/image/7928164.png", color: "green" }
   ];
 
   const grid = document.getElementById("kpiGrid");
@@ -118,7 +118,7 @@ function renderAdminKPIs() {
 
   grid.innerHTML = kpis.map(kpi => `
     <div class="kpi-card">
-      <div class="kpi-icon ${kpi.color}">${kpi.icon}</div>
+      <div class="kpi-icon ${kpi.color}"><img class="kpi-icon-img" src="${kpi.icon}" alt="${kpi.label}"></div>
       <div>
         <div class="kpi-value">${kpi.value}</div>
         <div class="kpi-label">${kpi.label}</div>
@@ -129,40 +129,229 @@ function renderAdminKPIs() {
 }
 
 function renderAdminUsers() {
-  const users = [
-    { name: "Marie Dupont", role: "Candidat", date: "12 Jan 2026", status: "actif" },
-    { name: "Jean Koffi", role: "Recruteur", date: "10 Jan 2026", status: "actif" },
-    { name: "Sophie Martin", role: "Candidat", date: "08 Jan 2026", status: "attente" },
-    { name: "Luc Adeyemi", role: "Candidat", date: "05 Jan 2026", status: "actif" },
-    { name: "Emma Bernard", role: "Recruteur", date: "03 Jan 2026", status: "suspendu" },
-    { name: "Thomas Kouassi", role: "Candidat", date: "01 Jan 2026", status: "actif" }
-  ];
-
-  const tbody = document.getElementById("userTableBody");
+  const tbody = document.getElementById("adminUsersTableBody");
+  const countEl = document.getElementById("adminUserTableCount");
+  console.log("[ADMIN] renderAdminUsers tbody:", tbody ? "trouvé" : "INTROUVABLE", "countEl:", countEl ? "trouvé" : "INTROUVABLE");
   if (!tbody) return;
 
-  const statusMap = {
-    actif: '<span class="status-badge success">Actif</span>',
-    attente: '<span class="status-badge warning">En attente</span>',
-    suspendu: '<span class="status-badge danger">Suspendu</span>'
-  };
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#6b7280;">Chargement des utilisateurs...</td></tr>`;
 
-  tbody.innerHTML = users.map(user => `
-    <tr>
-      <td>
-        <div class="user-cell">
-          <div class="user-avatar-sm">${user.name.charAt(0)}</div>
-          <span>${user.name}</span>
-        </div>
-      </td>
-      <td>${user.role}</td>
-      <td>${user.date}</td>
-      <td>${statusMap[user.status] || user.status}</td>
-      <td>
-        <button class="table-action-btn">⋯</button>
-      </td>
-    </tr>
-  `).join("");
+  firebase.database().ref("users").once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const allUsers = Object.keys(data).map((id) => ({ id, ...data[id] }));
+    
+    const users = allUsers.filter((u) => (u.role || "").toString().toLowerCase() === "chercheur_emploi");
+    console.log("[ADMIN] renderAdminUsers users.length:", users.length);
+
+    const statusMap = {
+      actif: '<span class="status-badge success">Actif</span>',
+      attente: '<span class="status-badge warning">En attente</span>',
+      suspendu: '<span class="status-badge danger">Suspendu</span>'
+    };
+
+    if (users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#6b7280;">Aucun chercheur d'emploi trouvé.</td></tr>`;
+      if (countEl) countEl.textContent = "Affichage de 0 chercheur d'emploi";
+      return;
+    }
+
+    tbody.innerHTML = users.map((user) => {
+      const name = user.name || user.displayName || "Sans nom";
+      const email = user.email || "—";
+      const avatar = user.avatar || user.photoURL || `https://i.pravatar.cc/64?u=${encodeURIComponent(user.id || name)}`;
+      const role = user.role === "chercheur_emploi" ? "Chercheur d'emploi" : ((user.role || "candidat").charAt(0).toUpperCase() + (user.role || "candidat").slice(1));
+      const date = user.createdAt ? new Date(user.createdAt).toLocaleDateString("fr-FR") : "—";
+      const status = user.status || "actif";
+
+      return `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}">
+              <div>
+                <div class="user-cell-name">${escapeHtml(name)}</div>
+                <div class="user-cell-email">${escapeHtml(email)}</div>
+              </div>
+            </div>
+          </td>
+          <td>${escapeHtml(role)}</td>
+          <td>${escapeHtml(date)}</td>
+          <td>${statusMap[status] ? statusMap[status] : escapeHtml(status)}</td>
+          <td>
+            <div class="row-menu">
+              <button class="row-menu-btn" data-id="${escapeHtml(user.id)}">⋯</button>
+              <div class="row-dropdown" id="dropdown-${escapeHtml(user.id)}">
+                <button data-action="view" data-id="${escapeHtml(user.id)}">Voir le profil</button>
+                <button data-action="toggle" data-id="${escapeHtml(user.id)}">${status === "suspendu" ? "Réactiver" : "Suspendre"}</button>
+                <button data-action="delete" data-id="${escapeHtml(user.id)}" class="danger">Supprimer</button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    console.log("[ADMIN] renderAdminUsers HTML injecté, rows:", tbody.querySelectorAll("tr").length);
+
+    if (countEl) countEl.textContent = `Affichage de ${users.length} chercheur${users.length > 1 ? "s" : ""} d'emploi`;
+
+    tbody.querySelectorAll(".row-menu-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const dropdown = document.getElementById(`dropdown-${btn.dataset.id}`);
+        document.querySelectorAll(".row-dropdown").forEach((d) => { if (d !== dropdown) d.classList.remove("open"); });
+        dropdown.classList.toggle("open");
+      });
+    });
+
+    tbody.querySelectorAll("[data-action]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const userId = btn.dataset.id;
+        const action = btn.dataset.action;
+        const userRef = firebase.database().ref("users/" + userId);
+
+        if (action === "toggle") {
+          userRef.once("value").then((snap) => {
+            const u = snap.val() || {};
+            const current = u.status || "actif";
+            const next = current === "suspendu" ? "actif" : "suspendu";
+            userRef.update({ status: next }).then(() => renderAdminUsers());
+          });
+        } else if (action === "delete") {
+          if (!confirm("Supprimer cet utilisateur ? Cette action est irréversible.")) return;
+          userRef.remove().then(() => renderAdminUsers()).catch(() => alert("Échec de la suppression"));
+        } else {
+          alert(`Affichage du profil de l'utilisateur ${userId} (démo).`);
+        }
+        document.querySelectorAll(".row-dropdown").forEach((d) => d.classList.remove("open"));
+      });
+    });
+  }).catch((err) => {
+    console.error("[ADMIN] Erreur chargement utilisateurs:", err);
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement des utilisateurs: ${err.message || err.code}</td></tr>`;
+  });
+}
+
+function getAdminUserRoleLabel(role) {
+  const rawRole = (role || "candidat").toString();
+  const labels = {
+    chercheur_emploi: "Chercheur d'emploi",
+    recruteur: "Recruteur",
+    admin: "Admin",
+    candidat: "Candidat"
+  };
+  return labels[rawRole.toLowerCase()] || (rawRole.charAt(0).toUpperCase() + rawRole.slice(1));
+}
+
+function renderAllAdminUsers() {
+  const tbody = document.getElementById("adminUsersTableBody");
+  const countEl = document.getElementById("adminUserTableCount");
+  const searchEl = document.getElementById("adminUserSearch");
+  const filterEl = document.getElementById("adminUserFilter");
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#6b7280;">Chargement des utilisateurs...</td></tr>`;
+
+  firebase.database().ref("users").once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const search = searchEl ? searchEl.value.trim().toLowerCase() : "";
+    const roleFilter = filterEl ? filterEl.value : "all";
+    const users = Object.keys(data).map((id) => ({ id, ...data[id] }))
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+      .filter((user) => {
+        const role = (user.role || "candidat").toString().toLowerCase();
+        const name = (user.name || user.displayName || "").toString().toLowerCase();
+        const email = (user.email || "").toString().toLowerCase();
+        const matchesSearch = !search || name.includes(search) || email.includes(search) || role.includes(search);
+        const matchesRole = roleFilter === "all" || role === roleFilter;
+        return matchesSearch && matchesRole;
+      });
+
+    const statusMap = {
+      actif: '<span class="status-badge success">Actif</span>',
+      attente: '<span class="status-badge warning">En attente</span>',
+      suspendu: '<span class="status-badge danger">Suspendu</span>'
+    };
+
+    if (users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#6b7280;">Aucun utilisateur trouvé.</td></tr>`;
+      if (countEl) countEl.textContent = "Affichage de 0 utilisateur";
+      return;
+    }
+
+    tbody.innerHTML = users.map((user) => {
+      const name = user.name || user.displayName || "Sans nom";
+      const email = user.email || "—";
+      const avatar = user.avatar || user.photoURL || `https://i.pravatar.cc/64?u=${encodeURIComponent(user.id || name)}`;
+      const role = getAdminUserRoleLabel(user.role);
+      const date = user.createdAt ? new Date(user.createdAt).toLocaleDateString("fr-FR") : "—";
+      const status = user.status || "actif";
+
+      return `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}">
+              <div>
+                <div class="user-cell-name">${escapeHtml(name)}</div>
+                <div class="user-cell-email">${escapeHtml(email)}</div>
+              </div>
+            </div>
+          </td>
+          <td>${escapeHtml(role)}</td>
+          <td>${escapeHtml(date)}</td>
+          <td>${statusMap[status] ? statusMap[status] : escapeHtml(status)}</td>
+          <td>
+            <div class="row-menu">
+              <button class="row-menu-btn" data-id="${escapeHtml(user.id)}">⋯</button>
+              <div class="row-dropdown" id="dropdown-${escapeHtml(user.id)}">
+                <button data-action="view" data-id="${escapeHtml(user.id)}">Voir le profil</button>
+                <button data-action="toggle" data-id="${escapeHtml(user.id)}">${status === "suspendu" ? "Réactiver" : "Suspendre"}</button>
+                <button data-action="delete" data-id="${escapeHtml(user.id)}" class="danger">Supprimer</button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    if (countEl) countEl.textContent = `Affichage de ${users.length} utilisateur${users.length > 1 ? "s" : ""}`;
+
+    tbody.querySelectorAll(".row-menu-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const dropdown = document.getElementById(`dropdown-${btn.dataset.id}`);
+        document.querySelectorAll(".row-dropdown").forEach((d) => { if (d !== dropdown) d.classList.remove("open"); });
+        if (dropdown) dropdown.classList.toggle("open");
+      });
+    });
+
+    tbody.querySelectorAll("[data-action]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const userId = btn.dataset.id;
+        const action = btn.dataset.action;
+        const userRef = firebase.database().ref("users/" + userId);
+
+        if (action === "toggle") {
+          userRef.once("value").then((snap) => {
+            const user = snap.val() || {};
+            const current = user.status || "actif";
+            const next = current === "suspendu" ? "actif" : "suspendu";
+            userRef.update({ status: next }).then(() => renderAllAdminUsers());
+          });
+        } else if (action === "delete") {
+          if (!confirm("Supprimer cet utilisateur ? Cette action est irréversible.")) return;
+          userRef.remove().then(() => renderAllAdminUsers()).catch(() => alert("Échec de la suppression"));
+        } else {
+          alert(`Affichage du profil de l'utilisateur ${userId} (démo).`);
+        }
+        document.querySelectorAll(".row-dropdown").forEach((d) => d.classList.remove("open"));
+      });
+    });
+  }).catch((err) => {
+    console.error("[ADMIN] Erreur chargement utilisateurs:", err);
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement des utilisateurs: ${err.message || err.code}</td></tr>`;
+  });
 }
 
 function renderAdminCharts() {
@@ -254,8 +443,10 @@ document.querySelectorAll(".nav-item").forEach(item => {
           updateNavCounts();
         }, 50);
       } else if (panel === "utilisateurs") {
+        console.log("[ADMIN] Clic sur Utilisateurs, panel:", panel);
         setTimeout(() => {
-          renderAdminUsers();
+          console.log("[ADMIN] Lancement renderAdminUsers pour panel utilisateurs");
+          renderAllAdminUsers();
           updateNavCounts();
         }, 50);
       } else {
@@ -636,6 +827,12 @@ const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
 if (bulkDeleteBtn) {
   bulkDeleteBtn.addEventListener("click", deleteSelectedJobs);
 }
+
+const adminUserSearchEl = document.getElementById("adminUserSearch");
+if (adminUserSearchEl) adminUserSearchEl.addEventListener("input", renderAllAdminUsers);
+
+const adminUserFilterEl = document.getElementById("adminUserFilter");
+if (adminUserFilterEl) adminUserFilterEl.addEventListener("change", renderAllAdminUsers);
 
 // ============== SITES ==============
 let siteCurrentPage = 1;

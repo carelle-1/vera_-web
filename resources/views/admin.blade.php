@@ -69,7 +69,7 @@
         <img src="https://i.pravatar.cc/64?img=32" alt="admin">
         <div>
           <div class="admin-name">{{ auth()->user()->name ?? 'Admin' }}</div>
-          <div class="admin-role">{{ auth()->user()->role === 'admin' ? 'Administrateur' : 'Utilisateur' }}</div>
+          <div class="admin-role">{{ optional(auth()->user())->role === 'admin' ? 'Administrateur' : 'Utilisateur' }}</div>
         </div>
       </div>
       <form action="/logout" method="POST" style="margin-top: 10px;">
@@ -245,10 +245,10 @@
                     <th>Statut</th>
                     <th>Date limite</th>
                     <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody id="jobTableBody"></tbody>
-              </table>
+                 </tr>
+              </thead>
+              <tbody id="jobTableBody"></tbody>
+            </table>
               <div class="table-footer">
                 <span id="jobTableCount">Affichage de 0 offre</span>
                 <div style="display:flex;gap:10px;align-items:center;">
@@ -391,6 +391,46 @@
         </div>
       </div>
 
+      <!-- UTILISATEURS PANEL -->
+      <div class="panel" id="panel-utilisateurs">
+        <div class="page-head">
+          <div>
+            <h1>Utilisateurs</h1>
+            <p>Liste de tous les utilisateurs inscrits sur la plateforme.</p>
+          </div>
+          <div class="page-actions">
+            <input type="text" id="adminUserSearch" placeholder="Rechercher un utilisateur...">
+            <select id="adminUserFilter">
+              <option value="all">Tous les rôles</option>
+              <option value="chercheur_emploi">Chercheur d'emploi</option>
+              <option value="recruteur">Recruteur</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="bottom-row" style="padding:0 26px 40px;">
+          <section class="card table-card">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Utilisateur</th>
+                  <th>Rôle</th>
+                  <th>Inscrit le</th>
+                  <th>Statut</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersTableBody"></tbody>
+            </table>
+            <div class="table-footer">
+              <span id="adminUserTableCount">Affichage de 0 utilisateur</span>
+              <div class="pagination" id="adminUserPagination"></div>
+            </div>
+          </section>
+        </div>
+      </div>
+
     </div>
   </main>
 </div>
@@ -401,6 +441,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="firebase-init.js"></script>
-<script src="scriptAD.js?v=2"></script>
+<script src="scriptAD.js?v=3"></script>
 </body>
 </html>

@@ -1,19 +1,19 @@
 // ============== DONNÉES KPI ==============
 const kpis = [
   {
-    icon: "👥", iconBg: "#eaf8ff", label: "Utilisateurs actifs", value: "4 218", trend: "+12.4%", up: true,
+    icon: "/image/users.png", iconBg: "#eaf8ff", label: "Utilisateurs actifs", value: "4 218", trend: "+12.4%", up: true,
     spark: [40, 45, 42, 50, 55, 52, 60, 65, 62, 70, 75, 80], color: "#0ea5e9"
   },
   {
-    icon: "🏢", iconBg: "#ecfdf5", label: "Entreprises partenaires", value: "312", trend: "+5.1%", up: true,
+    icon: "/image/3914425.png", iconBg: "#ecfdf5", label: "Entreprises partenaires", value: "312", trend: "+5.1%", up: true,
     spark: [30, 32, 31, 35, 34, 38, 40, 39, 42, 45, 44, 48], color: "#22c55e"
   },
   {
-    icon: "💼", iconBg: "#f3ecff", label: "Offres publiées", value: "1 546", trend: "+8.7%", up: true,
+    icon: "/image/3916670.png", iconBg: "#f3ecff", label: "Offres publiées", value: "1 546", trend: "+8.7%", up: true,
     spark: [50, 48, 55, 60, 58, 65, 63, 70, 68, 75, 78, 82], color: "#8b5cf6"
   },
   {
-    icon: "💰", iconBg: "#fdf1de", label: "Revenus (mois)", value: "48 200 $", trend: "-2.3%", up: false,
+    icon: "/image/7928164.png", iconBg: "#fdf1de", label: "Revenus (mois)", value: "48 200 $", trend: "-2.3%", up: false,
     spark: [70, 68, 72, 65, 60, 62, 58, 55, 57, 53, 50, 48], color: "#f59e0b"
   }
 ];
@@ -32,7 +32,7 @@ function renderKPIs() {
     return `
       <div class="kpi-card">
         <div class="kpi-top">
-          <div class="kpi-icon" style="background:${k.iconBg}">${k.icon}</div>
+          <div class="kpi-icon" style="background:${k.iconBg}"><img class="kpi-icon-img" src="${k.icon}" alt="${k.label}"></div>
           <span class="kpi-trend ${k.up ? "up" : "down"}">${k.up ? "↗" : "↘"} ${k.trend}</span>
         </div>
         <div class="kpi-value">${k.value}</div>
