@@ -100,6 +100,7 @@ firebase.auth().onAuthStateChanged((user) => {
 
 function initAdminPanel(data) {
   renderAdminKPIs();
+  renderDashboardUserTable();
   renderAllAdminUsers();
   renderAdminCharts();
   updateNavCounts();
@@ -126,6 +127,174 @@ function renderAdminKPIs() {
       </div>
     </div>
   `).join("");
+}
+
+function renderDashboardUserTable() {
+  const tbody = document.getElementById("userTableBody");
+  const countEl = document.getElementById("tableCount");
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#6b7280;">Chargement des utilisateurs...</td></tr>`;
+
+  firebase.database().ref("users").once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const users = Object.keys(data)
+      .map((id) => ({ id, ...data[id] }))
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+      .slice(0, 6);
+
+    const statusMap = {
+      actif: '<span class="status-badge actif">Actif</span>',
+      attente: '<span class="status-badge attente">En attente</span>',
+      suspendu: '<span class="status-badge suspendu">Suspendu</span>'
+    };
+
+    if (users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#6b7280;">Aucun utilisateur trouvé.</td></tr>`;
+      if (countEl) countEl.textContent = "0 résultat";
+      return;
+    }
+
+    tbody.innerHTML = users.map((user) => {
+      const name = user.name || user.displayName || "Sans nom";
+      const email = user.email || "—";
+      const avatar = user.avatar || user.photoURL || `https://i.pravatar.cc/64?u=${encodeURIComponent(user.id || name)}`;
+      const role = getAdminUserRoleLabel(user.role);
+      const date = user.createdAt ? new Date(user.createdAt).toLocaleDateString("fr-FR") : "—";
+      const status = user.status || "actif";
+
+      return `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}">
+              <div>
+                <div class="user-cell-name">${escapeHtml(name)}</div>
+                <div class="user-cell-email">${escapeHtml(email)}</div>
+              </div>
+            </div>
+          </td>
+          <td>${escapeHtml(role)}</td>
+          <td>${escapeHtml(date)}</td>
+          <td>${statusMap[status] ? statusMap[status] : escapeHtml(status)}</td>
+          <td>
+            <div class="row-menu">
+              <button type="button" class="row-menu-btn" data-id="${escapeHtml(user.id)}">⋯</button>
+              <div class="row-dropdown" id="dropdown-${escapeHtml(user.id)}">
+                <button data-action="view" data-id="${escapeHtml(user.id)}">Voir le profil</button>
+                <button data-action="toggle" data-id="${escapeHtml(user.id)}">${status === "suspendu" ? "Réactiver" : "Suspendre"}</button>
+                <button data-action="delete" data-id="${escapeHtml(user.id)}" class="danger">Supprimer</button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    if (countEl) countEl.textContent = `Affichage de ${users.length} sur ${Object.keys(data).length} utilisateurs`;
+  }).catch((err) => {
+    console.error("[ADMIN] Erreur chargement du tableau utilisateur:", err);
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#ef4444;">Erreur de chargement: ${err.message || err.code}</td></tr>`;
+  });
+}
+
+function closeAllRowDropdowns() {
+  document.querySelectorAll(".row-dropdown").forEach((item) => {
+    item.classList.remove("open");
+    item.style.display = "none";
+    item.style.position = "";
+    item.style.top = "";
+    item.style.left = "";
+    item.style.right = "";
+    item.style.zIndex = "";
+    item.style.minWidth = "";
+    item.style.width = "";
+    item.style.boxSizing = "";
+  });
+}
+
+function attachRowMenuHandlers(container, users) {
+  if (!container) return;
+
+  container.onclick = (event) => {
+    const menuBtn = event.target.closest(".row-menu-btn");
+    if (menuBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      let dropdown = document.getElementById(`dropdown-${menuBtn.dataset.id}`);
+      if (!dropdown && menuBtn.parentElement && menuBtn.parentElement.classList.contains("row-menu")) {
+        dropdown = menuBtn.parentElement.querySelector(".row-dropdown");
+      }
+      document.querySelectorAll(".row-dropdown").forEach((d) => {
+        if (d !== dropdown) {
+          d.classList.remove("open");
+          d.style.display = "none";
+          d.style.position = "";
+          d.style.top = "";
+          d.style.left = "";
+          d.style.right = "";
+          d.style.zIndex = "";
+        }
+      });
+      if (dropdown) {
+        dropdown.classList.toggle("open");
+        if (dropdown.classList.contains("open")) {
+          dropdown.style.display = "block";
+          const rect = menuBtn.getBoundingClientRect();
+          dropdown.style.position = "fixed";
+          dropdown.style.top = (rect.bottom + window.scrollY) + "px";
+          dropdown.style.left = (rect.left + window.scrollX) + "px";
+          dropdown.style.right = "auto";
+          dropdown.style.zIndex = "99999";
+        } else {
+          dropdown.style.display = "none";
+          dropdown.style.position = "";
+          dropdown.style.top = "";
+          dropdown.style.left = "";
+          dropdown.style.right = "";
+          dropdown.style.zIndex = "";
+        }
+      }
+      return;
+    }
+
+    const actionBtn = event.target.closest("[data-action]");
+    if (actionBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      const userId = actionBtn.dataset.id;
+      const action = actionBtn.dataset.action;
+      const userRef = firebase.database().ref("users/" + userId);
+      const user = users.find((item) => item.id === userId);
+
+      if (action === "view") {
+        openAdminUserProfile(userId);
+      } else if (action === "toggle") {
+        userRef.once("value").then((snap) => {
+          const currentUser = snap.val() || {};
+          const current = currentUser.status || "actif";
+          const next = current === "suspendu" ? "actif" : "suspendu";
+          userRef.update({ status: next }).then(() => {
+            renderDashboardUserTable();
+            renderAllAdminUsers();
+          });
+        });
+      } else if (action === "delete") {
+        if (!confirm(user ? `Supprimer ${user.name || "cet utilisateur"} ? Cette action est irréversible.` : "Supprimer cet utilisateur ? Cette action est irréversible.")) return;
+        userRef.remove().then(() => {
+          renderDashboardUserTable();
+          renderAllAdminUsers();
+        }).catch(() => alert("Échec de la suppression"));
+      }
+
+      closeAllRowDropdowns();
+      return;
+    }
+
+    if (!event.target.closest(".row-menu")) {
+      closeAllRowDropdowns();
+    }
+  };
 }
 
 function renderAdminUsers() {
@@ -179,7 +348,7 @@ function renderAdminUsers() {
           <td>${statusMap[status] ? statusMap[status] : escapeHtml(status)}</td>
           <td>
             <div class="row-menu">
-              <button class="row-menu-btn" data-id="${escapeHtml(user.id)}">⋯</button>
+              <button type="button" class="row-menu-btn" data-id="${escapeHtml(user.id)}">⋯</button>
               <div class="row-dropdown" id="dropdown-${escapeHtml(user.id)}">
                 <button data-action="view" data-id="${escapeHtml(user.id)}">Voir le profil</button>
                 <button data-action="toggle" data-id="${escapeHtml(user.id)}">${status === "suspendu" ? "Réactiver" : "Suspendre"}</button>
@@ -194,38 +363,6 @@ function renderAdminUsers() {
     console.log("[ADMIN] renderAdminUsers HTML injecté, rows:", tbody.querySelectorAll("tr").length);
 
     if (countEl) countEl.textContent = `Affichage de ${users.length} chercheur${users.length > 1 ? "s" : ""} d'emploi`;
-
-    tbody.querySelectorAll(".row-menu-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const dropdown = document.getElementById(`dropdown-${btn.dataset.id}`);
-        document.querySelectorAll(".row-dropdown").forEach((d) => { if (d !== dropdown) d.classList.remove("open"); });
-        dropdown.classList.toggle("open");
-      });
-    });
-
-    tbody.querySelectorAll("[data-action]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const userId = btn.dataset.id;
-        const action = btn.dataset.action;
-        const userRef = firebase.database().ref("users/" + userId);
-
-        if (action === "toggle") {
-          userRef.once("value").then((snap) => {
-            const u = snap.val() || {};
-            const current = u.status || "actif";
-            const next = current === "suspendu" ? "actif" : "suspendu";
-            userRef.update({ status: next }).then(() => renderAdminUsers());
-          });
-        } else if (action === "delete") {
-          if (!confirm("Supprimer cet utilisateur ? Cette action est irréversible.")) return;
-          userRef.remove().then(() => renderAdminUsers()).catch(() => alert("Échec de la suppression"));
-        } else {
-          alert(`Affichage du profil de l'utilisateur ${userId} (démo).`);
-        }
-        document.querySelectorAll(".row-dropdown").forEach((d) => d.classList.remove("open"));
-      });
-    });
   }).catch((err) => {
     console.error("[ADMIN] Erreur chargement utilisateurs:", err);
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement des utilisateurs: ${err.message || err.code}</td></tr>`;
@@ -241,6 +378,97 @@ function getAdminUserRoleLabel(role) {
     candidat: "Candidat"
   };
   return labels[rawRole.toLowerCase()] || (rawRole.charAt(0).toUpperCase() + rawRole.slice(1));
+}
+
+function ensureAdminUserModal() {
+  let overlay = document.getElementById("adminUserDetailOverlay");
+  if (overlay) return overlay;
+
+  overlay = document.createElement("div");
+  overlay.className = "admin-modal-overlay";
+  overlay.id = "adminUserDetailOverlay";
+  overlay.innerHTML = `
+    <div class="admin-modal-card">
+      <div class="admin-modal-head">
+        <div class="admin-modal-title">Profil utilisateur</div>
+        <button class="admin-modal-close" type="button" aria-label="Fermer">×</button>
+      </div>
+      <div class="admin-modal-body" id="adminUserDetailBody"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector(".admin-modal-close").addEventListener("click", () => {
+    overlay.classList.remove("active");
+  });
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) overlay.classList.remove("active");
+  });
+
+  return overlay;
+}
+
+function openAdminUserProfile(userId) {
+  const overlay = ensureAdminUserModal();
+  const body = document.getElementById("adminUserDetailBody");
+  if (!body) return;
+
+  body.innerHTML = `<div class="admin-modal-empty">Chargement du profil...</div>`;
+  overlay.classList.add("active");
+
+  firebase.database().ref("users/" + userId).once("value").then((snapshot) => {
+    const user = snapshot.val() || {};
+    const name = user.name || user.displayName || "Sans nom";
+    const email = user.email || "—";
+    const avatar = user.avatar || user.photoURL || `https://i.pravatar.cc/96?u=${encodeURIComponent(userId || name)}`;
+    const role = getAdminUserRoleLabel(user.role);
+    const status = user.status || "actif";
+    const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleString("fr-FR") : "—";
+    const phone = user.phone || user.telephone || user.phoneNumber || "—";
+
+    body.innerHTML = `
+      <div class="admin-user-profile-head">
+        <img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}">
+        <div>
+          <div class="admin-user-profile-name">${escapeHtml(name)}</div>
+          <div class="admin-user-profile-email">${escapeHtml(email)}</div>
+        </div>
+      </div>
+      <div class="admin-modal-row"><span>ID</span><strong>${escapeHtml(userId)}</strong></div>
+      <div class="admin-modal-row"><span>Rôle</span><strong>${escapeHtml(role)}</strong></div>
+      <div class="admin-modal-row"><span>Statut</span><strong>${escapeHtml(status)}</strong></div>
+      <div class="admin-modal-row"><span>Téléphone</span><strong>${escapeHtml(phone)}</strong></div>
+      <div class="admin-modal-row"><span>Inscrit le</span><strong>${escapeHtml(createdAt)}</strong></div>
+    `;
+  }).catch((err) => {
+    body.innerHTML = `<div class="admin-modal-empty error">Impossible de charger le profil : ${escapeHtml(err.message || err.code)}</div>`;
+  });
+}
+
+function handleAdminUserAction(action, userId) {
+  const userRef = firebase.database().ref("users/" + userId);
+
+  if (action === "view") {
+    openAdminUserProfile(userId);
+    return;
+  }
+
+  if (action === "toggle") {
+    userRef.once("value").then((snapshot) => {
+      const user = snapshot.val() || {};
+      const current = user.status || "actif";
+      const next = current === "suspendu" ? "actif" : "suspendu";
+      return userRef.update({ status: next });
+    }).then(() => renderAllAdminUsers());
+    return;
+  }
+
+  if (action === "delete") {
+    if (!confirm("Supprimer cet utilisateur ? Cette action est irréversible.")) return;
+    userRef.remove()
+      .then(() => renderAllAdminUsers())
+      .catch(() => alert("Échec de la suppression"));
+  }
 }
 
 function renderAllAdminUsers() {
@@ -303,7 +531,7 @@ function renderAllAdminUsers() {
           <td>${statusMap[status] ? statusMap[status] : escapeHtml(status)}</td>
           <td>
             <div class="row-menu">
-              <button class="row-menu-btn" data-id="${escapeHtml(user.id)}">⋯</button>
+              <button type="button" class="row-menu-btn" data-id="${escapeHtml(user.id)}">⋯</button>
               <div class="row-dropdown" id="dropdown-${escapeHtml(user.id)}">
                 <button data-action="view" data-id="${escapeHtml(user.id)}">Voir le profil</button>
                 <button data-action="toggle" data-id="${escapeHtml(user.id)}">${status === "suspendu" ? "Réactiver" : "Suspendre"}</button>
@@ -316,38 +544,6 @@ function renderAllAdminUsers() {
     }).join("");
 
     if (countEl) countEl.textContent = `Affichage de ${users.length} utilisateur${users.length > 1 ? "s" : ""}`;
-
-    tbody.querySelectorAll(".row-menu-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const dropdown = document.getElementById(`dropdown-${btn.dataset.id}`);
-        document.querySelectorAll(".row-dropdown").forEach((d) => { if (d !== dropdown) d.classList.remove("open"); });
-        if (dropdown) dropdown.classList.toggle("open");
-      });
-    });
-
-    tbody.querySelectorAll("[data-action]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const userId = btn.dataset.id;
-        const action = btn.dataset.action;
-        const userRef = firebase.database().ref("users/" + userId);
-
-        if (action === "toggle") {
-          userRef.once("value").then((snap) => {
-            const user = snap.val() || {};
-            const current = user.status || "actif";
-            const next = current === "suspendu" ? "actif" : "suspendu";
-            userRef.update({ status: next }).then(() => renderAllAdminUsers());
-          });
-        } else if (action === "delete") {
-          if (!confirm("Supprimer cet utilisateur ? Cette action est irréversible.")) return;
-          userRef.remove().then(() => renderAllAdminUsers()).catch(() => alert("Échec de la suppression"));
-        } else {
-          alert(`Affichage du profil de l'utilisateur ${userId} (démo).`);
-        }
-        document.querySelectorAll(".row-dropdown").forEach((d) => d.classList.remove("open"));
-      });
-    });
   }).catch((err) => {
     console.error("[ADMIN] Erreur chargement utilisateurs:", err);
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement des utilisateurs: ${err.message || err.code}</td></tr>`;
@@ -833,6 +1029,93 @@ if (adminUserSearchEl) adminUserSearchEl.addEventListener("input", renderAllAdmi
 
 const adminUserFilterEl = document.getElementById("adminUserFilter");
 if (adminUserFilterEl) adminUserFilterEl.addEventListener("change", renderAllAdminUsers);
+
+document.addEventListener("click", (e) => {
+  const menuBtn = e.target.closest(".row-menu-btn");
+  if (menuBtn) {
+    let dropdown = null;
+    if (menuBtn.nextElementSibling && menuBtn.nextElementSibling.classList.contains("row-dropdown")) {
+      dropdown = menuBtn.nextElementSibling;
+    }
+    if (!dropdown && menuBtn.parentElement && menuBtn.parentElement.classList.contains("row-menu")) {
+      dropdown = menuBtn.parentElement.querySelector(".row-dropdown");
+    }
+    if (!dropdown) {
+      dropdown = document.getElementById(`dropdown-${menuBtn.dataset.id}`);
+    }
+    if (!dropdown) return;
+
+    document.querySelectorAll(".row-dropdown").forEach((d) => {
+      if (d !== dropdown) {
+        d.classList.remove("open");
+        d.style.display = "none";
+        d.style.position = "";
+        d.style.top = "";
+        d.style.left = "";
+        d.style.right = "";
+        d.style.zIndex = "";
+        d.style.minWidth = "";
+        d.style.width = "";
+      }
+    });
+    if (dropdown.classList.contains("open")) {
+      dropdown.classList.remove("open");
+      dropdown.style.display = "none";
+      dropdown.style.position = "";
+      dropdown.style.top = "";
+      dropdown.style.left = "";
+      dropdown.style.right = "";
+      dropdown.style.zIndex = "";
+      dropdown.style.minWidth = "";
+      dropdown.style.width = "";
+    } else {
+      dropdown.classList.add("open");
+      dropdown.style.display = "block";
+      dropdown.style.position = "fixed";
+      dropdown.style.zIndex = "99999";
+      dropdown.style.minWidth = "160px";
+      dropdown.style.width = "160px";
+      const rect = menuBtn.getBoundingClientRect();
+      dropdown.style.top = (rect.bottom + window.scrollY) + "px";
+      dropdown.style.left = (rect.left + window.scrollX) + "px";
+      dropdown.style.right = "auto";
+    }
+    return;
+  }
+
+  const actionBtn = e.target.closest("[data-action]");
+  if (actionBtn) {
+    const userId = actionBtn.dataset.id;
+    const action = actionBtn.dataset.action;
+    closeAllRowDropdowns();
+    if (action === "view") {
+      openAdminUserProfile(userId);
+    } else if (action === "toggle") {
+      const userRef = firebase.database().ref("users/" + userId);
+      userRef.once("value").then((snap) => {
+        const user = snap.val() || {};
+        const current = user.status || "actif";
+        const next = current === "suspendu" ? "actif" : "suspendu";
+        userRef.update({ status: next }).then(() => {
+          renderDashboardUserTable();
+          renderAllAdminUsers();
+        });
+      });
+    } else if (action === "delete") {
+      if (confirm("Supprimer cet utilisateur ? Cette action est irréversible.")) {
+        firebase.database().ref("users/" + userId).remove().then(() => {
+          renderDashboardUserTable();
+          renderAllAdminUsers();
+        }).catch(() => alert("Échec de la suppression"));
+      }
+    }
+    return;
+  }
+
+  if (!e.target.closest(".row-menu")) {
+    closeAllRowDropdowns();
+  }
+});
 
 // ============== SITES ==============
 let siteCurrentPage = 1;

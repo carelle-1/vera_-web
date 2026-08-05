@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="/image/vera1.png">
 <title>VERA Admin - Tableau de bord</title>
-<link rel="stylesheet" href="styleAD.css">
+<link rel="stylesheet" href="{{ asset('styleAD.css') }}?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -440,7 +440,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-<script src="firebase-init.js"></script>
-<script src="scriptAD.js?v=3"></script>
+<script src="{{ asset('firebase-init.js') }}"></script>
+<script src="{{ asset('scriptAD.js') }}?v=14"></script>
 </body>
 </html>
