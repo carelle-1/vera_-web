@@ -28,6 +28,10 @@ Route::get('/admin', function () {
     return view('admin');
 });
 
+Route::get('/entreprise', function () {
+    return view('entreprise');
+});
+
 Route::get('/favoris', function () {
     return view('favoris');
 });
@@ -69,6 +73,7 @@ Route::post('/upload-cover-letter', [App\Http\Controllers\UploadController::clas
 Route::post('/delete-cv', [App\Http\Controllers\UploadController::class, 'deleteCv'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 Route::post('/delete-cover-letter', [App\Http\Controllers\UploadController::class, 'deleteCoverLetter'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 Route::post('/messages/upload', [App\Http\Controllers\UploadController::class, 'uploadMessageFile'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+Route::post('/upload-company-doc', [App\Http\Controllers\UploadController::class, 'uploadCompanyDoc'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 Route::post('/messages/send', [App\Http\Controllers\ChatController::class, 'send'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 Route::post('/coaching/advice', [App\Http\Controllers\CoachController::class, 'advice'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 Route::post('/send-application-email', [App\Http\Controllers\ApplyEmailController::class, 'send'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);

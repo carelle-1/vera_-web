@@ -76,18 +76,29 @@ function setError(inputId, errorId, message) {
 
 // ============== TRADUCTION DES ERREURS FIREBASE ==============
 function firebaseAuthError(error) {
-  const map = {
-    "auth/invalid-email": "Adresse email invalide.",
-    "auth/user-disabled": "Ce compte a été désactivé.",
-    "auth/user-not-found": "Aucun compte ne correspond à cet email.",
-    "auth/wrong-password": "Mot de passe incorrect.",
-    "auth/invalid-credential": "Email ou mot de passe incorrect.",
-    "auth/email-already-in-use": "Cet email est déjà utilisé.",
-    "auth/weak-password": "Le mot de passe est trop faible (6 caractères min).",
-    "auth/operation-not-allowed": "La création de compte par email/mot de passe n'est pas activée dans Firebase.",
-    "auth/network-request-failed": "Problème de connexion réseau."
-  };
-  return map[error.code] || (error.message || "Une erreur est survenue.");
+  const code = error && error.code ? error.code : '';
+  const message = error && error.message ? error.message : 'Une erreur est survenue.';
+
+  if (code) {
+    const map = {
+      "auth/invalid-email": "Adresse email invalide.",
+      "auth/user-disabled": "Ce compte a été désactivé.",
+      "auth/user-not-found": "Aucun compte ne correspond à cet email.",
+      "auth/wrong-password": "Mot de passe incorrect.",
+      "auth/invalid-credential": "Email ou mot de passe incorrect.",
+      "auth/email-already-in-use": "Cet email est déjà utilisé.",
+      "auth/weak-password": "Le mot de passe est trop faible (6 caractères min).",
+      "auth/operation-not-allowed": "La création de compte par email/mot de passe n'est pas activée dans Firebase.",
+      "auth/network-request-failed": "Problème de connexion réseau."
+    };
+    return map[code] || message;
+  }
+
+  if (typeof message === 'string' && message.indexOf('400') !== -1) {
+    return "Erreur Firebase 400 : vérifie Email/Mot de passe dans Firebase Console > Authentication > Sign-in method, et ajoute 127.0.0.1 dans Authentication > Settings > Authorized domains.";
+  }
+
+  return message;
 }
 
 // ============== LOGIN FORM ==============
@@ -186,6 +197,111 @@ document.getElementById("signupPassword").addEventListener("input", (e) => {
   strengthLabel.textContent = val.length === 0 ? "Force du mot de passe" : level.label;
 });
 
+// ============== COMPANY ACCOUNT TOGGLE ==============
+const signupIsCompany = document.getElementById("signupIsCompany");
+const companyDocSection = document.getElementById("companyDocGroup");
+const companyDocDrop = document.getElementById("companyDocDrop");
+const companyDocInput = document.getElementById("signupCompanyDoc");
+const companyDocFileInfo = document.getElementById("companyDocFileInfo");
+const companyDocFileName = document.getElementById("companyDocFileName");
+const companyDocRemove = document.getElementById("companyDocRemove");
+const companyToggleWrap = document.getElementById("companyToggleWrap");
+
+function setCompanyDocEnabled(enabled) {
+  if (companyDocInput) companyDocInput.disabled = !enabled;
+  if (companyDocDrop) {
+    companyDocDrop.classList.toggle("disabled", !enabled);
+    companyDocDrop.style.pointerEvents = enabled ? "auto" : "none";
+    companyDocDrop.style.opacity = enabled ? "1" : "0.5";
+  }
+  if (!enabled) {
+    if (companyDocInput) companyDocInput.value = "";
+    if (companyDocFileInfo) companyDocFileInfo.style.display = "none";
+    if (companyDocDrop) companyDocDrop.classList.remove("drag-over");
+  }
+}
+
+if (signupIsCompany && companyDocSection) {
+  signupIsCompany.addEventListener("click", () => {
+    const isChecked = signupIsCompany.getAttribute("aria-checked") === "true";
+    const newState = !isChecked;
+    signupIsCompany.setAttribute("aria-checked", String(newState));
+    if (companyToggleWrap) {
+      companyToggleWrap.classList.toggle("active", newState);
+    }
+    if (newState) {
+      companyDocSection.style.display = "block";
+      requestAnimationFrame(() => {
+        companyDocSection.classList.add("visible");
+      });
+    } else {
+      companyDocSection.classList.remove("visible");
+      setTimeout(() => {
+        companyDocSection.style.display = "none";
+      }, 450);
+    }
+    setCompanyDocEnabled(newState);
+  });
+  setCompanyDocEnabled(false);
+  companyDocSection.style.display = "none";
+}
+
+if (companyDocDrop && companyDocInput) {
+  companyDocDrop.addEventListener("click", () => {
+    if (companyDocInput.disabled) return;
+    companyDocInput.click();
+  });
+
+  companyDocDrop.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    if (companyDocInput.disabled) return;
+    companyDocDrop.classList.add("drag-over");
+  });
+
+  companyDocDrop.addEventListener("dragleave", () => {
+    companyDocDrop.classList.remove("drag-over");
+  });
+
+  companyDocDrop.addEventListener("drop", (e) => {
+    e.preventDefault();
+    companyDocDrop.classList.remove("drag-over");
+    if (companyDocInput.disabled) return;
+    if (e.dataTransfer.files.length > 0) {
+      companyDocInput.files = e.dataTransfer.files;
+      showCompanyDocFile(e.dataTransfer.files[0].name);
+    }
+  });
+
+  companyDocInput.addEventListener("change", () => {
+    if (companyDocInput.disabled) return;
+    if (companyDocInput.files.length > 0) {
+      showCompanyDocFile(companyDocInput.files[0].name);
+    }
+  });
+}
+
+function showCompanyDocFile(name) {
+  if (companyDocFileInfo) {
+    companyDocFileInfo.style.display = "flex";
+  }
+  if (companyDocFileName) {
+    companyDocFileName.textContent = name;
+  }
+  if (companyDocDrop) {
+    companyDocDrop.style.display = "none";
+  }
+}
+
+if (companyDocRemove) {
+  companyDocRemove.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (companyDocInput) companyDocInput.value = "";
+    if (companyDocFileInfo) companyDocFileInfo.style.display = "none";
+    if (companyDocDrop) companyDocDrop.style.display = "";
+  });
+}
+
 // ============== SIGNUP FORM ==============
 const signupForm = document.getElementById("signupForm");
 signupForm.addEventListener("submit", (e) => {
@@ -198,6 +314,9 @@ signupForm.addEventListener("submit", (e) => {
   const password = document.getElementById("signupPassword").value;
   const confirm = document.getElementById("signupConfirm").value;
   const terms = document.getElementById("termsCheckbox").checked;
+  const isCompany = signupIsCompany ? signupIsCompany.getAttribute("aria-checked") === "true" : false;
+  const companyDocInput = document.getElementById("signupCompanyDoc");
+  const companyDocError = document.getElementById("signupCompanyDocError");
 
   if (!firstName) {
     setError("signupFirstName", "signupFirstNameError", "Requis.");
@@ -243,6 +362,13 @@ signupForm.addEventListener("submit", (e) => {
     setError("signupConfirm", "signupConfirmError", "");
   }
 
+  if (isCompany && companyDocInput && companyDocInput.files.length === 0) {
+    if (companyDocError) companyDocError.textContent = "Le document d'entreprise est requis.";
+    valid = false;
+  } else {
+    if (companyDocError) companyDocError.textContent = "";
+  }
+
   const termsError = document.getElementById("termsError");
   if (!terms) {
     termsError.textContent = "Tu dois accepter les conditions pour continuer.";
@@ -258,27 +384,86 @@ signupForm.addEventListener("submit", (e) => {
   btn.textContent = "Création du compte...";
   btn.classList.add("loading");
 
+  const role = isCompany ? "entreprise" : "chercheur_emploi";
+  let user = null;
+  let fullName = "";
+
+  function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
+  }
+
+  function uploadCompanyDocToCloudinary(file, idToken) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('_token', getCsrfToken());
+
+    return fetch('/upload-company-doc', {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Authorization': 'Bearer ' + (idToken || '')
+      },
+      body: formData
+    }).then(function(response) {
+      return response.json().then(function(data) {
+        if (!response.ok) {
+          var error = new Error(data.message || 'Erreur upload Cloudinary');
+          error.response = response;
+          error.data = data;
+          throw error;
+        }
+        return data;
+      });
+    });
+  }
+
   firebase.auth().createUserWithEmailAndPassword(email, password)
     .then((userCredential) => {
-      const user = userCredential.user;
-      const fullName = (firstName + " " + lastName).trim();
+      user = userCredential.user;
+      fullName = (firstName + " " + lastName).trim();
 
-      // Enregistre le profil dans la Realtime Database (Firebase)
-      return firebase.database().ref("users/" + user.uid).set({
+      const userData = {
         firstName: firstName,
         lastName: lastName,
         fullName: fullName,
         email: email,
-        role: "chercheur_emploi",
+        role: role,
         createdAt: firebase.database.ServerValue.TIMESTAMP
-      }).then(() => {
-        if (user) {
-          user.updateProfile({ displayName: fullName });
-        }
-        btn.textContent = original;
-        btn.classList.remove("loading");
-        window.location.href = "/tableau-de-bord";
-      });
+      };
+
+      if (isCompany && companyDocInput && companyDocInput.files.length > 0) {
+        const file = companyDocInput.files[0];
+        return user.getIdToken().then((idToken) => {
+          return uploadCompanyDocToCloudinary(file, idToken).then((cloudinaryResult) => {
+            if (cloudinaryResult && cloudinaryResult.success) {
+              userData.companyDocUrl = cloudinaryResult.url || '';
+              userData.companyDocName = cloudinaryResult.name || file.name;
+              userData.companyDocPublicId = cloudinaryResult.publicId || '';
+              if (companyDocFileName) {
+                companyDocFileName.textContent = cloudinaryResult.name || file.name;
+              }
+            } else {
+              userData.companyDocUrl = '';
+              userData.companyDocName = file.name;
+              if (companyDocFileName) {
+                companyDocFileName.textContent = file.name;
+              }
+            }
+            return firebase.database().ref("users/" + user.uid).set(userData);
+          });
+        });
+      }
+
+      return firebase.database().ref("users/" + user.uid).set(userData);
+    })
+    .then(() => {
+      if (user) {
+        user.updateProfile({ displayName: fullName });
+      }
+      btn.textContent = original;
+      btn.classList.remove("loading");
+      window.location.href = isCompany ? "/entreprise" : "/tableau-de-bord";
     })
     .catch((error) => {
       btn.textContent = original;

@@ -1,3 +1,17 @@
+// ============== UTILS ==============
+function escapeHtml(text) {
+  if (text === null || text === undefined) return "";
+  const str = String(text);
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return str.replace(/[&<>"']/g, (m) => map[m]);
+}
+
 // ============== DONNÉES KPI ==============
 const kpis = [
   { icon: "💼", iconBg: "#eaf8ff", label: "Offres actives", value: "6", trend: "+2", up: true,
@@ -48,9 +62,11 @@ function renderAppsChart() {
   const maxVal = Math.max(...appsData.views);
 
   function toPoints(arr) {
+    const min = Math.min(...arr);
+    const max = Math.max(...arr);
     return arr.map((v, i) => {
       const x = pad + (i / (arr.length - 1)) * (w - pad * 2);
-      const y = h - pad - (v / maxVal) * (h - pad * 2);
+      const y = h - pad - ((v - min) / (max - min || 1)) * 28;
       return `${x},${y}`;
     }).join(" ");
   }
@@ -107,40 +123,367 @@ function renderSourceDonut() {
   `).join("");
 }
 
-// ============== OFFRES PUBLIEES ==============
-const jobs = [
-  { title: "Product Designer UI/UX", sub: "Design · Remote", status: "active", views: 342, apps: 8, match: "92%", date: "05 Jul 2026" },
-  { title: "Développeur Full Stack", sub: "Engineering · Hybride", status: "active", views: 210, apps: 5, match: "88%", date: "02 Jul 2026" },
-  { title: "Chef de Projet Digital", sub: "Produit · Sur site", status: "paused", views: 98, apps: 2, match: "80%", date: "28 Jun 2026" },
-  { title: "Digital Marketing Specialist", sub: "Marketing · Remote", status: "active", views: 156, apps: 3, match: "85%", date: "24 Jun 2026" },
-  { title: "Ingénieur Backend", sub: "Engineering · Hybride", status: "closed", views: 420, apps: 12, match: "90%", date: "10 Jun 2026" }
-];
+// ============== CRUD OFFRES D'EMPLOI ==============
+let jobCurrentPage = 1;
+const JOBS_PER_PAGE = 10;
+let allFilteredJobs = [];
+let jobEditId = null;
 
-function renderJobsTable() {
-  const tbody = document.getElementById("jobsTableBody");
-  const statusLabels = { active: "Active", paused: "En pause", closed: "Clôturée" };
+function jobRef() {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    console.warn("[ENTREPRISE] aucun utilisateur Firebase connecté");
+  }
+  return user ? firebase.database().ref("jobs") : null;
+}
 
-  tbody.innerHTML = jobs.map((j, i) => `
-    <tr>
-      <td><div class="job-title-cell">${j.title}</div><div class="job-sub-cell">${j.sub}</div></td>
-      <td><button class="status-toggle ${j.status}" data-index="${i}">${statusLabels[j.status]}</button></td>
-      <td>${j.views}</td>
-      <td>${j.apps}</td>
-      <td><span class="match-pill">${j.match}</span></td>
-      <td>${j.date}</td>
-      <td><button class="job-action-btn">⋮</button></td>
-    </tr>
-  `).join("");
+function renderJobs(resetPage) {
+  const tbody = document.getElementById("jobTableBody");
+  const countEl = document.getElementById("jobTableCount");
+  const search = document.getElementById("jobSearch");
+  const filter = document.getElementById("jobFilter");
+  if (!tbody) {
+    console.warn("[ENTREPRISE] jobTableBody introuvable");
+    return;
+  }
 
-  tbody.querySelectorAll(".status-toggle").forEach(btn => {
+  const ref = jobRef();
+  if (!ref) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:#ef4444;">Vous devez être connecté pour voir les offres.</td></tr>`;
+    return;
+  }
+
+  const q = search ? search.value.trim().toLowerCase() : "";
+  const statusFilter = filter ? filter.value : "all";
+
+  ref.once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const currentUser = firebase.auth().currentUser;
+    const items = Object.keys(data).map((id) => ({ id, ...data[id] }))
+      .filter((job) => !currentUser || job.createdBy === currentUser.uid)
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    let filtered = items;
+    if (q) {
+      filtered = filtered.filter(job =>
+        (job.title || "").toLowerCase().includes(q) ||
+        (job.company || "").toLowerCase().includes(q) ||
+        (job.location || "").toLowerCase().includes(q) ||
+        (job.country || "").toLowerCase().includes(q)
+      );
+    }
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(job => (job.status || "active") === statusFilter);
+    }
+
+    allFilteredJobs = filtered;
+    if (resetPage !== false) jobCurrentPage = 1;
+
+    tbody.innerHTML = "";
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:#6b7280;">Aucune offre trouvée.</td></tr>`;
+      if (countEl) countEl.textContent = "Affichage de 0 offre";
+      renderJobPagination(0);
+      return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / JOBS_PER_PAGE));
+    if (jobCurrentPage > totalPages) jobCurrentPage = totalPages;
+    const start = (jobCurrentPage - 1) * JOBS_PER_PAGE;
+    const end = Math.min(start + JOBS_PER_PAGE, filtered.length);
+    const pageJobs = filtered.slice(start, end);
+
+    if (countEl) countEl.textContent = `Affichage de ${start + 1} à ${end} sur ${filtered.length} offre${filtered.length > 1 ? "s" : ""}`;
+
+    const statusMap = {
+      active: '<span class="status-badge success">Active</span>',
+      inactive: '<span class="status-badge danger">Inactive</span>'
+    };
+
+    pageJobs.forEach((job) => {
+      const tr = document.createElement("tr");
+      const logoUrl = job.logoURL || "";
+      const logoHtml = logoUrl
+        ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(job.company || 'logo')}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">`
+        : `<div class="job-logo-placeholder">${escapeHtml((job.company || "?").charAt(0).toUpperCase())}</div>`;
+
+      tr.innerHTML = `
+        <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="job-select-checkbox" data-id="${job.id}" style="cursor:pointer;width:16px;height:16px;"></td>
+        <td style="text-align:center;vertical-align:middle;">${logoHtml}</td>
+        <td><button class="job-title-edit" data-id="${job.id}" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;text-align:left;padding:0;font-weight:700;">${escapeHtml(job.title || "Sans titre")}</button></td>
+        <td>${escapeHtml(job.company || "—")}</td>
+        <td>${escapeHtml(job.location || "—")}${job.country ? ", " + escapeHtml(job.country) : ""}</td>
+        <td>${statusMap[job.status] || job.status || "—"}</td>
+        <td>${job.deadline ? escapeHtml(job.deadline) : "—"}</td>
+        <td class="exp-action-cell">
+          <button class="exp-delete-btn" data-id="${job.id}" title="Supprimer">
+            <img src="/image/delete.png" alt="Supprimer" style="width:16px;height:16px;object-fit:contain;">
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll(".job-title-edit").forEach((btn) => {
+      btn.addEventListener("click", () => openJobForm(btn.dataset.id));
+    });
+    tbody.querySelectorAll(".exp-delete-btn").forEach((btn) => {
+      btn.addEventListener("click", () => deleteJob(btn.dataset.id));
+    });
+    tbody.querySelectorAll(".job-select-checkbox").forEach((checkbox) => {
+      checkbox.addEventListener("change", updateBulkDeleteButton);
+    });
+
+    updateBulkDeleteButton();
+    renderJobPagination(filtered.length);
+  }).catch((err) => {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement: ${err.message || err.code}</td></tr>`;
+  });
+}
+
+function renderJobPagination(totalItems) {
+  const container = document.getElementById("jobPagination");
+  if (!container) return;
+
+  const totalPages = totalItems === 0 ? 0 : Math.max(1, Math.ceil(totalItems / JOBS_PER_PAGE));
+  if (totalPages <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let html = `<button class="page-arrow" data-page="prev" ${jobCurrentPage === 1 ? 'disabled' : ''}>‹</button>`;
+
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= jobCurrentPage - 1 && i <= jobCurrentPage + 1)) {
+      html += `<button class="page-num ${i === jobCurrentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    } else if (i === jobCurrentPage - 2 || i === jobCurrentPage + 2) {
+      html += `<span class="page-dots">...</span>`;
+    }
+  }
+
+  html += `<button class="page-arrow" data-page="next" ${jobCurrentPage === totalPages ? 'disabled' : ''}>›</button>`;
+  container.innerHTML = html;
+
+  container.querySelectorAll(".page-num, .page-arrow").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const idx = parseInt(btn.dataset.index);
-      const order = ["active", "paused", "closed"];
-      const next = order[(order.indexOf(jobs[idx].status) + 1) % order.length];
-      jobs[idx].status = next;
-      renderJobsTable();
+      const page = btn.dataset.page;
+      if (!page) return;
+
+      if (page === "prev" && jobCurrentPage > 1) {
+        jobCurrentPage--;
+      } else if (page === "next" && jobCurrentPage < totalPages) {
+        jobCurrentPage++;
+      } else if (page !== "prev" && page !== "next") {
+        jobCurrentPage = parseInt(page);
+      }
+
+      renderJobs(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
   });
+}
+
+function deleteJob(id) {
+  if (!confirm("Supprimer cette offre d'emploi ?")) return;
+  const ref = jobRef();
+  if (!ref) return;
+  ref.child(id).remove()
+    .then(() => {
+      renderJobs();
+    })
+    .catch((err) => alert("Échec de la suppression : " + (err.message || err.code)));
+}
+
+function updateBulkDeleteButton() {
+  const checkboxes = document.querySelectorAll(".job-select-checkbox:checked");
+  const bulkBtn = document.getElementById("bulkDeleteBtn");
+  if (bulkBtn) {
+    bulkBtn.style.display = checkboxes.length > 0 ? "inline-block" : "none";
+    bulkBtn.textContent = checkboxes.length > 0 ? `🗑 Supprimer la sélection (${checkboxes.length})` : "🗑 Supprimer la sélection";
+  }
+}
+
+function deleteSelectedJobs() {
+  const checkboxes = document.querySelectorAll(".job-select-checkbox:checked");
+  if (checkboxes.length === 0) return;
+
+  const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
+  if (!confirm(`Supprimer ${ids.length} offre(s) d'emploi ?`)) return;
+
+  const ref = jobRef();
+  if (!ref) return;
+
+  const deletions = ids.map(id => ref.child(id).remove());
+  Promise.all(deletions)
+    .then(() => {
+      renderJobs();
+      const selectAll = document.getElementById("selectAllJobs");
+      if (selectAll) selectAll.checked = false;
+    })
+    .catch((err) => alert("Échec de la suppression : " + (err.message || err.code)));
+}
+
+function openJobForm(id) {
+  const wrapper = document.getElementById("offresFormWrapper");
+  const titleEl = document.getElementById("jobModalTitle");
+  const form = document.getElementById("jobForm");
+  if (!wrapper || !form || !titleEl) return;
+
+  form.reset();
+  if (id) {
+    jobEditId = id;
+    titleEl.textContent = "Modifier l'offre";
+    const ref = jobRef();
+    if (ref) {
+      ref.child(id).once("value").then((snap) => {
+        const d = snap.val() || {};
+        form.title.value = d.title || "";
+        form.company.value = d.company || "";
+        form.applyEmail.value = d.applyEmail || "";
+        form.location.value = d.location || "";
+        form.country.value = d.country || "";
+        form.description.value = d.description || "";
+        form.salary.value = d.salary || "";
+        form.contractType.value = d.contractType || "";
+        form.skills.value = d.skills || "";
+        form.deadline.value = d.deadline || "";
+        form.status.value = d.status || "active";
+      });
+    }
+  } else {
+    jobEditId = null;
+    titleEl.textContent = "Ajouter une offre";
+  }
+
+  wrapper.classList.add("active");
+}
+
+function closeJobForm() {
+  const wrapper = document.getElementById("offresFormWrapper");
+  if (wrapper) wrapper.classList.remove("active");
+  jobEditId = null;
+}
+
+function handleJobSubmit(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = {
+    title: (fd.get("title") || "").toString().trim(),
+    company: (fd.get("company") || "").toString().trim(),
+    applyEmail: (fd.get("applyEmail") || "").toString().trim(),
+    location: (fd.get("location") || "").toString().trim(),
+    country: (fd.get("country") || "").toString().trim(),
+    description: (fd.get("description") || "").toString().trim(),
+    salary: (fd.get("salary") || "").toString().trim(),
+    contractType: (fd.get("contractType") || "").toString().trim(),
+    skills: (fd.get("skills") || "").toString().trim(),
+    deadline: (fd.get("deadline") || "").toString().trim(),
+    status: (fd.get("status") || "active").toString().trim(),
+    createdAt: Date.now()
+  };
+
+  const logoFile = e.target.querySelector('input[name="logo"]').files[0];
+
+  const ref = jobRef();
+  const currentUser = firebase.auth().currentUser;
+  if (!ref || !currentUser) {
+    alert("Vous devez être connecté pour enregistrer une offre.");
+    return;
+  }
+
+  const saveRef = jobEditId ? ref.child(jobEditId) : ref.push();
+
+  const finish = () => {
+    closeJobForm();
+    renderJobs();
+  };
+
+  if (jobEditId) {
+    saveRef.update(payload).then(() => {
+      return handleLogoUpload(saveRef, logoFile);
+    }).then(() => {
+      finish();
+    }).catch((err) => {
+      alert("Échec de la modification : " + (err.message || err.code));
+    });
+  } else {
+    saveRef.set({ ...payload, createdBy: currentUser.uid }).then(() => {
+      return handleLogoUpload(saveRef, logoFile);
+    }).then(() => {
+      finish();
+    }).catch((err) => {
+      alert("Échec de la création : " + (err.message || err.code));
+    });
+  }
+}
+
+function handleLogoUpload(saveRef, logoFile) {
+  if (!logoFile) {
+    return null;
+  }
+
+  const formData = new FormData();
+  formData.append('logo', logoFile);
+
+  return fetch('/upload-logo.php', {
+    method: 'POST',
+    body: formData
+  }).then((response) => {
+    if (!response.ok) {
+      return response.json().then((err) => {
+        throw new Error(err.error || 'Erreur upload local');
+      });
+    }
+    return response.json();
+  }).then((data) => {
+    if (data.success && data.url) {
+      return saveRef.update({ logoURL: data.url });
+    }
+    return null;
+  }).catch((err) => {
+    console.error("[ENTREPRISE] erreur upload logo:", err);
+    alert("Échec de l'upload du logo : " + err.message);
+    throw err;
+  });
+}
+
+const addJobBtn = document.getElementById("addJobBtn");
+if (addJobBtn) {
+  addJobBtn.addEventListener("click", () => openJobForm(null));
+}
+
+const jobCloseBtn = document.getElementById("jobModalClose");
+if (jobCloseBtn) {
+  jobCloseBtn.addEventListener("click", closeJobForm);
+}
+
+const jobCancelBtn = document.getElementById("jobCancel");
+if (jobCancelBtn) {
+  jobCancelBtn.addEventListener("click", closeJobForm);
+}
+
+const jobForm = document.getElementById("jobForm");
+if (jobForm) {
+  jobForm.addEventListener("submit", handleJobSubmit);
+}
+
+const jobSearchEl = document.getElementById("jobSearch");
+if (jobSearchEl) jobSearchEl.addEventListener("input", renderJobs);
+
+const jobFilterEl = document.getElementById("jobFilter");
+if (jobFilterEl) jobFilterEl.addEventListener("change", renderJobs);
+
+const selectAllJobs = document.getElementById("selectAllJobs");
+if (selectAllJobs) {
+  selectAllJobs.addEventListener("change", () => {
+    document.querySelectorAll(".job-select-checkbox").forEach(cb => cb.checked = selectAllJobs.checked);
+    updateBulkDeleteButton();
+  });
+}
+
+const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+if (bulkDeleteBtn) {
+  bulkDeleteBtn.addEventListener("click", deleteSelectedJobs);
 }
 
 // ============== CANDIDATS RECENTS ==============
@@ -223,6 +566,7 @@ function renderInterviews() {
 
 // ============== NAVIGATION SIDEBAR ==============
 const panelTitles = {
+  dashboard: "Tableau de bord",
   offres: "Gestion des offres publiées",
   candidatures: "Toutes les candidatures",
   talents: "Talents recommandés par VERA",
@@ -235,10 +579,21 @@ const panelTitles = {
 
 function goToPanel(panel) {
   document.querySelectorAll(".nav-item").forEach(i => i.classList.toggle("active", i.dataset.panel === panel));
-  document.getElementById("panel-dashboard").classList.toggle("active", panel === "dashboard");
-  document.getElementById("panel-placeholder").classList.toggle("active", panel !== "dashboard");
-  if (panel !== "dashboard") {
-    document.getElementById("placeholderTitle").textContent = panelTitles[panel] || "Section en construction";
+  const dashboard = document.getElementById("panel-dashboard");
+  const offres = document.getElementById("panel-offres");
+  const placeholder = document.getElementById("panel-placeholder");
+
+  if (dashboard) dashboard.classList.toggle("active", panel === "dashboard");
+  if (offres) offres.classList.toggle("active", panel === "offres");
+  if (placeholder) {
+    placeholder.classList.toggle("active", panel !== "dashboard" && panel !== "offres");
+    if (panel !== "dashboard" && panel !== "offres" && panelTitles[panel]) {
+      document.getElementById("placeholderTitle").textContent = panelTitles[panel];
+    }
+  }
+
+  if (panel === "offres") {
+    renderJobs();
   }
 }
 
@@ -252,32 +607,11 @@ document.querySelectorAll("[data-panel-link]").forEach(link => {
   });
 });
 
-// ============== MODAL PUBLIER OFFRE ==============
-const modalOverlay = document.getElementById("modalOverlay");
-document.getElementById("publishBtn").addEventListener("click", () => {
-  modalOverlay.classList.add("open");
-});
-document.getElementById("modalClose").addEventListener("click", () => {
-  modalOverlay.classList.remove("open");
-});
-modalOverlay.addEventListener("click", (e) => {
-  if (e.target === modalOverlay) modalOverlay.classList.remove("open");
-});
-
-document.getElementById("publishForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const title = document.getElementById("jobTitleInput").value.trim() || "Nouvelle offre";
-  jobs.unshift({ title, sub: "Nouveau · Remote", status: "active", views: 0, apps: 0, match: "—", date: "Aujourd'hui" });
-  renderJobsTable();
-  modalOverlay.classList.remove("open");
-  document.getElementById("publishForm").reset();
-});
-
 // ============== INIT ==============
 renderKPIs();
 renderAppsChart();
 renderSourceDonut();
-renderJobsTable();
+renderJobs();
 renderCandidates();
 renderTalents();
 renderInterviews();

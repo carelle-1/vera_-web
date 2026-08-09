@@ -154,21 +154,65 @@
           <span class="field-error" id="signupPasswordError"></span>
         </div>
 
-        <div class="field-group">
-          <label>Confirmer le mot de passe</label>
-          <div class="input-wrap">
-            <span class="input-icon"><img src="/image/3917606.png" alt="" style="width:16px;height:16px;object-fit:contain;"></span>
-            <input type="password" id="signupConfirm" placeholder="••••••••">
-            <button type="button" class="toggle-pass" data-target="signupConfirm"><i class="ph ph-eye"></i></button>
-          </div>
-          <span class="field-error" id="signupConfirmError"></span>
-        </div>
+<div class="field-group">
+            <label>Confirmer le mot de passe</label>
+            <div class="input-wrap">
+              <span class="input-icon"><img src="/image/3917606.png" alt="" style="width:16px;height:16px;object-fit:contain;"></span>
+              <input type="password" id="signupConfirm" placeholder="••••••••">
+              <button type="button" class="toggle-pass" data-target="signupConfirm"><i class="ph ph-eye"></i></button>
+            </div>
+            <span class="field-error" id="signupConfirmError"></span>
+            </div>
 
-        <label class="remember terms">
-          <input type="checkbox" id="termsCheckbox">
-          J'accepte les <a href="#">Conditions d'utilisation</a> et la <a href="#">Politique de confidentialité</a>
-        </label>
-        <span class="field-error" id="termsError"></span>
+            <div class="company-toggle-section">
+              <div class="toggle-switch-wrap" id="companyToggleWrap">
+                <span class="toggle-switch-label">
+                  <span class="toggle-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+                  </span>
+                  Compte entreprise
+                </span>
+                <button type="button" class="toggle-switch" id="signupIsCompany" role="switch" aria-checked="false" aria-label="Activer le compte entreprise">
+                  <span class="toggle-switch-knob">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                </button>
+              </div>
+
+              <div class="company-doc-section" id="companyDocGroup">
+                <div class="company-doc-card">
+                  <div class="company-doc-header">
+                    <div class="company-doc-icon">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <div class="company-doc-header-text">
+                      <span class="company-doc-title">Ajouter un justificatif</span>
+                      <span class="company-doc-sub">KBIS, attestation ou document officiel</span>
+                    </div>
+                  </div>
+                  <div class="company-doc-drop" id="companyDocDrop" tabindex="0" role="button">
+                    <input type="file" id="signupCompanyDoc" accept=".pdf,.jpg,.jpeg,.png" hidden>
+                    <div class="company-doc-drop-content">
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      <span class="company-doc-drop-text"><strong>Cliquez pour importer</strong> ou glissez-déposez</span>
+                      <span class="company-doc-drop-formats">PDF, JPG, PNG — Max 5 Mo</span>
+                    </div>
+                    <div class="company-doc-file-info" id="companyDocFileInfo" style="display:none;">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      <span id="companyDocFileName"></span>
+                      <button type="button" class="company-doc-remove" id="companyDocRemove" aria-label="Supprimer le fichier">&times;</button>
+                    </div>
+                  </div>
+                  <span class="field-error" id="signupCompanyDocError"></span>
+                </div>
+              </div>
+            </div>
+
+            <label class="remember terms">
+           <input type="checkbox" id="termsCheckbox">
+           J'accepte les <a href="#">Conditions d'utilisation</a> et la <a href="#">Politique de confidentialité</a>
+         </label>
+         <span class="field-error" id="termsError"></span>
 
         <button type="submit" class="btn-submit">Créer mon compte</button>
 
@@ -219,6 +263,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="firebase-init.js"></script>
 
 <script src="script_L.js?v=2"></script>

@@ -270,6 +270,63 @@ class UploadController extends Controller
         }
     }
 
+    public function uploadCompanyDoc(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|max:5120|mimetypes:application/pdf,image/jpeg,image/png'
+        ]);
+
+        try {
+            $uid = $this->verifyFirebaseToken($request);
+            if (!$uid) {
+                return response()->json(['success' => false, 'message' => 'Non autorisé'], 401);
+            }
+
+            $file = $request->file('file');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $folder = 'company_docs/' . $uid;
+
+            $response = Http::asMultipart()
+                ->attach(
+                    name: 'file',
+                    contents: fopen($file->getRealPath(), 'r'),
+                    filename: $filename,
+                )
+                ->post("https://api.cloudinary.com/v1_1/{$this->cloudName()}/upload", [
+                    'upload_preset' => $this->uploadPreset(),
+                    'folder' => $folder,
+                ]);
+
+            if (!$response->successful()) {
+                \Log::error('Cloudinary company doc upload failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreur lors de l\'upload: ' . $response->body(),
+                ], 500);
+            }
+
+            $result = $response->json();
+            $publicId = $result['public_id'] ?? '';
+            $fileUrl = $result['secure_url'] ?? $result['url'] ?? '';
+
+            return response()->json([
+                'success' => true,
+                'url' => $fileUrl,
+                'name' => $filename,
+                'path' => $folder . '/' . $filename,
+                'publicId' => $publicId,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'upload: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     private function deleteFromCloudinary(string $publicId): void
     {
         $apiKey = env('CLOUDINARY_API_KEY');
