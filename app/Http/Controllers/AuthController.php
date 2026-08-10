@@ -62,7 +62,11 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'role' => $role,
-                'redirect' => $role === 'admin' ? '/admin' : '/tableau-de-bord'
+                'redirect' => match ($role) {
+                    'admin' => '/admin',
+                    'entreprise' => '/entreprise',
+                    default => '/tableau-de-bord',
+                }
             ]);
         } catch (\Exception $e) {
             \Log::error('Firebase sync error: ' . $e->getMessage());

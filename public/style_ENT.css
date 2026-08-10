@@ -656,3 +656,24 @@ table{border-collapse:collapse;width:100%;}
   font-weight:700;
   text-align:right;
 }
+
+/* ================= CANDIDATURES PANEL ================= */
+.cand-layout{display:flex;gap:16px;padding:0 26px 40px;align-items:flex-start;}
+#panel-candidatures .cand-layout{display:flex;}
+#panel-candidatures .cand-jobs-panel{flex:1;min-width:0;display:block;}
+#panel-candidatures .cand-list-panel{flex:1;min-width:0;display:none;}
+#panel-candidatures .cand-list-panel.is-visible{display:block;}
+.cand-list-panel .admin-table td{vertical-align:middle;}
+.cand-action-cell{display:flex;align-items:center;gap:8px;}
+.cand-action-btn{background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;font-size:12px;font-weight:600;}
+.cand-action-btn.accept{color:var(--mint-dark);background:var(--mint-pale);}
+.cand-action-btn.accept:hover{background:#dcfce7;}
+.cand-action-btn.reject{color:var(--red);background:#fef2f2;}
+.cand-action-btn.reject:hover{background:#fee2e2;}
+.cand-action-btn.message{color:var(--sky-dark);background:var(--sky-pale);}
+.cand-action-btn.message:hover{background:#e0f2fe;}
+.cand-view-btn{background:none;border:none;color:var(--sky);cursor:pointer;font-size:12px;font-weight:600;padding:4px 8px;border-radius:6px;}
+.cand-view-btn:hover{background:var(--sky-pale);}
+.cand-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;}
+.cand-back-btn{background:none;border:none;color:var(--sky);cursor:pointer;font-size:12px;font-weight:600;padding:4px 8px;border-radius:6px;}
+.cand-back-btn:hover{background:var(--sky-pale);}

@@ -69,6 +69,13 @@
       </div>
     </div>
 
+    <div style="padding:0 14px 14px;">
+      <form id="logoutForm" action="/logout" method="POST" style="margin-top:0;">
+        @csrf
+        <button type="submit" style="width:100%;padding:9px;background:#f3f4f6;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:#374151;">Déconnexion</button>
+      </form>
+    </div>
+
     <!-- <div class="upgrade-card">
       <div class="upgrade-title">🚀 Boostez vos offres</div>
       <p>Mettez en avant vos annonces pour 3x plus de candidatures qualifiées.</p>
@@ -291,6 +298,122 @@
                 <div class="exp-form-actions">
                   <button type="button" class="btn-outline-sm" id="jobCancel">Annuler</button>
                   <button type="submit" class="btn-primary-sm">Enregistrer</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CANDIDATURES PANEL -->
+      <div class="panel" id="panel-candidatures">
+        <div class="page-head">
+          <div>
+            <h1>Candidatures</h1>
+            <p>Consultez les candidats pour vos offres et gérez les réponses.</p>
+          </div>
+        </div>
+
+        <div class="cand-layout">
+          <section class="cand-jobs-panel">
+            <div class="card table-card">
+              <div class="card-head-row">
+                <div class="card-title">Vos offres</div>
+                <div class="table-tools">
+                  <input type="text" id="candJobSearch" placeholder="Rechercher une offre...">
+                </div>
+              </div>
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Offre</th>
+                    <th>Entreprise</th>
+                    <th>Statut</th>
+                    <th>Candidatures</th>
+                    <th>Publiée le</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="candJobTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="cand-list-panel" id="candListPanel">
+            <div class="card table-card">
+              <div class="card-head-row">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button class="cand-back-btn" id="candBackBtn" type="button">← Retour</button>
+                  <div class="card-title" id="candListTitle">Candidats</div>
+                </div>
+                <div class="table-tools">
+                  <input type="text" id="candSearch" placeholder="Rechercher un candidat...">
+                  <select id="candFilter">
+                    <option value="all">Tous les statuts</option>
+                    <option value="sent">Envoyée</option>
+                    <option value="response">Réponse</option>
+                    <option value="interview">Entretien</option>
+                    <option value="accepted">Acceptée</option>
+                    <option value="rejected">Rejetée</option>
+                  </select>
+                </div>
+              </div>
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Candidat</th>
+                    <th>Offre</th>
+                    <th>Statut</th>
+                    <th>Date</th>
+                    <th>CV</th>
+                    <th>Lettre</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="candTableBody"></tbody>
+              </table>
+              <div class="table-footer">
+                <span id="candTableCount">Affichage de 0 candidature</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- MODAL DETAILS CANDIDAT -->
+        <div class="admin-modal-overlay" id="candDetailOverlay">
+          <div class="admin-modal-card">
+            <div class="admin-modal-head">
+              <div class="admin-modal-title" id="candDetailTitle">Détails du candidat</div>
+              <button class="admin-modal-close" id="candDetailClose" type="button">×</button>
+            </div>
+            <div class="admin-modal-body" id="candDetailBody"></div>
+          </div>
+        </div>
+
+        <!-- MODAL DOCUMENT -->
+        <div class="admin-modal-overlay" id="candDocOverlay">
+          <div class="admin-modal-card">
+            <div class="admin-modal-head">
+              <div class="admin-modal-title" id="candDocTitle">Document</div>
+              <button class="admin-modal-close" id="candDocClose" type="button">×</button>
+            </div>
+            <div class="admin-modal-body" id="candDocBody"></div>
+          </div>
+        </div>
+
+        <!-- MODAL MESSAGE -->
+        <div class="admin-modal-overlay" id="candMessageOverlay">
+          <div class="admin-modal-card">
+            <div class="admin-modal-head">
+              <div class="admin-modal-title">Envoyer un message au candidat</div>
+              <button class="admin-modal-close" id="candMessageClose" type="button">×</button>
+            </div>
+            <div class="admin-modal-body">
+              <form id="candMessageForm" class="exp-form">
+                <label>Message<textarea name="message" rows="5" placeholder="Écrivez votre message au candidat..." required></textarea></label>
+                <div class="exp-form-actions">
+                  <button type="button" class="btn-outline-sm" id="candMessageCancel">Annuler</button>
+                  <button type="submit" class="btn-primary-sm">Envoyer</button>
                 </div>
               </form>
             </div>

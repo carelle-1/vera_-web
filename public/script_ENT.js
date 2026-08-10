@@ -12,6 +12,47 @@ function escapeHtml(text) {
   return str.replace(/[&<>"']/g, (m) => map[m]);
 }
 
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.textContent = message;
+  toast.style.cssText = "position:fixed;bottom:20px;right:20px;background:#1f2937;color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.18);opacity:0;transition:opacity .2s ease;";
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => { toast.style.opacity = "1"; });
+  setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 200); }, 2500);
+}
+
+function saveMessageToFirebase(recipientId, messageData) {
+  const user = firebase.auth().currentUser;
+  if (!user) return Promise.reject("Utilisateur non connecté");
+
+  const conversationId = [user.uid, recipientId].sort().join("_");
+  const messageRef = firebase.database().ref("messages/" + conversationId).push();
+  const messageWithId = {
+    ...messageData,
+    id: messageRef.key,
+    senderUid: user.uid,
+    timestamp: Date.now(),
+    read: false
+  };
+
+  return messageRef.set(messageWithId)
+    .then(() => {
+      return firebase.database().ref("conversations/" + user.uid + "/" + recipientId).update({
+        lastMessage: messageData.text || messageData.fileName || "Fichier",
+        lastTimestamp: messageWithId.timestamp,
+        recipientId: recipientId
+      });
+    })
+    .then(() => {
+      return firebase.database().ref("conversations/" + recipientId + "/" + user.uid).update({
+        lastMessage: messageData.text || messageData.fileName || "Fichier",
+        lastTimestamp: messageWithId.timestamp,
+        recipientId: user.uid,
+        unread: true
+      });
+    });
+}
+
 // ============== DONNÉES KPI ==============
 const kpis = [
   { icon: "💼", iconBg: "#eaf8ff", label: "Offres actives", value: "6", trend: "+2", up: true,
@@ -568,7 +609,7 @@ function renderInterviews() {
 const panelTitles = {
   dashboard: "Tableau de bord",
   offres: "Gestion des offres publiées",
-  candidatures: "Toutes les candidatures",
+  candidatures: "Candidatures",
   talents: "Talents recommandés par VERA",
   entretiens: "Planning des entretiens",
   messages: "Messagerie",
@@ -581,19 +622,30 @@ function goToPanel(panel) {
   document.querySelectorAll(".nav-item").forEach(i => i.classList.toggle("active", i.dataset.panel === panel));
   const dashboard = document.getElementById("panel-dashboard");
   const offres = document.getElementById("panel-offres");
+  const candidatures = document.getElementById("panel-candidatures");
   const placeholder = document.getElementById("panel-placeholder");
 
   if (dashboard) dashboard.classList.toggle("active", panel === "dashboard");
   if (offres) offres.classList.toggle("active", panel === "offres");
+  if (candidatures) candidatures.classList.toggle("active", panel === "candidatures");
   if (placeholder) {
-    placeholder.classList.toggle("active", panel !== "dashboard" && panel !== "offres");
-    if (panel !== "dashboard" && panel !== "offres" && panelTitles[panel]) {
+    placeholder.classList.toggle("active", panel !== "dashboard" && panel !== "offres" && panel !== "candidatures");
+    if (panel !== "dashboard" && panel !== "offres" && panel !== "candidatures" && panelTitles[panel]) {
       document.getElementById("placeholderTitle").textContent = panelTitles[panel];
     }
   }
 
+  const candListPanel = document.getElementById("candListPanel");
+  if (candListPanel) {
+    candListPanel.style.display = "none";
+  }
+
   if (panel === "offres") {
     renderJobs();
+  }
+  if (panel === "candidatures") {
+    candSelectedJobId = null;
+    loadCandidatureJobs();
   }
 }
 
@@ -606,6 +658,481 @@ document.querySelectorAll("[data-panel-link]").forEach(link => {
     goToPanel(link.dataset.panelLink);
   });
 });
+
+// ============== CANDIDATURES ==============
+let candSelectedJobId = null;
+let candCurrentPage = 1;
+const CAND_PER_PAGE = 10;
+let allCandidatures = [];
+const userCache = {};
+
+function getUserInfo(uid) {
+  if (!uid) return Promise.resolve({ name: "Candidat", email: "" });
+  if (userCache[uid]) return Promise.resolve(userCache[uid]);
+
+  return firebase.database().ref("users/" + uid).once("value").then((snap) => {
+    const data = snap.val() || {};
+    const info = {
+      name: data.name || data.displayName || "Candidat",
+      email: data.email || ""
+    };
+    userCache[uid] = info;
+    return info;
+  }).catch(() => {
+    const info = { name: "Candidat #" + uid, email: "" };
+    userCache[uid] = info;
+    return info;
+  });
+}
+
+function getUserRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("users/" + user.uid) : null;
+}
+
+function loadCurrentUserCompany() {
+  const userRef = getUserRef();
+  if (!userRef) return Promise.resolve(null);
+  return userRef.once("value").then((snap) => snap.val() || null);
+}
+
+function candidatureJobsRef() {
+  const user = firebase.auth().currentUser;
+  if (!user) return null;
+  return firebase.database().ref("jobs").orderByChild("createdBy").equalTo(user.uid);
+}
+
+function loadCandidatureJobs() {
+  const tbody = document.getElementById("candJobTableBody");
+  const countEl = document.getElementById("candJobTableCount");
+  const searchEl = document.getElementById("candJobSearch");
+  if (!tbody) return;
+
+  const ref = candidatureJobsRef();
+  if (!ref) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#ef4444;">Vous devez être connecté.</td></tr>`;
+    return;
+  }
+
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : "";
+
+  ref.once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const jobs = Object.keys(data).map((id) => ({ id, ...data[id] }))
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    let filtered = jobs;
+    if (q) {
+      filtered = filtered.filter(job =>
+        (job.title || "").toLowerCase().includes(q) ||
+        (job.company || "").toLowerCase().includes(q)
+      );
+    }
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#6b7280;">Aucune offre trouvée.</td></tr>`;
+      return;
+    }
+
+    const statusMap = {
+      active: '<span class="status-badge success">Active</span>',
+      inactive: '<span class="status-badge danger">Inactive</span>'
+    };
+
+    tbody.innerHTML = filtered.map((job) => {
+      const logoUrl = job.logoURL || "";
+      const logoHtml = logoUrl
+        ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(job.company || 'logo')}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">`
+        : `<div class="job-logo-placeholder">${escapeHtml((job.company || "?").charAt(0).toUpperCase())}</div>`;
+
+      return `
+        <tr>
+          <td><button class="cand-view-btn" data-job-id="${job.id}">${escapeHtml(job.title || "Sans titre")}</button></td>
+          <td>${escapeHtml(job.company || "—")}</td>
+          <td>${statusMap[job.status] || job.status || "—"}</td>
+          <td id="candCount-${job.id}">...</td>
+          <td>${job.createdAt ? new Date(job.createdAt).toLocaleDateString("fr-FR") : "—"}</td>
+          <td class="cand-action-cell">
+            <button class="cand-action-btn accept" data-job-id="${job.id}" title="Voir candidats">Voir candidats</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    tbody.querySelectorAll(".cand-view-btn, .cand-action-btn.accept").forEach((btn) => {
+      btn.addEventListener("click", () => openCandidaturesForJob(btn.dataset.jobId));
+    });
+
+    filtered.forEach((job) => {
+      countCandidaturesForJob(job.id);
+    });
+  }).catch((err) => {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement: ${err.message || err.code}</td></tr>`;
+  });
+}
+
+function countCandidaturesForJob(jobId) {
+  const countEl = document.getElementById("candCount-" + jobId);
+  if (!countEl) return;
+
+  firebase.database().ref("candidatures").orderByChild("jobId").equalTo(jobId).once("value").then((snap) => {
+    const data = snap.val() || {};
+    const count = Object.keys(data).length;
+    countEl.textContent = count + " candidat" + (count > 1 ? "s" : "");
+  }).catch(() => {
+    countEl.textContent = "—";
+  });
+}
+
+function openCandidaturesForJob(jobId) {
+  candSelectedJobId = jobId;
+  candCurrentPage = 1;
+
+  const jobsPanel = document.querySelector(".cand-jobs-panel");
+  const listPanel = document.getElementById("candListPanel");
+  const listTitle = document.getElementById("candListTitle");
+  if (jobsPanel) jobsPanel.style.display = "none";
+  if (listPanel) listPanel.style.display = "block";
+
+  firebase.database().ref("jobs/" + jobId).once("value").then((snap) => {
+    const job = snap.val() || {};
+    if (listTitle) listTitle.textContent = "Candidats - " + (job.title || "Offre");
+  });
+
+  renderCandidatures();
+}
+
+function loadCandidaturesForJob(jobId) {
+  return firebase.database().ref("candidatures").orderByChild("jobId").equalTo(jobId).once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    return Object.keys(data).map((id) => ({ id, ...data[id] }))
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  });
+}
+
+function renderCandidatures() {
+  const tbody = document.getElementById("candTableBody");
+  const countEl = document.getElementById("candTableCount");
+  const searchEl = document.getElementById("candSearch");
+  const filterEl = document.getElementById("candFilter");
+
+  if (!tbody) return;
+  if (!candSelectedJobId) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#6b7280;">Sélectionnez une offre pour voir les candidats.</td></tr>`;
+    return;
+  }
+
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : "";
+  const statusFilter = filterEl ? filterEl.value : "all";
+
+  loadCandidaturesForJob(candSelectedJobId).then((candidatures) => {
+    allCandidatures = candidatures;
+
+    let filtered = candidatures;
+    if (q) {
+      filtered = filtered.filter(c =>
+        (c.userId || "").toLowerCase().includes(q)
+      );
+    }
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(c => c.status === statusFilter);
+    }
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#6b7280;">Aucune candidature trouvée.</td></tr>`;
+      if (countEl) countEl.textContent = "Affichage de 0 candidature";
+      return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / CAND_PER_PAGE));
+    if (candCurrentPage > totalPages) candCurrentPage = totalPages;
+    const start = (candCurrentPage - 1) * CAND_PER_PAGE;
+    const end = Math.min(start + CAND_PER_PAGE, filtered.length);
+    const pageItems = filtered.slice(start, end);
+
+    if (countEl) countEl.textContent = `Affichage de ${start + 1} à ${end} sur ${filtered.length} candidature${filtered.length > 1 ? "s" : ""}`;
+
+    const statusMap = {
+      sent: '<span class="status-badge success">Envoyée</span>',
+      response: '<span class="status-badge success">Réponse</span>',
+      interview: '<span class="status-badge warning">Entretien</span>',
+      accepted: '<span class="status-badge success">Acceptée</span>',
+      rejected: '<span class="status-badge danger">Rejetée</span>'
+    };
+
+    const userPromises = pageItems.map((c) => {
+      if (!c.userId) return Promise.resolve({ ...c, candidateName: "Candidat #" + c.id, candidateEmail: "" });
+      return getUserInfo(c.userId).then((info) => ({ ...c, candidateName: info.name, candidateEmail: info.email }));
+    });
+
+    Promise.all(userPromises).then((enriched) => {
+      tbody.innerHTML = enriched.map((c) => {
+        const userId = c.userId || "";
+
+        return `
+          <tr>
+            <td>
+              <div class="user-cell">
+                <img src="https://i.pravatar.cc/64?u=${encodeURIComponent(userId || c.candidateName)}" alt="${escapeHtml(c.candidateName)}">
+                <div>
+                  <div class="user-cell-name">${escapeHtml(c.candidateName)}</div>
+                  <div class="user-cell-email">${escapeHtml(c.candidateEmail)}</div>
+                </div>
+              </div>
+            </td>
+            <td>${escapeHtml(c.title || "—")}</td>
+            <td>${statusMap[c.status] || c.status || "—"}</td>
+            <td>${c.date || "—"}</td>
+            <td><a class="cand-view-btn" data-cand-id="${c.id}" data-action="view-cv">Voir CV</a></td>
+            <td><a class="cand-view-btn" data-cand-id="${c.id}" data-action="view-letter">Voir lettre</a></td>
+            <td class="cand-action-cell">
+              ${c.status !== "accepted" ? `<button class="cand-action-btn accept" data-cand-id="${c.id}" data-action="accept" title="Accepter">Accepter</button>` : ""}
+              ${c.status !== "rejected" ? `<button class="cand-action-btn reject" data-cand-id="${c.id}" data-action="reject" title="Rejeter">Rejeter</button>` : ""}
+              ${c.status === "accepted" ? `<button class="cand-action-btn message" data-user-id="${userId}" data-action="message" title="Envoyer un message">Message</button>` : ""}
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      tbody.querySelectorAll("[data-action='view-cv']").forEach((btn) => {
+        btn.addEventListener("click", () => openCandDocument(btn.dataset.candId, "cv"));
+      });
+      tbody.querySelectorAll("[data-action='view-letter']").forEach((btn) => {
+        btn.addEventListener("click", () => openCandDocument(btn.dataset.candId, "letter"));
+      });
+      tbody.querySelectorAll("[data-action='accept']").forEach((btn) => {
+        btn.addEventListener("click", () => updateCandStatus(btn.dataset.candId, "accepted", "Acceptée"));
+      });
+      tbody.querySelectorAll("[data-action='reject']").forEach((btn) => {
+        btn.addEventListener("click", () => updateCandStatus(btn.dataset.candId, "rejected", "Rejetée"));
+      });
+      tbody.querySelectorAll("[data-action='message']").forEach((btn) => {
+        btn.addEventListener("click", () => openMessageModal(btn.dataset.userId));
+      });
+    });
+  }).catch((err) => {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement: ${err.message || err.code}</td></tr>`;
+  });
+}
+
+function openCandDocument(candId, type) {
+  const cand = allCandidatures.find((c) => c.id === candId);
+  if (!cand || !cand.userId) return;
+
+  const overlay = document.getElementById("candDocOverlay");
+  const body = document.getElementById("candDocBody");
+  const title = document.getElementById("candDocTitle");
+  if (!overlay || !body || !title) return;
+
+  title.textContent = type === "cv" ? "CV du candidat" : "Lettre de motivation";
+  body.innerHTML = `<div class="cand-empty">Chargement du document...</div>`;
+  overlay.classList.add("active");
+
+  const field = type === "cv" ? "cvUrl" : "coverLetterUrl";
+  firebase.database().ref("users/" + cand.userId + "/candidatures/" + field).once("value").then((snap) => {
+    const url = snap.val();
+    if (!url) {
+      body.innerHTML = `<div class="cand-empty">Aucun document disponible.</div>`;
+      return;
+    }
+    if (url.match(/\.(pdf|jpg|jpeg|png|gif|webp)$/i)) {
+      body.innerHTML = `<iframe src="${escapeHtml(url)}" style="width:100%;height:70vh;border:none;border-radius:12px;"></iframe>`;
+    } else {
+      body.innerHTML = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="btn-primary" style="display:inline-block;margin-top:12px;">Ouvrir le document</a>`;
+    }
+  }).catch(() => {
+    body.innerHTML = `<div class="cand-empty">Impossible de charger le document.</div>`;
+  });
+}
+
+function updateCandStatus(candId, status, statusLabel) {
+  if (!confirm("Marquer cette candidature comme \"" + statusLabel + "\" ?")) return;
+
+  firebase.database().ref("candidatures/" + candId).update({ status, statusLabel })
+    .then(() => {
+      renderCandidatures();
+      showToast("Candidature " + statusLabel.toLowerCase());
+    })
+    .catch((err) => alert("Échec de la mise à jour : " + (err.message || err.code)));
+}
+
+function openCandidatureDetail(candId) {
+  const cand = allCandidatures.find((c) => c.id === candId);
+  if (!cand) return;
+
+  const overlay = document.getElementById("candDetailOverlay");
+  const body = document.getElementById("candDetailBody");
+  const title = document.getElementById("candDetailTitle");
+  if (!overlay || !body || !title) return;
+
+  title.textContent = "Détails de la candidature";
+  body.innerHTML = `
+    <div class="admin-user-profile-head">
+      <img src="https://i.pravatar.cc/96?u=${encodeURIComponent(cand.userId || cand.id)}" alt="${escapeHtml(cand.candidateName || "Candidat")}">
+      <div>
+        <div class="admin-user-profile-name">${escapeHtml(cand.candidateName || "Candidat")}</div>
+        <div class="admin-user-profile-email">${escapeHtml(cand.candidateEmail || "")}</div>
+      </div>
+    </div>
+    <div class="admin-modal-row"><span>Offre</span><strong>${escapeHtml(cand.title || "—")}</strong></div>
+    <div class="admin-modal-row"><span>Entreprise</span><strong>${escapeHtml(cand.company || "—")}</strong></div>
+    <div class="admin-modal-row"><span>Statut</span><strong>${escapeHtml(cand.statusLabel || cand.status || "—")}</strong></div>
+    <div class="admin-modal-row"><span>Date</span><strong>${escapeHtml(cand.date || "—")}</strong></div>
+    <div class="admin-modal-row"><span>ID Candidature</span><strong>${escapeHtml(cand.id || "—")}</strong></div>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="cand-action-btn accept" data-action="accept" data-cand-id="${cand.id}">Accepter</button>
+      <button class="cand-action-btn reject" data-action="reject" data-cand-id="${cand.id}">Rejeter</button>
+      ${cand.status === "accepted" ? `<button class="cand-action-btn message" data-action="message" data-user-id="${cand.userId}">Envoyer un message</button>` : ""}
+    </div>
+  `;
+
+  overlay.classList.add("active");
+
+  body.querySelectorAll("[data-action='accept']").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      updateCandStatus(btn.dataset.candId, "accepted", "Acceptée");
+      overlay.classList.remove("active");
+    });
+  });
+  body.querySelectorAll("[data-action='reject']").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      updateCandStatus(btn.dataset.candId, "rejected", "Rejetée");
+      overlay.classList.remove("active");
+    });
+  });
+  body.querySelectorAll("[data-action='message']").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      overlay.classList.remove("active");
+      openMessageModal(btn.dataset.userId);
+    });
+  });
+}
+
+function openMessageModal(userId) {
+  if (!userId) return;
+
+  const overlay = document.getElementById("candMessageOverlay");
+  const form = document.getElementById("candMessageForm");
+  if (!overlay || !form) return;
+
+  overlay.classList.add("active");
+  form.reset();
+
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = "Envoi...";
+  submitBtn.disabled = true;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const text = (form.message.value || "").toString().trim();
+    if (!text) return;
+
+    const messageData = { text, type: "text" };
+
+    saveMessageToFirebase(userId, messageData)
+      .then(() => {
+        showToast("Message envoyé");
+        overlay.classList.remove("active");
+      })
+      .catch((err) => {
+        console.error("Erreur envoi message:", err);
+        showToast("Erreur lors de l'envoi");
+      })
+      .finally(() => {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        form.removeEventListener("submit", handleSubmit);
+      });
+  };
+
+  form.addEventListener("submit", handleSubmit);
+}
+
+const candDetailOverlay = document.getElementById("candDetailOverlay");
+if (candDetailOverlay) {
+  candDetailOverlay.addEventListener("click", (e) => {
+    if (e.target === candDetailOverlay) candDetailOverlay.classList.remove("active");
+  });
+}
+
+const candDetailClose = document.getElementById("candDetailClose");
+if (candDetailClose) {
+  candDetailClose.addEventListener("click", () => {
+    const overlay = document.getElementById("candDetailOverlay");
+    if (overlay) overlay.classList.remove("active");
+  });
+}
+
+const candMessageOverlay = document.getElementById("candMessageOverlay");
+if (candMessageOverlay) {
+  candMessageOverlay.addEventListener("click", (e) => {
+    if (e.target === candMessageOverlay) candMessageOverlay.classList.remove("active");
+  });
+}
+
+const candMessageClose = document.getElementById("candMessageClose");
+if (candMessageClose) {
+  candMessageClose.addEventListener("click", () => {
+    const overlay = document.getElementById("candMessageOverlay");
+    if (overlay) overlay.classList.remove("active");
+  });
+}
+
+const candMessageCancel = document.getElementById("candMessageCancel");
+if (candMessageCancel) {
+  candMessageCancel.addEventListener("click", () => {
+    const overlay = document.getElementById("candMessageOverlay");
+    if (overlay) overlay.classList.remove("active");
+  });
+}
+
+const candDocClose = document.getElementById("candDocClose");
+if (candDocClose) {
+  candDocClose.addEventListener("click", () => {
+    const overlay = document.getElementById("candDocOverlay");
+    if (overlay) overlay.classList.remove("active");
+  });
+}
+
+const candDocOverlay = document.getElementById("candDocOverlay");
+if (candDocOverlay) {
+  candDocOverlay.addEventListener("click", (e) => {
+    if (e.target === candDocOverlay) candDocOverlay.classList.remove("active");
+  });
+}
+
+const candJobSearchEl = document.getElementById("candJobSearch");
+if (candJobSearchEl) candJobSearchEl.addEventListener("input", loadCandidatureJobs);
+
+  const candBackBtn = document.getElementById("candBackBtn");
+  if (candBackBtn) {
+    candBackBtn.addEventListener("click", () => {
+      candSelectedJobId = null;
+      candCurrentPage = 1;
+      const jobsPanel = document.querySelector(".cand-jobs-panel");
+      const listPanel = document.getElementById("candListPanel");
+      if (jobsPanel) jobsPanel.style.display = "block";
+      if (listPanel) listPanel.style.display = "none";
+    });
+  }
+
+const candSearchEl = document.getElementById("candSearch");
+if (candSearchEl) candSearchEl.addEventListener("input", () => { candCurrentPage = 1; renderCandidatures(); });
+
+const candFilterEl = document.getElementById("candFilter");
+if (candFilterEl) candFilterEl.addEventListener("change", () => { candCurrentPage = 1; renderCandidatures(); });
+
+const logoutForm = document.getElementById("logoutForm");
+if (logoutForm) {
+  logoutForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (firebase.auth().currentUser) {
+      firebase.auth().signOut();
+    }
+    logoutForm.submit();
+  });
+}
 
 // ============== INIT ==============
 renderKPIs();

@@ -36,6 +36,10 @@
         <img class="nav-icon" src="/image/3917512.png" alt="Candidatures">
         Candidatures
       </a>
+      <a class="nav-item" href="/entretiens">
+        <img class="nav-icon" src="/image/user.png" alt="Entretiens">
+        Entretiens
+      </a>
       <a class="nav-item" href="/profil">
         <img class="nav-icon" src="/image/user.png" alt="Profil">
         Profil
