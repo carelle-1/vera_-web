@@ -64,6 +64,10 @@ Route::get('/messages', function () {
     return view('message');
 });
 
+Route::get('/entretiens', function () {
+    return view('entretiens');
+});
+
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
 
 Route::get('/scrape-jobs', [App\Http\Controllers\ScraperController::class, 'scrapeAll'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
