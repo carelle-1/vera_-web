@@ -57,7 +57,8 @@
         <div class="chat-input">
           <button class="input-icon" id="attachImageBtn" title="Ajouter une image">🖼️</button>
           <button class="input-icon" id="attachFileBtn" title="Ajouter un fichier">📎</button>
-          <button class="input-icon">😊</button>
+          <button class="input-icon" id="voiceInputBtn" title="Parler pour envoyer un message">🎙️</button>
+          <button class="input-icon" id="voiceOutputBtn" title="Lire la réponse à voix haute">🔊</button>
           <input type="file" id="imageInput" accept="image/*" style="display:none;">
           <input type="file" id="fileInput" style="display:none;">
           <input type="text" id="chatInput" placeholder="Écrivez votre message...">

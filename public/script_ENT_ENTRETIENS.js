@@ -14,6 +14,107 @@ const recipientId = "vera";
 let interviewMode = true;
 let interviewStep = 0;
 let waitingForUserAnswer = false;
+let voiceOutputEnabled = true;
+let recognition = null;
+let isListening = false;
+
+const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function initVoiceControls() {
+  const voiceInputBtn = document.getElementById("voiceInputBtn");
+  const voiceOutputBtn = document.getElementById("voiceOutputBtn");
+
+  if (voiceInputBtn) {
+    voiceInputBtn.addEventListener("click", toggleVoiceInput);
+    voiceInputBtn.title = SpeechRecognitionCtor ? "Parler pour envoyer un message" : "La reconnaissance vocale n'est pas supportée par ce navigateur";
+  }
+
+  if (voiceOutputBtn) {
+    voiceOutputBtn.addEventListener("click", () => {
+      voiceOutputEnabled = !voiceOutputEnabled;
+      voiceOutputBtn.style.opacity = voiceOutputEnabled ? "1" : "0.5";
+      voiceOutputBtn.style.filter = voiceOutputEnabled ? "none" : "grayscale(1)";
+      showToast(voiceOutputEnabled ? "Lecture vocale activée" : "Lecture vocale désactivée");
+    });
+  }
+}
+
+function toggleVoiceInput() {
+  if (!SpeechRecognitionCtor) {
+    showToast("La reconnaissance vocale n'est pas disponible dans ce navigateur.");
+    return;
+  }
+
+  if (!recognition) {
+    recognition = new SpeechRecognitionCtor();
+    recognition.lang = 'fr-FR';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.trim();
+      if (transcript) {
+        const input = document.getElementById("chatInput");
+        if (input) {
+          input.value = transcript;
+          sendMessage();
+        }
+      }
+    };
+
+    recognition.onerror = () => {
+      isListening = false;
+      const voiceInputBtn = document.getElementById("voiceInputBtn");
+      if (voiceInputBtn) {
+        voiceInputBtn.style.background = "";
+      }
+      showToast("Erreur de reconnaissance vocale");
+    };
+
+    recognition.onend = () => {
+      isListening = false;
+      const voiceInputBtn = document.getElementById("voiceInputBtn");
+      if (voiceInputBtn) {
+        voiceInputBtn.style.background = "";
+        voiceInputBtn.style.transform = "scale(1)";
+      }
+    };
+  }
+
+  if (isListening) {
+    recognition.stop();
+    isListening = false;
+    return;
+  }
+
+  isListening = true;
+  const voiceInputBtn = document.getElementById("voiceInputBtn");
+  if (voiceInputBtn) {
+    voiceInputBtn.style.background = "#d1fae5";
+    voiceInputBtn.style.transform = "scale(1.05)";
+  }
+  recognition.start();
+  showToast("Écoute en cours... parlez maintenant");
+}
+
+function speakText(text) {
+  if (!voiceOutputEnabled || !text || !('speechSynthesis' in window)) {
+    return;
+  }
+
+  const cleanText = String(text).replace(/\s+/g, ' ').trim();
+  if (!cleanText) {
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = 'fr-FR';
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+  window.speechSynthesis.speak(utterance);
+}
 
 const interviewQuestions = [
   {
@@ -196,17 +297,20 @@ function appendVeraMessageToChat(messageData) {
   const typing = document.getElementById("typingIndicator");
   if (typing) typing.remove();
 
+  const text = messageData.text || "";
   const messageHtml = `
     <div class="msg-row vera">
       <div class="msg-avatar-sm">🤖</div>
       <div class="msg-bubble" style="background:#86efac;color:#0f1730;border-color:#22c55e;">
-        ${escapeHtml(messageData.text || "").replace(/\n/g, '<br>')}
+        ${escapeHtml(text).replace(/\n/g, '<br>')}
         <span class="msg-time" style="color:#14532d;">${formatTime(Date.now())}</span>
       </div>
     </div>
   `;
   container.insertAdjacentHTML("beforeend", messageHtml);
   container.scrollTop = container.scrollHeight;
+
+  setTimeout(() => speakText(text), 250);
 }
 
 function showTypingIndicator() {
@@ -467,6 +571,8 @@ document.getElementById("sendBtn").addEventListener("click", sendMessage);
 document.getElementById("chatInput").addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });
+
+initVoiceControls();
 
 loadConversationMessages(recipientId);
 
