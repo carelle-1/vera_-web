@@ -70,7 +70,7 @@ function saveMessageToFirebase(recipientId, messageData) {
   const user = firebase.auth().currentUser;
   if (!user) return Promise.reject("Utilisateur non connecté");
 
-  const conversationId = [user.uid, recipientId].sort().join("_");
+  const conversationId = [user.uid, recipientId].sort().join("_") + "_interview";
   const messageRef = firebase.database().ref("messages/" + conversationId).push();
   const messageWithId = {
     ...messageData,
@@ -108,7 +108,7 @@ function loadConversationMessages(recipientId) {
   const user = firebase.auth().currentUser;
   if (!user) return;
 
-  currentConversationId = [user.uid, recipientId].sort().join("_");
+  currentConversationId = [user.uid, recipientId].sort().join("_") + "_interview";
   const container = document.getElementById("chatMessages");
   container.innerHTML = '<div class="day-divider">Chargement...</div>';
 
