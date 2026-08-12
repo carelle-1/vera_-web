@@ -7,6 +7,111 @@ function showToast(message) {
   setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 200); }, 2500);
 }
 
+function triggerQuickAction(actionType) {
+  const actionMap = {
+    simulate: {
+      text: "Je veux simuler un entretien. Commence par la première question et donne-moi un exemple de réponse claire.",
+      step: 0
+    },
+    prepare: {
+      text: "Aide-moi à préparer une réponse pour cette question. Donne-moi un exemple structuré, pertinent et adapté au poste.",
+      step: interviewStep
+    },
+    coaching: {
+      text: "Donne-moi un coaching express pour mon entretien : 3 conseils rapides, 2 erreurs à éviter et une conclusion solide.",
+      step: interviewStep
+    }
+  };
+
+  const config = actionMap[actionType];
+  if (!config) return;
+
+  const input = document.getElementById("chatInput");
+  if (input) {
+    input.value = config.text;
+    if (actionType === "simulate") {
+      interviewStep = 0;
+    } else {
+      interviewStep = config.step;
+    }
+    sendMessage();
+  }
+}
+
+function attachQuickActions() {
+  document.querySelectorAll(".quick-action").forEach((actionEl) => {
+    actionEl.addEventListener("click", () => triggerQuickAction(actionEl.dataset.action));
+    actionEl.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        triggerQuickAction(actionEl.dataset.action);
+      }
+    });
+  });
+}
+
+function renderInterviewScore(scoreData = null) {
+  const scoreValue = document.getElementById("scoreValue");
+  const scoreLabel = document.getElementById("scoreLabel");
+  const scoreSummaryText = document.getElementById("scoreSummaryText");
+  const criteriaList = document.getElementById("criteriaList");
+  const scoreTips = document.getElementById("scoreTips");
+
+  if (!scoreData) {
+    if (scoreValue) scoreValue.textContent = "0/100";
+    if (scoreLabel) scoreLabel.textContent = "En attente";
+    if (scoreSummaryText) scoreSummaryText.textContent = "Répondez à la question pour obtenir une note.";
+    return;
+  }
+
+  const score = Number(scoreData.score ?? 0);
+  const label = score >= 80 ? "Très bonne réponse" : score >= 60 ? "Bonne réponse" : score >= 40 ? "À améliorer" : "Réponse faible";
+
+  if (scoreValue) scoreValue.textContent = score + "/100";
+  if (scoreLabel) scoreLabel.textContent = label;
+  if (scoreSummaryText) scoreSummaryText.textContent = scoreData.summary || "Réponse évaluée.";
+
+  const criteria = Array.isArray(scoreData.criteria) ? scoreData.criteria : [];
+  if (criteriaList) {
+    criteriaList.innerHTML = criteria.slice(0, 4).map(item => {
+      const percent = Number(item.score ?? 0);
+      const name = item.label || "Critère";
+      return `
+        <div class="criterion-item">
+          <div class="criterion-row"><span>${escapeHtml(name)}</span><strong>${percent}%</strong></div>
+          <div class="criterion-bar"><span style="width: ${percent}%"></span></div>
+        </div>
+      `;
+    }).join("") || `
+      <div class="criterion-item">
+        <div class="criterion-row"><span>Clarté</span><strong>0%</strong></div>
+        <div class="criterion-bar"><span style="width: 0%"></span></div>
+      </div>
+    `;
+  }
+
+  if (scoreTips) {
+    const tips = Array.isArray(scoreData.tips) ? scoreData.tips : [];
+    if (tips.length) {
+      scoreTips.innerHTML = `
+        <strong>Conseils :</strong>
+        <ul>
+          ${tips.map(tip => `<li>${escapeHtml(tip)}</li>`).join("")}
+        </ul>
+      `;
+    } else {
+      scoreTips.innerHTML = `
+        <strong>Conseils :</strong>
+        <ul>
+          <li>Utilisez la méthode STAR.</li>
+          <li>Ajoutez un exemple concret.</li>
+          <li>Reliez votre réponse au poste visé.</li>
+        </ul>
+      `;
+    }
+  }
+}
+
 let currentConversationId = null;
 let pendingAttachment = null;
 const recipientId = "vera";
@@ -416,6 +521,15 @@ function sendMessage() {
       .then(data => {
         hideTypingIndicator();
         if (data.success && data.reply) {
+          if (data.score !== undefined) {
+            renderInterviewScore({
+              score: data.score,
+              summary: data.summary,
+              criteria: data.criteria || [],
+              tips: data.tips || []
+            });
+          }
+
           const replyData = {
             text: data.reply,
             type: "text"
@@ -572,6 +686,8 @@ document.getElementById("chatInput").addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });
 
+renderInterviewScore();
+attachQuickActions();
 initVoiceControls();
 
 loadConversationMessages(recipientId);

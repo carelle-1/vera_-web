@@ -21,6 +21,76 @@
     overflow: hidden;
     padding: 0 !important;
   }
+  .score-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 0 12px;
+  }
+  .score-circle {
+    width: 76px;
+    height: 53px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #12b3c9, #7dd3fc);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 8px 20px rgba(18,179,201,.25);
+  }
+  .score-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .score-meta strong {
+    font-size: 14px;
+    color: var(--text);
+  }
+  .score-meta small {
+    color: var(--muted, #64748b);
+    line-height: 1.4;
+  }
+  .criteria-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .criterion-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .criterion-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .criterion-bar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .criterion-bar span {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #4ade80, #60a5fa);
+  }
+  .score-tips {
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--muted, #64748b);
+  }
+  .score-tips ul {
+    margin: 8px 0 0 18px;
+    padding: 0;
+  }
 </style>
 @endsection
 
@@ -85,26 +155,54 @@
 
         <div class="card">
           <div class="card-head-row"><span>Actions rapides</span></div>
-          <div class="quick-action">
+          <div class="quick-action" data-action="simulate" tabindex="0" role="button" aria-label="Simuler un entretien">
             <div class="quick-icon blue">🎙️</div>
             <div><div class="quick-title">Simuler un entretien</div><div class="quick-sub">Questions types &amp; conseils</div></div>
           </div>
-          <div class="quick-action">
+          <div class="quick-action" data-action="prepare" tabindex="0" role="button" aria-label="Préparer mes réponses">
             <div class="quick-icon purple">📝</div>
             <div><div class="quick-title">Préparer mes réponses</div><div class="quick-sub">Feedback personnalisé</div></div>
           </div>
-          <div class="quick-action">
+          <div class="quick-action" data-action="coaching" tabindex="0" role="button" aria-label="Coaching express">
             <div class="quick-icon green">🧠</div>
             <div><div class="quick-title">Coaching express</div><div class="quick-sub">Tips pour le jour J</div></div>
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-head-row"><span>Informations</span></div>
-          <div class="info-row"><span>Type</span><strong>Assistant IA</strong></div>
-          <div class="info-row"><span>Réponses moyennes</span><strong>Instantanées</strong></div>
-          <div class="info-row"><span>Disponibilité</span><strong>24/7</strong></div>
-          <div class="info-row"><span>Langue</span><strong>Français</strong></div>
+        <div class="card score-card">
+          <div class="card-head-row"><span>Évaluation de la réponse</span></div>
+
+          <div class="score-summary">
+            <div class="score-circle" id="scoreValue">0/100</div>
+            <div class="score-meta">
+              <strong id="scoreLabel">En attente</strong>
+              <small id="scoreSummaryText">Répondez à la question pour obtenir une note.</small>
+            </div>
+          </div>
+
+          <div class="criteria-list" id="criteriaList">
+            <div class="criterion-item">
+              <div class="criterion-row"><span>Clarté</span><strong>0%</strong></div>
+              <div class="criterion-bar"><span style="width: 0%"></span></div>
+            </div>
+            <div class="criterion-item">
+              <div class="criterion-row"><span>Pertinence</span><strong>0%</strong></div>
+              <div class="criterion-bar"><span style="width: 0%"></span></div>
+            </div>
+            <div class="criterion-item">
+              <div class="criterion-row"><span>Adéquation poste</span><strong>0%</strong></div>
+              <div class="criterion-bar"><span style="width: 0%"></span></div>
+            </div>
+          </div>
+
+          <div class="score-tips" id="scoreTips">
+            <strong>Conseils :</strong>
+            <ul>
+              <li>Utilisez la méthode STAR.</li>
+              <li>Ajoutez un exemple concret.</li>
+              <li>Reliez votre réponse au poste visé.</li>
+            </ul>
+          </div>
         </div>
       </aside>
 

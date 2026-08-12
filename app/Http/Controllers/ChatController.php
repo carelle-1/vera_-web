@@ -88,6 +88,10 @@ class ChatController extends Controller
                     'success' => true,
                     'reply' => $replyData['reply'],
                     'interviewStep' => $nextStep,
+                    'score' => $replyData['score'] ?? null,
+                    'criteria' => $replyData['criteria'] ?? [],
+                    'summary' => $replyData['summary'] ?? null,
+                    'tips' => $replyData['tips'] ?? [],
                 ]);
             }
 
@@ -114,23 +118,22 @@ class ChatController extends Controller
         }
 
         $text = mb_strtolower($message, 'UTF-8');
-        $hasExpected = false;
-
-        foreach ($question['expected'] as $keyword) {
-            if (str_contains($text, $keyword)) {
-                $hasExpected = true;
-                break;
-            }
-        }
+        $hasExpected = $this->isValidInterviewAnswer($message, $question);
 
         $nextStep = array_search($question['id'], array_column($this->interviewQuestions, 'id')) + 1;
         $nextQuestion = $this->interviewQuestions[$nextStep] ?? null;
 
-        if ($hasExpected) {
-            $followUp = $nextQuestion ? "❓ Question suivante : " . $nextQuestion['question'] : "";
+        $scoreData = $this->buildInterviewScoreData($message, $question, $profile);
+
+        if ($this->isHelpOrCoachingRequest($message)) {
+            $adaptive = $this->getAdaptiveInterviewReply($message, $question, $profile);
             return [
-                'reply' => "✅ Bonne réponse." . ($followUp ? "\n\n" . $followUp : ""),
-                'nextStep' => $nextStep,
+                'reply' => $adaptive,
+                'nextStep' => $step,
+                'score' => $scoreData['score'],
+                'criteria' => $scoreData['criteria'],
+                'summary' => $scoreData['summary'],
+                'tips' => $scoreData['tips'],
             ];
         }
 
@@ -139,33 +142,38 @@ class ChatController extends Controller
         return [
             'reply' => $adaptive,
             'nextStep' => $step,
+            'score' => $scoreData['score'],
+            'criteria' => $scoreData['criteria'],
+            'summary' => $scoreData['summary'],
+            'tips' => $scoreData['tips'],
         ];
     }
 
     private function getAdaptiveInterviewReply(string $message, array $question, array $profile = []): string
     {
-        $url = rtrim((string) env('OLLAMA_URL', 'http://localhost:11434'), '/');
-        $model = (string) env('OLLAMA_MODEL', 'llama3.2:1b');
+        $url = $this->getOllamaBaseUrl();
+        $model = $this->getOllamaModel();
 
         $profileSummary = $this->veraContext->summarizeProfile($profile);
         $systemPrompt = "Tu es VERA, coach d'entretien d'embauche. "
-            . "Tu guides un candidat sur la question : \"" . $question['question'] . "\". "
-            . "Voici sa réponse brute : \"" . $message . "\". "
+            . "Tu guides un candidat sur la question active : \"" . $question['question'] . "\". "
+            . "Voici le texte fourni par l'utilisateur : \"" . $message . "\". "
             . ($profileSummary !== '' ? "Profil connu : " . $profileSummary . ". " : "")
             . "Ta mission : "
-            . "1) Donne un Feedback court et bienveillant sur ce qui manque dans sa réponse. "
-            . "2) Construis une Réponse modèle UNIQUEMENT à partir des éléments qu'il a donnés dans sa réponse et de son profil connu, en les complétant intelligemment sans inventer un profil différent. "
-            . "Si l'utilisateur dit qu'il est étudiant, la réponse modèle doit être celle d'un étudiant. "
-            . "Si l'utilisateur parle de développement web, la réponse modèle doit rester dans le développement web. "
-            . "Si l'utilisateur mentionne une école, un stage, un projet précis, réutilise ces éléments. "
-            . "Ne remplace pas son profil par un autre. "
+            . "1) Si l'utilisateur demande simplement de l'aide, un exemple ou un coaching, réponde quand même à la question active avec une réponse modèle concrète et utile, pas avec un texte générique. "
+            . "2) Donne un Feedback court et bienveillant sur ce qui manque dans la réponse. "
+            . "3) Construis une Réponse modèle UNIQUEMENT à partir des éléments qu'il a donnés dans sa phrase ou de son profil connu, en les complétant intelligemment sans inventer un profil différent. "
+            . "4) Si l'utilisateur dit qu'il est étudiant, la réponse modèle doit être celle d'un étudiant. "
+            . "5) Si l'utilisateur parle de développement web, la réponse modèle doit rester dans le développement web. "
+            . "6) Si l'utilisateur mentionne une école, un stage, un projet précis, réutilise ces éléments. "
+            . "7) Ne remplace pas son profil par un autre. "
             . "Formate la réponse exactement ainsi :\n"
             . "📝 Feedback : ...\n\n"
             . "💡 Réponse modèle : ...\n\n"
             . "❓ Question suivante : ...\n\n"
-            . "Règle d'or : la réponse modèle doit être cohérente avec ce que l'utilisateur a dit, pas un exemple générique d'un autre métier. "
-            . "IMPORTANT : la réponse modèle doit être personnalisée avec les informations de l'utilisateur, pas un texte pré-écrit. "
-            . "EXIGENCE STRICTE : La Réponse modèle doit reprendre EXACTEMENT les mots et les faits de l'utilisateur. "
+            . "Règle d'or : la réponse modèle doit répondre directement à la question active et rester cohérente avec ce que l'utilisateur a dit, pas un exemple générique. "
+            . "IMPORTANT : si l'utilisateur demande un exemple ou du coaching, réponds avec une réponse exemple adaptée à la vraie question, pas un message de type 'oui' ou 'bonne réponse'. "
+            . "EXIGENCE STRICTE : La Réponse modèle doit reprendre EXACTEMENT les mots et les faits de l'utilisateur quand ils existent. "
             . "Si l'utilisateur dit 'j'ai réalisé une plateforme associative', la réponse modèle DOIT dire 'J'ai réalisé une plateforme associative' ou 'J'ai conçu une plateforme associative', pas 'une plateforme pour une association'. "
             . "Si l'utilisateur dit 'stage de 5 mois chez GHOSTROAR DIGITAL', la réponse modèle DOIT mentionner ce stage exact. "
             . "Si l'utilisateur dit 'Django, Flutter, Laravel', la réponse modèle DOIT citer ces technologies exactes. "
@@ -196,18 +204,23 @@ class ChatController extends Controller
 
                 if ($reply !== '') {
                     $minimumSafeReply = $this->personalizeInterviewReply($reply, $message);
-                    if ($this->isUserMessageEcho($message, $minimumSafeReply)) {
+                    $replyForEchoCheck = $this->extractSection($minimumSafeReply, 'Réponse modèle');
+                    if ($replyForEchoCheck === '') {
+                        $replyForEchoCheck = $minimumSafeReply;
+                    }
+
+                    if ($this->isUserMessageEcho($message, $replyForEchoCheck)) {
                         $minimumSafeReply = '';
                     }
 
                     if ($minimumSafeReply !== '') {
                         $reply = $minimumSafeReply;
                         $feedback = $this->extractSection($reply, 'Feedback');
-                        $modelAnswer = $this->extractSection($reply, 'Réponse modèle');
+                        $modelAnswerFromOllama = $this->extractSection($reply, 'Réponse modèle');
                         $nextQuestionText = $this->extractSection($reply, 'Question suivante');
 
-                        $personalizedModel = $this->buildPersonalizedModelAnswer($message, $question, $profile);
-                        $modelAnswer = "💡 Réponse modèle : " . $personalizedModel;
+                        $modelAnswer = $modelAnswerFromOllama ?: $this->buildPersonalizedModelAnswer($message, $question, $profile);
+                        $modelAnswer = "💡 Réponse modèle : " . $modelAnswer;
 
                         if (!$feedback) {
                             $feedback = "📝 Feedback : La réponse manque de détails. Utilisez la méthode STAR pour structurer votre réponse avec une situation, tâche, action et résultat. Reliez votre parcours à vos compétences techniques et expériences pertinentes pour le poste.";
@@ -325,6 +338,36 @@ class ChatController extends Controller
             }
 
             if ($text !== '') {
+                $name = $this->extractUserNameFromText($text) ?: ($userName ?: null);
+                $status = $this->extractStatusFromText($text);
+                $detailText = $this->normalizeInterviewText($text);
+
+                if ($name) {
+                    $intro = 'Je m\'appelle ' . $name;
+                    if ($status !== '') {
+                        $intro .= ', je suis ' . strtolower($status);
+                    }
+
+                    if (preg_match('/\b(?:informatique|génie|genie)\b/i', $detailText)) {
+                        $intro .= ' en informatique';
+                    }
+                    if (preg_match('/\b(?:option|spécialité|specialite)\b/i', $detailText)) {
+                        $intro .= ' option génie logiciel';
+                    }
+
+                    return $intro . '. Je souhaite développer mes compétences en développement web et mobile pour construire des solutions utiles et concrètes.';
+                }
+
+                if (preg_match('/\bje\s+suis\b/i', $text)) {
+                    $prefix = 'Je suis ' . trim($this->extractRoleFromText($text) ?: 'développeur web', ' ,;.!?');
+                    $experience = $this->extractExperienceFromText($text);
+                    $suffix = $experience ? ' avec ' . $experience . ' d\'expérience' : '';
+                    $techs = $this->extractTechnologiesFromText($text);
+                    $techSuffix = $techs !== 'des outils modernes' ? ' et j\'utilise ' . $techs : '';
+
+                    return $prefix . $suffix . $techSuffix . '. Je souhaite continuer à développer des solutions utiles et concrètes.';
+                }
+
                 $domain = $domaine ?: 'le développement';
                 $technologiesCsv = $technologies ? implode(', ', $technologies) : $this->extractTechnologiesFromText($text);
                 $experience = $this->extractExperienceFromText($text);
@@ -338,14 +381,20 @@ class ChatController extends Controller
 
         if ($question['id'] === 'values') {
             $parts = [];
+            $statedMotivation = $this->extractStatedMotivation($text);
+
+            if ($statedMotivation !== '') {
+                $parts[] = "Ma motivation pour ce poste est " . $statedMotivation;
+            }
+
             if ($domaine) $parts[] = "Je suis motivé(e) par le domaine de " . $domaine;
-            if ($poste) $parts[] = "et je souhaite rejoindre une équipe en tant que " . $poste;
+            if ($poste) $parts[] = "Je souhaite rejoindre une équipe en tant que " . $poste;
             if ($valeurs) $parts[] = "Mes valeurs sont : " . implode(', ', $valeurs);
             if ($objectifs) $parts[] = "Je souhaite " . implode(', ', $objectifs);
             if ($motivations) $parts[] = "Ce qui me motive : " . implode(', ', $motivations);
 
             if ($parts) {
-                return implode(', ', $parts) . ".";
+                return implode('. ', $parts) . ".";
             }
 
             if ($text !== '') {
@@ -360,6 +409,12 @@ class ChatController extends Controller
 
         if ($question['id'] === 'strengths') {
             $parts = [];
+
+            $statedStrengths = $this->extractStatedStrengths($text);
+            if ($statedStrengths !== '') {
+                $parts[] = "Mes forces sont " . $statedStrengths;
+            }
+
             if ($forces) $parts[] = "Mes forces sont : " . implode(', ', $forces);
             if ($technologies) $parts[] = "Sur le plan technique, je maîtrise " . implode(', ', $technologies);
             if ($stages) $parts[] = "Par exemple, lors de " . $stages[0] . ", j'ai pu mettre en œuvre ces qualités.";
@@ -431,6 +486,257 @@ class ChatController extends Controller
         return "Je m'appelle " . $normalizedName . ". Je suis motivé(e) et je souhaite mettre mes compétences au service d'une entreprise qui partage mes valeurs.";
     }
 
+    private function extractUserNameFromText(string $text): ?string
+    {
+        $patterns = [
+            '/je\s+m[\'’]?appelle\s+([a-zA-ZÀ-ÖØ-öø-ÿ\-\'\s]+?)(?:\s*[,.!]\s*|\s+je\s+suis|\s+je\s+travaille|\s+je\s+cherche|$)/iu',
+            '/je\s+me\s+(?:nomme|norme|appelle)\s+([a-zA-ZÀ-ÖØ-öø-ÿ\-\'\s]+?)(?:\s*(?:je|et|en|dans|avec|option|spécialité)|\s*[,.!]|$)/iu',
+            '/je\s+suis\s+([a-zA-ZÀ-ÖØ-öø-ÿ\-\'\s]+?)(?:\s*[,.!]\s*|\s+je\s+travaille|\s+je\s+cherche|$)/iu',
+            '/moi,\s*c[\'’]?est\s+([a-zA-ZÀ-ÖØ-öø-ÿ\-\'\s]+?)(?:\s*[,.!]\s*|\s+je\s+travaille|\s+je\s+cherche|$)/iu',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $text, $matches)) {
+                $name = trim($matches[1]);
+                $name = preg_replace('/\s+(?:étudiant|étudiante|informatique|développeur|developpeur|genie|génie|logiciel|option|spécialité|web|mobile|en|dans|avec).*$/iu', '', $name);
+                $name = trim($name, " \t\n\r,.;!?");
+                if ($name !== '' && !preg_match('/^(?:je|moi|cest|étudiant|étudiante|informatique|developpeur|développeur|genie|génie|logiciel|web|mobile)$/iu', $name)) {
+                    return ucfirst(mb_strtolower($name, 'UTF-8'));
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function extractStatusFromText(string $text): string
+    {
+        if (preg_match('/\b(étudiante|étudiant)\b/i', $text)) {
+            return 'étudiante';
+        }
+
+        if (preg_match('/\b(ingénieur(?:e)?|developeur(?:se)?|développeur(?:se)?|analyste|chef\s+de\s+projet|stagiaire)\b/i', $text, $matches)) {
+            return strtolower($matches[1]);
+        }
+
+        return '';
+    }
+
+    private function extractDomainFromText(string $text): string
+    {
+        if (preg_match('/\b(informatique|développement\s+web|web|logiciel|data|cybersécurité|réseau|devops)\b/i', $text, $matches)) {
+            return strtolower($matches[1]);
+        }
+
+        return '';
+    }
+
+    private function extractStudyContextFromText(string $text): string
+    {
+        if (preg_match('/\b(?:en\s+)?(?:(?:option|spécialité)\s+)?(?:(?:génie|genie)\s+logiciel|informatique(?:\s+option\s+génie\s+logiciel)?|mathématiques|réseaux|cybersécurité)\b/i', $text, $matches)) {
+            return 'je suis en ' . trim($matches[0]);
+        }
+
+        if (preg_match('/\b(?:je\s+suis\s+)?(étudiant(?:e)?\s+en\s+[^.,!?]+)/i', $text, $matches)) {
+            return 'je suis ' . trim($matches[1]);
+        }
+
+        return '';
+    }
+
+    private function extractFocusFromText(string $text): string
+    {
+        if (preg_match('/\b(?:dév|développement|dev)\s+(?:web\s+)?(?:et\s+)?(?:mobile|backend|frontend|full\s*stack)?/i', $text, $matches)) {
+            return strtolower(trim($matches[0]));
+        }
+
+        if (preg_match('/\b(?:web|mobile|logiciel|application)\b/i', $text)) {
+            return 'développement web et mobile';
+        }
+
+        return 'développement web et mobile';
+    }
+
+    private function extractIntroRole(string $text): string
+    {
+        if (preg_match('/\bje\s+suis\s+([a-zA-ZÀ-ÖØ-öø-ÿ\-\'\s]+?)(?:\s*(?:avec|et|mais|donc|car|je|j\')|$)/iu', $text, $matches)) {
+            $role = trim($matches[1]);
+            $role = preg_replace('/\s*(?:avec|et|mais|donc|car)\b.*$/iu', '', $role);
+            return trim($role, " \t\n\r,.;!?");
+        }
+
+        return '';
+    }
+
+    private function extractRoleFromText(string $text): string
+    {
+        if (preg_match('/\b(?:développeur|developpeur|ingénieur|ingenieur|étudiant|etudiante|analyste|stagiaire|chef\s+de\s+projet)\b/i', $text, $matches)) {
+            return trim($matches[0]);
+        }
+
+        return '';
+    }
+
+    private function extractStatedMotivation(string $text): string
+    {
+        $cleaned = trim($text);
+        if ($cleaned === '') {
+            return '';
+        }
+
+        if (preg_match('/^(?:le\s+)?travail$/iu', $cleaned)) {
+            return 'le travail';
+        }
+
+        $patterns = [
+            '/(?:ma\s+motivation(?:\s+pour\s+ce\s+poste)?\s*(?:est|:)\s*)(.+?)(?:[.!?]|$)/iu',
+            '/(?:je\s+suis\s+(?:également\s+)?motivé(?:e)?(?:\s+par)?\s*(?:pour|par)\s*)(.+?)(?:[.!?]|$)/iu',
+            '/(?:je\s+suis\s+(?:également\s+)?motivé(?:e)?\s+par\s+(.+?))(?:[.!?]|$)/iu',
+            '/(?:ce\s+qui\s+me\s+motivate\s*(?:est|:)\s*)(.+?)(?:[.!?]|$)/iu',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $cleaned, $matches)) {
+                $motivation = trim($matches[1]);
+                $motivation = preg_replace('/\s*(?:car|parce\s+que)\b.*$/iu', '', $motivation);
+                $motivation = preg_replace('/\s*[;,]\s*/u', ' et ', $motivation);
+                $motivation = preg_replace('/\s+/', ' ', $motivation);
+                $motivation = trim($motivation, " .,:;!?\t\n\r");
+
+                if ($motivation !== '') {
+                    return ucfirst(mb_strtolower($motivation, 'UTF-8'));
+                }
+            }
+        }
+
+        if (preg_match('/\b(?:motivation|motivé|motivée|motivé|motivée)\b/i', $cleaned)) {
+            return ucfirst(mb_strtolower($cleaned, 'UTF-8'));
+        }
+
+        return '';
+    }
+
+    private function isValidInterviewAnswer(string $message, array $question): bool
+    {
+        $text = trim($message);
+        if ($text === '' || $this->isHelpOrCoachingRequest($text)) {
+            return false;
+        }
+
+        $ollamaCheck = $this->evaluateAnswerWithOllama($message, $question['question'] ?? '');
+        if ($ollamaCheck !== null) {
+            return $ollamaCheck;
+        }
+
+        $lower = mb_strtolower($text, 'UTF-8');
+        $questionId = $question['id'] ?? '';
+
+        $patterns = [
+            'intro' => ['je suis', 'je m\'appelle', 'j\'ai', 'mon parcours', 'formation', 'étudiant', 'expérience', 'compétences', 'domaine', 'objectif', 'projet'],
+            'values' => ['motivation', 'motivé', 'pourquoi', 'objectif', 'poste', 'mission', 'apprendre', 'professionnel', 'défi', 'équipe', 'projets', 'car'],
+            'strengths' => ['force', 'forces', 'rigueur', 'travail', 'attention', 'autonomie', 'communication', 'organisation', 'solide', 'analyse', 'esprit', 'dynamique'],
+            'weaknesses' => ['faiblesse', 'améliorer', 'apprendre', 'progresser', 'développer', 'travail', 'gestion', 'organisation', 'difficulté'],
+            'scenario' => ['situation', 'tâche', 'action', 'résultat', 'difficulté', 'géré', 'résolu', 'problème']
+        ];
+
+        $keywords = $patterns[$questionId] ?? ['je suis', 'je', 'motivation', 'équipe', 'poste'];
+        foreach ($keywords as $keyword) {
+            if (str_contains($lower, mb_strtolower($keyword, 'UTF-8'))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function evaluateAnswerWithOllama(string $message, string $question): ?bool
+    {
+        $url = $this->getOllamaBaseUrl();
+        $model = $this->getOllamaModel();
+
+        try {
+            $response = Http::timeout(12)
+                ->post($url . '/api/chat', [
+                    'model' => $model,
+                    'stream' => false,
+                    'messages' => [
+                        ['role' => 'system', 'content' => 'Tu es un évaluateur d’entretien. Réponds uniquement en JSON valide: {"answeringQuestion": true|false, "reason": "..."}. Renvoie true si le texte répond réellement à la question. Ne réponds pas par un message normal.'],
+                        ['role' => 'user', 'content' => "Question: " . $question . "\n\nRéponse: " . $message],
+                    ],
+                ]);
+
+            if (!$response->successful()) {
+                return null;
+            }
+
+            $payload = $response->json();
+            $content = trim((string) ($payload['message']['content'] ?? $payload['response'] ?? ''));
+            if ($content === '') {
+                return null;
+            }
+
+            $json = json_decode($content, true);
+            if (!is_array($json) || !array_key_exists('answeringQuestion', $json)) {
+                return null;
+            }
+
+            return (bool) $json['answeringQuestion'];
+        } catch (\Throwable $e) {
+            \Log::warning('Ollama interview answer validation failed: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function isHelpOrCoachingRequest(string $message): bool
+    {
+        $text = mb_strtolower(trim($message), 'UTF-8');
+        if ($text === '') {
+            return false;
+        }
+
+        $patterns = [
+            '/\b(aide|aider|assistant|coaching|conseils?|exemple|préparer|préparation|simuler|simulateur|structure|structuré|adapté|réponse claire|réponds?\s+à\s+la\s+question|donne[-\s]*moi|peux[-\s]*tu|je\s+veux)\b/i',
+            '/\b(question|réponse|entretien|poste|cv|motivation|forces|faiblesses)\b.*\b(exemple|conseil|aide|coaching|préparer)\b/i',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $text)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function extractStatedStrengths(string $text): string
+    {
+        $cleaned = trim($text);
+        if ($cleaned === '') {
+            return '';
+        }
+
+        $patterns = [
+            '/(?:mes\s+forces\s+(?:sont|sont\s+les\s+suivants?|sont\s+les\s+suivantes?)\s*)(.+?)(?:[.!?]|$)/iu',
+            '/(?:ma\s+force\s+(?:est|sont)?\s*)(.+?)(?:[.!?]|$)/iu',
+            '/(?:je\s+suis\s+(?:très|assez|bien)?\s*(?:rigoureux|rigoureuse|organisé|organisée|autonome|patient|dynamique|discret|attentif|attentive|communicatif|communicative|travailleur|travailleuse|serieux|sérieuse)\b.*?)(?:[.!?]|$)/iu',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $cleaned, $matches)) {
+                $strength = trim($matches[1]);
+                $strength = preg_replace('/\s*(?:et|,|;|:|\.)\s*/u', ' et ', $strength);
+                $strength = preg_replace('/\s+/', ' ', $strength);
+                $strength = trim($strength, " .,:;!?\t\n\r");
+
+                if ($strength !== '') {
+                    return ucfirst(mb_strtolower($strength, 'UTF-8'));
+                }
+            }
+        }
+
+        return '';
+    }
+
     private function extractTechnologiesFromText(string $text): string
     {
         $known = [
@@ -478,9 +784,49 @@ class ChatController extends Controller
             return true;
         }
 
-        similar_text($user, $candidate, $percent);
+        $userTokens = $this->tokenizeInterviewText($user);
+        $candidateTokens = $this->tokenizeInterviewText($candidate);
 
-        return $percent >= 85;
+        if (empty($userTokens) || empty($candidateTokens)) {
+            return false;
+        }
+
+        $overlap = count(array_intersect($userTokens, $candidateTokens));
+        $sharedRatio = $overlap / count($userTokens);
+        $lengthRatio = count($candidateTokens) / count($userTokens);
+        $extraCandidate = count(array_diff($candidateTokens, $userTokens));
+        $extraUser = count(array_diff($userTokens, $candidateTokens));
+
+        return $sharedRatio >= 0.9
+            && $lengthRatio <= 1.2
+            && $extraCandidate <= 2
+            && $extraUser <= 2;
+    }
+
+    private function tokenizeInterviewText(string $text): array
+    {
+        $normalized = preg_replace('/[\p{P}\p{S}]+/u', ' ', $text);
+        $normalized = mb_strtolower((string) $normalized, 'UTF-8');
+        $tokens = preg_split('/\s+/u', trim((string) $normalized), -1, PREG_SPLIT_NO_EMPTY);
+
+        if (!is_array($tokens)) {
+            return [];
+        }
+
+        $skipWords = [
+            'je', 'me', 'm', 'ma', 'mon', 'mes', 'est', 'suis', 'ai', 'dans', 'pour', 'avec', 'et', 'de', 'des', 'du', 'le', 'la', 'les', 'un', 'une', 'au', 'aux', 'sur', 'sous', 'que', 'qui', 'mais', 'donc', 'parce', 'car', 'cette', 'cest', 'cela', 'ce', 'ces', 'comme', 'très', 'plus', 'tres', 'je', 'mappelle', 'nomme', 'norme', 'appelle'
+        ];
+
+        $filtered = [];
+        foreach ($tokens as $token) {
+            $token = trim($token, "'\"");
+            if ($token === '' || in_array($token, $skipWords, true)) {
+                continue;
+            }
+            $filtered[] = $token;
+        }
+
+        return array_values(array_unique($filtered));
     }
 
     private function normalizeInterviewText(string $text): string
@@ -521,6 +867,94 @@ class ChatController extends Controller
         return '';
     }
 
+    private function buildInterviewScoreData(string $message, array $question, array $profile = []): array
+    {
+        $analysis = $this->veraContext->analyzeResponse($message, $question['expected'] ?? [], $profile, []);
+        $criteria = [];
+
+        foreach ($analysis['criteria'] ?? [] as $key => $value) {
+            $criteria[] = [
+                'label' => $this->formatCriterionLabel($key),
+                'score' => $value['present'] ? 100 : 40,
+                'status' => $value['present'] ? 'Présent' : 'À améliorer',
+            ];
+        }
+
+        if (empty($criteria)) {
+            $criteria = [
+                ['label' => 'Clarté', 'score' => 60, 'status' => 'À améliorer'],
+                ['label' => 'Pertinence', 'score' => 60, 'status' => 'À améliorer'],
+                ['label' => 'Adéquation poste', 'score' => 60, 'status' => 'À améliorer'],
+            ];
+        }
+
+        $score = (int) ($analysis['score'] ?? 60);
+        if ($score >= 80) {
+            $summary = 'Très bonne réponse : claire, pertinente et bien alignée avec le poste.';
+        } elseif ($score >= 60) {
+            $summary = 'Bonne réponse : elle contient les bases, mais il manque un peu de structure et d’exemples concrets.';
+        } elseif ($score >= 40) {
+            $summary = 'Réponse acceptable : elle est compréhensible, mais elle manque de précision et d’éléments convaincants.';
+        } else {
+            $summary = 'Réponse insuffisante : elle reste trop générale ou peu ciblée. Il faut renforcer votre message.';
+        }
+
+        $tips = [];
+        if ($score < 70) {
+            $tips[] = 'Ajoutez un exemple concret : situation, action et résultat.';
+        }
+        if ($score < 80) {
+            $tips[] = 'Mettez en avant votre motivation, vos compétences et votre adéquation au poste.';
+        }
+        $tips[] = 'Structurez votre réponse avec une idée claire, un exemple et une conclusion professionnelle.';
+
+        return [
+            'score' => $score,
+            'criteria' => $criteria,
+            'summary' => $summary,
+            'tips' => $tips,
+        ];
+    }
+
+    private function formatCriterionLabel(string $criterion): string
+    {
+        $labels = [
+            'formation' => 'Clarté du parcours',
+            'expérience' => 'Expérience',
+            'compétences' => 'Compétences',
+            'poste' => 'Adéquation poste',
+            'domaine' => 'Mise en contexte',
+            'passion' => 'Motivation',
+            'profil' => 'Profil',
+            'mission' => 'Mission',
+            'entreprise' => 'Alignement entreprise',
+            'impact' => 'Impact',
+            'valeur' => 'Valeurs',
+            'croissance' => 'Croissance',
+            'équipe' => 'Travail en équipe',
+            'projet' => 'Projets',
+            'rigueur' => 'Rigueur',
+            'communication' => 'Communication',
+            'leadership' => 'Leadership',
+            'technique' => 'Approche technique',
+            'analyse' => 'Analyse',
+            'créativité' => 'Créativité',
+            'autonomie' => 'Autonomie',
+            'situation' => 'Situation',
+            'tâche' => 'Tâche',
+            'action' => 'Action',
+            'résultat' => 'Résultat',
+            'apprentissage' => 'Apprentissage',
+            'améliorer' => 'Amélioration',
+            'développer' => 'Développement',
+            'apprendre' => 'Apprentissage',
+            'travailler' => 'Engagement',
+            'progresser' => 'Progression',
+        ];
+
+        return $labels[$criterion] ?? ucfirst(str_replace(['_', '-'], ' ', $criterion));
+    }
+
     private function personalizeInterviewReply(string $reply, string $userMessage): string
     {
         $userMessage = trim($userMessage);
@@ -544,10 +978,10 @@ class ChatController extends Controller
         }
 
         $normalizedReply = $reply;
+        $commonNames = ['Sarah', 'Jeanne', 'Marie', 'Thomas', 'Lucas', 'Sophie', 'Camille', 'Alexandre', 'Julie', 'Jean', 'Pierre', 'Paul', 'Claire', 'Lucie', 'Emma', 'Léa', 'Chloé', 'Manon', 'Ambre'];
 
         if ($userName && mb_strlen($userName) >= 2) {
             $normalizedName = ucfirst(mb_strtolower($userName, 'UTF-8'));
-            $commonNames = ['Sarah', 'Jeanne', 'Marie', 'Thomas', 'Lucas', 'Sophie', 'Camille', 'Alexandre', 'Julie', 'Jean', 'Pierre', 'Paul', 'Claire', 'Lucie', 'Emma', 'Léa', 'Chloé', 'Manon', 'Ambre'];
             foreach ($commonNames as $name) {
                 $normalizedReply = preg_replace('/\b' . preg_quote($name, '/') . '\b/iu', $normalizedName, $normalizedReply);
             }
@@ -555,14 +989,27 @@ class ChatController extends Controller
             $normalizedReply = preg_replace('/\bJe\s+m[\'’]?appelle\s+[a-zA-ZÀ-ÖØ-öø-ÿ\-\'\s]+/iu', "Je m'appelle " . $normalizedName, $normalizedReply);
         } else {
             $normalizedReply = preg_replace('/\b[Nn]om\s*:[^\\n]*/iu', '', $normalizedReply);
-            $normalizedReply = preg_replace('/\bJe\s+m[\'’]?appelle\s+[a-zA-ZÀ-ÖØ-öø-ÿ\-\'\s]+/iu', '', $normalizedReply);
-            $commonNames = ['Sarah', 'Jeanne', 'Marie', 'Thomas', 'Lucas', 'Sophie', 'Camille', 'Alexandre', 'Julie', 'Jean', 'Pierre', 'Paul', 'Claire', 'Lucie', 'Emma', 'Léa', 'Chloé', 'Manon', 'Ambre'];
             foreach ($commonNames as $name) {
                 $normalizedReply = preg_replace('/\b' . preg_quote($name, '/') . '\b/iu', '[Prénom]', $normalizedReply);
             }
         }
 
         return $normalizedReply;
+    }
+
+    private function getOllamaBaseUrl(): string
+    {
+        $url = trim((string) env('OLLAMA_URL', 'http://127.0.0.1:11434'));
+        $url = rtrim($url, '/');
+
+        return $url !== '' ? $url : 'http://127.0.0.1:11434';
+    }
+
+    private function getOllamaModel(): string
+    {
+        $model = trim((string) env('OLLAMA_MODEL', 'llama3.2:1b'));
+
+        return $model !== '' ? $model : 'llama3.2:1b';
     }
 
     private function getNextQuestionIndex(string $currentId): int
@@ -573,8 +1020,8 @@ class ChatController extends Controller
 
     private function getVeraReply(string $message): string
     {
-        $url = rtrim((string) env('OLLAMA_URL', 'http://localhost:11434'), '/');
-        $model = (string) env('OLLAMA_MODEL', 'llama3.2:1b');
+        $url = $this->getOllamaBaseUrl();
+        $model = $this->getOllamaModel();
 
         $systemPrompt = "Tu es VERA, l'assistant IA officiel de VERA (Real Opportunities, Smart Jobs). "
             . "Tu ne t'appelles pas Léa. Tu es VERA, assistant carrière. "
