@@ -126,10 +126,10 @@ class ChatController extends Controller
         $scoreData = $this->buildInterviewScoreData($message, $question, $profile);
 
         if ($this->isHelpOrCoachingRequest($message)) {
-            $adaptive = $this->getAdaptiveInterviewReply($message, $question, $profile);
+            $adaptive = $this->getAdaptiveInterviewReply($message, $question, $scoreData, $profile);
             return [
                 'reply' => $adaptive,
-                'nextStep' => $step,
+                'nextStep' => $step + 1,
                 'score' => $scoreData['score'],
                 'criteria' => $scoreData['criteria'],
                 'summary' => $scoreData['summary'],
@@ -137,11 +137,11 @@ class ChatController extends Controller
             ];
         }
 
-        $adaptive = $this->getAdaptiveInterviewReply($message, $question, $profile);
+        $adaptive = $this->getAdaptiveInterviewReply($message, $question, $scoreData, $profile);
 
         return [
             'reply' => $adaptive,
-            'nextStep' => $step,
+            'nextStep' => $step + 1,
             'score' => $scoreData['score'],
             'criteria' => $scoreData['criteria'],
             'summary' => $scoreData['summary'],
@@ -149,24 +149,25 @@ class ChatController extends Controller
         ];
     }
 
-    private function getAdaptiveInterviewReply(string $message, array $question, array $profile = []): string
+    private function getAdaptiveInterviewReply(string $message, array $question, array $scoreData, array $profile = []): string
     {
         $url = $this->getOllamaBaseUrl();
         $model = $this->getOllamaModel();
 
         $profileSummary = $this->veraContext->summarizeProfile($profile);
-        $systemPrompt = "Tu es VERA, coach d'entretien d'embauche. "
-            . "Tu guides un candidat sur la question active : \"" . $question['question'] . "\". "
-            . "Voici le texte fourni par l'utilisateur : \"" . $message . "\". "
+        $systemPrompt = "Tu es VERA, un recruteur senior / manager d'entreprise qui mène un véritable entretien d'embauche. "
+            . "Tu adoptes le ton professionnel, exigeant mais bienveillant, d'un DRH ou d'un chef d'entreprise face à un candidat. "
+            . "Question active posée au candidat : \"" . $question['question'] . "\". "
+            . "Réponse réelle du candidat : \"" . $message . "\". "
             . ($profileSummary !== '' ? "Profil connu : " . $profileSummary . ". " : "")
             . "Ta mission : "
-            . "1) Si l'utilisateur demande simplement de l'aide, un exemple ou un coaching, réponde quand même à la question active avec une réponse modèle concrète et utile, pas avec un texte générique. "
-            . "2) Donne un Feedback court et bienveillant sur ce qui manque dans la réponse. "
-            . "3) Construis une Réponse modèle UNIQUEMENT à partir des éléments qu'il a donnés dans sa phrase ou de son profil connu, en les complétant intelligemment sans inventer un profil différent. "
-            . "4) Si l'utilisateur dit qu'il est étudiant, la réponse modèle doit être celle d'un étudiant. "
-            . "5) Si l'utilisateur parle de développement web, la réponse modèle doit rester dans le développement web. "
-            . "6) Si l'utilisateur mentionne une école, un stage, un projet précis, réutilise ces éléments. "
-            . "7) Ne remplace pas son profil par un autre. "
+            . "1) Lis ATTENTIVEMENT ce que le candidat a réellement écrit et réagis en fonction : félicite ce qui est correct, et pointe précisément ce qui manque ou manque de précision. "
+            . "2) Le Feedback DOIT être différent à chaque réponse et faire référence au contenu précis du candidat (mots-clés utilisés, éléments absents, niveau de détail). Ne donne JAMAIS un feedback générique ou identique d'une réponse à l'autre. "
+            . "3) Si l'utilisateur demande de l'aide, un exemple ou un coaching, donne quand même une réponse modèle concrète et utile adaptée à la question. "
+            . "4) Construis une Réponse modèle UNIQUEMENT à partir des éléments donnés dans sa phrase ou de son profil connu, en les complétant sans inventer un profil différent. "
+            . "5) Si l'utilisateur dit qu'il est étudiant, la réponse modèle doit être celle d'un étudiant ; si cadre, celle d'un cadre ; garde son vrai statut. "
+            . "6) Si l'utilisateur mentionne une école, un stage, un projet, une techno précis, réutilise ces éléments exacts. "
+            . "7) Ne remplace pas son profil par un autre et n'invente pas de domaine (n'impose pas 'développement web' si l'utilisateur parle d'autre chose). "
             . "Formate la réponse exactement ainsi :\n"
             . "📝 Feedback : ...\n\n"
             . "💡 Réponse modèle : ...\n\n"
@@ -219,11 +220,14 @@ class ChatController extends Controller
                         $modelAnswerFromOllama = $this->extractSection($reply, 'Réponse modèle');
                         $nextQuestionText = $this->extractSection($reply, 'Question suivante');
 
-                        $modelAnswer = $modelAnswerFromOllama ?: $this->buildPersonalizedModelAnswer($message, $question, $profile);
-                        $modelAnswer = "💡 Réponse modèle : " . $modelAnswer;
+                        $candidate = $modelAnswerFromOllama ?: '';
+                        if ($candidate === '' || $this->isUserMessageEcho($message, $candidate) || mb_strlen(trim($candidate)) < 140) {
+                            $candidate = $this->buildPersonalizedModelAnswer($message, $question, $profile);
+                        }
+                        $modelAnswer = "💡 Réponse modèle : " . $candidate;
 
                         if (!$feedback) {
-                            $feedback = "📝 Feedback : La réponse manque de détails. Utilisez la méthode STAR pour structurer votre réponse avec une situation, tâche, action et résultat. Reliez votre parcours à vos compétences techniques et expériences pertinentes pour le poste.";
+                            $feedback = $this->buildAdaptiveFeedback($message, $question, $scoreData, $profile);
                         }
 
                         if (!$nextQuestionText) {
@@ -250,9 +254,43 @@ class ChatController extends Controller
 
         $personalizedModel = $this->buildPersonalizedModelAnswer($message, $question, $profile);
 
-        return "📝 Feedback : La réponse manque de détails. Utilisez la méthode STAR pour structurer votre réponse avec une situation, tâche, action et résultat. Reliez votre parcours à vos compétences techniques et expériences pertinentes pour le poste.\n\n"
+        $feedback = $this->buildAdaptiveFeedback($message, $question, $scoreData, $profile);
+
+        return $feedback . "\n\n"
             . "💡 Réponse modèle : " . $personalizedModel
             . ($nextQuestionText ? "\n\n" . $nextQuestionText : "");
+    }
+
+    private function buildAdaptiveFeedback(string $message, array $question, array $scoreData, array $profile = []): string
+    {
+        $text = trim($message);
+        $length = mb_strlen($text, 'UTF-8');
+        $score = (int) ($scoreData['score'] ?? 50);
+
+        if ($length < 40) {
+            $expected = $question['expected'] ?? [];
+            $missing = array_slice($expected, 0, 3);
+            $focus = !empty($missing) ? implode(', ', $missing) : 'votre parcours et vos compétences';
+            return "📝 Feedback : Votre réponse est un peu courte. En tant que recruteur, j'aimerais en savoir plus : précisez " . $focus . ". Illustrez avec un exemple concret tiré de votre expérience.";
+        }
+
+        $missingLabels = [];
+        foreach (($scoreData['criteria'] ?? []) as $c) {
+            if (($c['status'] ?? '') === 'À améliorer') {
+                $missingLabels[] = $c['label'];
+            }
+        }
+
+        if ($score >= 75) {
+            return "📝 Feedback : Bonne réponse, vous allez à l'essentiel et restez cohérent(e) avec votre profil. Pour marquer encore plus les esprits, ajoutez un chiffre ou un résultat concret.";
+        }
+
+        if (!empty($missingLabels)) {
+            $list = implode(', ', array_slice($missingLabels, 0, 3));
+            return "📝 Feedback : Votre réponse est compréhensible, mais elle manque de précision sur : " . $list . ". Reformulez avec un exemple lié à votre propre parcours pour convaincre un manager.";
+        }
+
+        return "📝 Feedback : Réponse enregistrée. Structurez-la avec une idée claire, un exemple et une conclusion professionnelle.";
     }
 
     private function buildPersonalizedModelAnswer(string $message, array $question, array $profile = []): string
@@ -338,42 +376,86 @@ class ChatController extends Controller
             }
 
             if ($text !== '') {
-                $name = $this->extractUserNameFromText($text) ?: ($userName ?: null);
-                $status = $this->extractStatusFromText($text);
-                $detailText = $this->normalizeInterviewText($text);
+            $name = $this->extractUserNameFromText($text) ?: ($userName ?: null);
+            $status = $this->extractStatusFromText($text);
+            $textDomain = $this->extractDomainFromText($text);
+            $effectiveDomain = $domaine ?? $textDomain;
+            $goalField = $this->deriveGoalField($text, $effectiveDomain);
+            $parts = [];
 
-                if ($name) {
-                    $intro = 'Je m\'appelle ' . $name;
-                    if ($status !== '') {
-                        $intro .= ', je suis ' . strtolower($status);
-                    }
-
-                    if (preg_match('/\b(?:informatique|génie|genie)\b/i', $detailText)) {
-                        $intro .= ' en informatique';
-                    }
-                    if (preg_match('/\b(?:option|spécialité|specialite)\b/i', $detailText)) {
-                        $intro .= ' option génie logiciel';
-                    }
-
-                    return $intro . '. Je souhaite développer mes compétences en développement web et mobile pour construire des solutions utiles et concrètes.';
+            // 1) Identité professionnelle
+            $identity = '';
+            if ($name) {
+                $identity .= "Je m'appelle " . $name;
+            }
+            if ($status !== '') {
+                $identity .= $identity !== '' ? ", je suis " . strtolower($status) : "Je suis " . strtolower($status);
+            }
+            if ($effectiveDomain) {
+                $identity .= $identity !== '' ? " en " . $effectiveDomain : "Je travaille dans le domaine " . $effectiveDomain;
+            } elseif ($formation) {
+                    $identity .= $identity !== '' ? ", diplômé(e) en " . $formation : "Je suis diplômé(e) en " . $formation;
+                } elseif ($niveauEtude) {
+                    $identity .= $identity !== '' ? " (" . $niveauEtude . ")" : $niveauEtude;
+                }
+                if ($identity !== '') {
+                    $parts[] = rtrim($identity, ' ,') . ".";
                 }
 
-                if (preg_match('/\bje\s+suis\b/i', $text)) {
-                    $prefix = 'Je suis ' . trim($this->extractRoleFromText($text) ?: 'développeur web', ' ,;.!?');
-                    $experience = $this->extractExperienceFromText($text);
-                    $suffix = $experience ? ' avec ' . $experience . ' d\'expérience' : '';
-                    $techs = $this->extractTechnologiesFromText($text);
-                    $techSuffix = $techs !== 'des outils modernes' ? ' et j\'utilise ' . $techs : '';
-
-                    return $prefix . $suffix . $techSuffix . '. Je souhaite continuer à développer des solutions utiles et concrètes.';
+                // 2) Formation pertinente
+                $formationBits = [];
+                if ($ecole) {
+                    $formationBits[] = "issu(e) de " . $ecole;
+                }
+                if ($certifications) {
+                    $formationBits[] = "certifié(e) en " . implode(', ', array_slice($certifications, 0, 2));
+                }
+                if ($formationBits) {
+                    $parts[] = "Ma formation : " . implode(', ', $formationBits) . ".";
                 }
 
-                $domain = $domaine ?: 'le développement';
-                $technologiesCsv = $technologies ? implode(', ', $technologies) : $this->extractTechnologiesFromText($text);
-                $experience = $this->extractExperienceFromText($text);
-                $lead = $experience ? "J'ai " . $experience . " d'expérience" : "J'ai une expérience pratique solide";
+                // 3 & 6) Expériences et réalisation concrète
+                $realisation = $projets[0] ?? $stages[0] ?? $experiences[0] ?? null;
+                if ($realisation) {
+                    $parts[] = "J'ai notamment réalisé " . $realisation . ", ce qui m'a permis de mettre en pratique mes connaissances.";
+                } elseif (!empty($stages) || !empty($experiences)) {
+                    $expList = array_merge(array_slice($stages, 0, 2), array_slice($experiences, 0, 2));
+                    $parts[] = "J'ai acquis de l'expérience via " . implode(' et ', $expList) . ".";
+                }
 
-                return "Je suis " . $domain . " motivé(e) par la création de solutions utiles et je mets en avant ma rigueur, mon autonomie et ma capacité à apprendre rapidement. " . $lead . ", notamment avec " . $technologiesCsv . ", et je souhaite contribuer à des projets à fort impact.";
+                // 4) Compétences techniques
+                $techList = !empty($technologies) ? implode(', ', $technologies) : $this->extractTechnologiesFromText($text);
+                if ($techList !== '' && $techList !== 'des outils modernes') {
+                    $parts[] = "Sur le plan technique, je maîtrise " . $techList . ".";
+                } elseif ($domaine) {
+                    $parts[] = "J'ai développé des compétences techniques solides dans le domaine " . $domaine . ".";
+                }
+
+                // 5) Qualités professionnelles
+                $qualites = !empty($forces) ? array_slice($forces, 0, 2) : ['l\'esprit d\'équipe', 'la capacité d\'apprentissage'];
+                $parts[] = "Mes qualités professionnelles : " . implode(' et ', $qualites) . ".";
+
+                // 7) Motivation
+                $motiv = $this->extractStatedMotivation($text);
+                if ($motiv === '') {
+                    $motiv = !empty($motivations) ? implode(', ', array_slice($motivations, 0, 2)) : "contribuer à des projets concrets et utiles";
+                }
+                $parts[] = "Je suis motivé(e) par " . $motiv . ".";
+
+                // 8) Ce que je peux apporter
+                $parts[] = "Je peux apporter à votre entreprise mes compétences en " . $goalField . ", ma rigueur et ma capacité à résoudre des problèmes.";
+
+                // 9) Projet professionnel
+                if (!empty($objectifs)) {
+                    $parts[] = "À moyen terme, " . implode(', ', array_slice($objectifs, 0, 1)) . ".";
+                } else {
+                    $parts[] = "À moyen terme, je souhaite poursuivre mon développement en " . $goalField . " pour construire des solutions performantes.";
+                }
+
+                $introText = implode(' ', $parts);
+                if ($introText !== '') {
+                    return $introText;
+                }
             }
 
             return "Je m'appelle " . $normalizedName . ". Je suis motivé(e) et je souhaite mettre mes compétences au service d'une entreprise qui partage mes valeurs.";
@@ -490,7 +572,7 @@ class ChatController extends Controller
     {
         $patterns = [
             '/je\s+m[\'’]?appelle\s+([a-zA-ZÀ-ÖØ-öø-ÿ\-\'\s]+?)(?:\s*[,.!]\s*|\s+je\s+suis|\s+je\s+travaille|\s+je\s+cherche|$)/iu',
-            '/je\s+me\s+(?:nomme|norme|appelle)\s+([a-zA-ZÀ-ÖØ-öø-ÿ\-\'\s]+?)(?:\s*(?:je|et|en|dans|avec|option|spécialité)|\s*[,.!]|$)/iu',
+            '/je\s+me\s+(?:nomme|norme|appelle)\s+([a-zA-ZÀ-ÖØ-öø-ÿ\-\'\s]+?)(?:\s*(?:je|et|dans|avec|option|spécialité)|\s*[,.!]|$)/iu',
             '/je\s+suis\s+([a-zA-ZÀ-ÖØ-öø-ÿ\-\'\s]+?)(?:\s*[,.!]\s*|\s+je\s+travaille|\s+je\s+cherche|$)/iu',
             '/moi,\s*c[\'’]?est\s+([a-zA-ZÀ-ÖØ-öø-ÿ\-\'\s]+?)(?:\s*[,.!]\s*|\s+je\s+travaille|\s+je\s+cherche|$)/iu',
         ];
@@ -498,9 +580,9 @@ class ChatController extends Controller
         foreach ($patterns as $pattern) {
             if (preg_match($pattern, $text, $matches)) {
                 $name = trim($matches[1]);
-                $name = preg_replace('/\s+(?:étudiant|étudiante|informatique|développeur|developpeur|genie|génie|logiciel|option|spécialité|web|mobile|en|dans|avec).*$/iu', '', $name);
+                $name = preg_replace('/\s+(?:étudiant|étudiante|ingenieur|ingénieur|stagiaire|chercheur|développeur|developpeur|genie|génie|logiciel|informatique|option|spécialité|des\s+travaux|travaux|web|mobile|en|dans|avec).*$/iu', '', $name);
                 $name = trim($name, " \t\n\r,.;!?");
-                if ($name !== '' && !preg_match('/^(?:je|moi|cest|étudiant|étudiante|informatique|developpeur|développeur|genie|génie|logiciel|web|mobile)$/iu', $name)) {
+                if ($name !== '' && !preg_match('/^(?:je|moi|cest|étudiant|étudiante|ingenieur|ingénieur|informatique|developpeur|développeur|genie|génie|logiciel|web|mobile)$/iu', $name)) {
                     return ucfirst(mb_strtolower($name, 'UTF-8'));
                 }
             }
@@ -529,6 +611,35 @@ class ChatController extends Controller
         }
 
         return '';
+    }
+
+    private function deriveGoalField(string $text, ?string $domaine): string
+    {
+        $lower = mb_strtolower($text, 'UTF-8');
+        $map = [
+            'génie logiciel' => 'génie logiciel',
+            'genie logiciel' => 'génie logiciel',
+            'informatique' => 'informatique',
+            'développement web' => 'développement web',
+            'web' => 'développement web',
+            'mobile' => 'développement mobile',
+            'réseau' => 'réseau',
+            'cybersécurité' => 'cybersécurité',
+            'data' => 'la data',
+            'intelligence artificielle' => 'intelligence artificielle',
+        ];
+
+        foreach ($map as $keyword => $label) {
+            if (str_contains($lower, $keyword)) {
+                return $label;
+            }
+        }
+
+        if ($domaine) {
+            return $domaine;
+        }
+
+        return 'mon domaine d\'expertise';
     }
 
     private function extractStudyContextFromText(string $text): string
