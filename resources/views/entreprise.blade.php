@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VERA Entreprise - Tableau de bord</title>
 <link rel="stylesheet" href="{{ asset('style_ENT.css') }}?v=2">
+<link rel="stylesheet" href="/style_INFO.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -434,12 +435,15 @@
   </main>
 </div>
 
+@include('partials.info-modal')
+
 <!-- ============== FIREBASE JS SDK + GARDE DE SESSION ============== -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="{{ asset('firebase-init.js') }}"></script>
+<script src="script_INFO.js"></script>
 <script src="{{ asset('script_ENT.js') }}?v=2"></script>
 </body>
 </html>

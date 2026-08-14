@@ -30,7 +30,7 @@
 
       <ul class="feature-list">
         <li><span class="feature-icon"><img src="/image/mission.png" alt="" style="width:18px;height:18px;object-fit:contain;"></span> Des offres qui correspondent vraiment à ton profil</li>
-        <li><span class="feature-icon"><img src="/image/3914260.png" alt="" style="width:18px;height:18px;object-fit:contain;"></span> Les offres d'emploi boostées automatiquement pas l'IA par l'IA</li>
+        <li><span class="feature-icon"><img src="/image/3914260.png" alt="" style="width:18px;height:18px;object-fit:contain;"></span> Les offres d'emploi boostées automatiquement par l'IA</li>
         <li><span class="feature-icon"><img src="/image/3916740.png" alt="" style="width:18px;height:18px;object-fit:contain;"></span> Un coaching carrière personnalisé</li>
       </ul>
 

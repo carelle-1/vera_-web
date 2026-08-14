@@ -43,10 +43,10 @@
 
       <div class="nav-label">Contenu</div>
       <a class="nav-item" data-panel="candidatures">
-        <img class="nav-icon" src="/image/3917505.png" alt="Candidatures"> Candidatures
+        <img class="nav-icon" src="/image/3917505.png" alt="informations"> informations
       </a>
       <a class="nav-item" data-panel="formations">
-        <img class="nav-icon" src="/image/3914133.png" alt="Formations"> Formations
+        <img class="nav-icon" src="/image/3914133.png" alt="Formations"> Administration
       </a>
       <a class="nav-item" data-panel="moderation">
         <img class="nav-icon" src="/image/3917385.png" alt="Modération"> Modération <span class="nav-count alert" data-count-path="moderation">0</span>
@@ -382,6 +382,94 @@
         </div>
       </div>
 
+      <!-- ADMINISTRATION PANEL (gestion des administrateurs + privilèges) -->
+      <div class="panel" id="panel-formations">
+        <div class="page-head">
+          <div>
+            <h1>Administration</h1>
+            <p>Ajoutez des administrateurs et attribuez-leur des privilèges d'accès à chaque section de la console.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn-primary" id="addAdminBtn">+ Ajouter un administrateur</button>
+          </div>
+        </div>
+
+        <div class="offres-layout">
+          <div class="offres-table-wrapper">
+            <div class="card table-card">
+              <div class="card-head-row">
+                <div class="card-title">Liste des administrateurs</div>
+                <div class="table-tools">
+                  <input type="text" id="adminMgmtSearch" placeholder="Rechercher un admin...">
+                </div>
+              </div>
+
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Administrateur</th>
+                    <th>Rôle</th>
+                    <th>Privilèges</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="adminMgmtTableBody"></tbody>
+              </table>
+              <div class="table-footer">
+                <span id="adminMgmtCount">Affichage de 0 administrateur</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="offres-form-wrapper" id="adminMgmtFormWrapper">
+            <div class="card">
+              <div class="card-head-row">
+                <div class="card-title" id="adminMgmtModalTitle">Ajouter un administrateur</div>
+                <button class="exp-modal-close" id="adminMgmtClose" type="button">×</button>
+              </div>
+              <form id="adminMgmtForm" class="exp-form">
+                <label>Email de l'utilisateur <span style="color:var(--red)">*</span>
+                  <input type="email" name="email" required placeholder="Ex. admin@vera.com">
+                </label>
+                <p class="form-hint" id="adminEmailHint">Si un compte existe avec cet email, il sera promu administrateur. Sinon, un nouveau compte sera créé (le mot de passe est alors requis).</p>
+
+                <label>Nom complet
+                  <input type="text" name="name" placeholder="Ex. Jean Dupont">
+                </label>
+
+                <label>Mot de passe <span class="optional-tag">(création de compte uniquement)</span>
+                  <input type="password" name="password" placeholder="6 caractères minimum">
+                </label>
+
+                <label>Statut
+                  <select name="status">
+                    <option value="actif">Actif</option>
+                    <option value="suspendu">Suspendu</option>
+                  </select>
+                </label>
+
+                <label class="switch-row">
+                  <span>
+                    <span class="switch-title">Super administrateur</span>
+                    <span class="switch-sub">Accès total à toutes les sections, ignore les privilèges ci-dessous.</span>
+                  </span>
+                  <input type="checkbox" name="super" class="admin-super-toggle">
+                </label>
+
+                <div class="exp-form-section-title">Privilèges par section</div>
+                <div class="privileges-grid" id="privilegesGrid"></div>
+
+                <div class="exp-form-actions">
+                  <button type="button" class="btn-outline-sm" id="adminMgmtCancel">Annuler</button>
+                  <button type="submit" class="btn-primary-sm">Enregistrer</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- AUTRES PANELS (placeholder) -->
       <div class="panel" id="panel-placeholder">
         <div class="placeholder-box">
@@ -399,17 +487,19 @@
             <p>Liste de tous les utilisateurs inscrits sur la plateforme.</p>
           </div>
           <div class="page-actions">
-            <input type="text" id="adminUserSearch" placeholder="Rechercher un utilisateur...">
-            <select id="adminUserFilter">
-              <option value="all">Tous les rôles</option>
-              <option value="chercheur_emploi">Chercheur d'emploi</option>
-              <option value="recruteur">Recruteur</option>
-              <option value="admin">Admin</option>
-            </select>
+            <div class="filter-wrap">
+              <span class="filter-label">Filtrer par rôle</span>
+              <select id="adminUserFilter" class="filter-select">
+                <option value="all">Tous les rôles</option>
+                <option value="chercheur_emploi">Chercheur d'emploi</option>
+                <option value="recruteur">Recruteur</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div class="bottom-row" style="padding:0 26px 40px;">
+        <div class="bottom-row bottom-row--full" style="padding:0 26px 40px;">
           <section class="card table-card">
             <table class="admin-table">
               <thead>
@@ -428,6 +518,92 @@
               <div class="pagination" id="adminUserPagination"></div>
             </div>
           </section>
+        </div>
+      </div>
+
+      <!-- INFORMATIONS PANEL -->
+      <div class="panel" id="panel-candidatures">
+        <div class="page-head">
+          <div>
+            <h1>Informations</h1>
+            <p>Gérez les messages et annonces affichés aux utilisateurs (titre, description, période d'affichage et image).</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn-primary" id="addInformationBtn">+ Ajouter une information</button>
+          </div>
+        </div>
+
+        <div class="offres-layout">
+          <div class="offres-table-wrapper">
+            <div class="card table-card">
+              <div class="card-head-row">
+                <div class="card-title">Liste des informations</div>
+                <div class="table-tools">
+                  <input type="text" id="infoSearch" placeholder="Rechercher une information...">
+                  <select id="infoFilter">
+                    <option value="all">Toutes</option>
+                    <option value="active">En cours</option>
+                    <option value="attente">À venir</option>
+                    <option value="inactive">Terminé</option>
+                  </select>
+                </div>
+              </div>
+
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th style="width:40px;"><input type="checkbox" id="selectAllInfos"></th>
+                    <th>Image</th>
+                    <th>Titre</th>
+                    <th>Description</th>
+                    <th>Période d'affichage</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="infoTableBody"></tbody>
+              </table>
+              <div class="table-footer">
+                <span id="infoTableCount">Affichage de 0 information</span>
+                <div style="display:flex;gap:10px;align-items:center;">
+                  <button class="btn-outline-sm" id="bulkDeleteInfoBtn" style="display:none;color:var(--red);border-color:var(--red);">🗑 Supprimer la sélection</button>
+                  <div class="pagination" id="infoPagination"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="offres-form-wrapper" id="informationsFormWrapper">
+            <div class="card">
+              <div class="card-head-row">
+                <div class="card-title" id="infoModalTitle">Ajouter une information</div>
+                <button class="exp-modal-close" id="infoModalClose" type="button">×</button>
+              </div>
+              <form id="informationForm" class="exp-form">
+                <label>Titre
+                  <input type="text" name="titre" required placeholder="Ex. Maintenance planifiée">
+                </label>
+                <label>Description
+                  <textarea name="description" rows="4" required placeholder="Décrivez l'information à communiquer..."></textarea>
+                </label>
+                <div class="exp-form-row">
+                  <label>Date de début
+                    <input type="date" name="dateDebut" required>
+                  </label>
+                  <label>Date de fin
+                    <input type="date" name="dateFin" required>
+                  </label>
+                </div>
+                <label>Image (affichée pendant la période)
+                  <input type="file" name="logo" accept="image/*">
+                </label>
+                <div class="exp-form-actions">
+                  <button type="button" class="btn-outline-sm" id="infoCancel">Annuler</button>
+                  <button type="submit" class="btn-primary-sm">Enregistrer</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
 

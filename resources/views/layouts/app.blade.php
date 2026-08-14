@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="/image/vera1.png">
 <title>@yield('title', 'VERA')</title>
-<link rel="stylesheet" href="/fonts/inter-local.css">
-@yield('styles')
+  <link rel="stylesheet" href="/fonts/inter-local.css">
+  <link rel="stylesheet" href="/style_INFO.css">
+  @yield('styles')
 </head>
 <body>
 
@@ -128,12 +129,24 @@
   </main>
 </div>
 
+<!-- MODAL INFORMATIONS (annonces créées dans l'admin) -->
+<div class="info-modal-overlay" id="infoModalOverlay" aria-hidden="true">
+  <div class="info-modal-card" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+    <button class="info-modal-close" id="infoModalCloseBtn" type="button" aria-label="Fermer">×</button>
+    <div class="info-modal-body" id="infoModalBody"></div>
+    <div class="info-modal-footer">
+      <button class="info-modal-ok" id="infoModalOkBtn" type="button">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============== FIREBASE JS SDK + GARDE DE SESSION ============== -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="firebase-init.js"></script>
+<script src="script_INFO.js"></script>
 <script src="salutation.js"></script>
 <script src="avatar.js"></script>
 <script src="scriptI.js?v={{ time() }}"></script>

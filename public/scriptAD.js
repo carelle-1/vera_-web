@@ -64,6 +64,8 @@ const JOBS_PER_PAGE = 10;
 let allFilteredJobs = [];
 
 firebase.auth().onAuthStateChanged((user) => {
+  if (window.__creatingAdmin) return; // ne pas rediriger pendant la création d'un admin
+
   console.log("[ADMIN] onAuthStateChanged firstCall=", adminAuthFirstCall, "user=", user ? user.uid : "null");
 
   if (adminAuthFirstCall) {
@@ -90,6 +92,7 @@ firebase.auth().onAuthStateChanged((user) => {
       return;
     }
 
+    data.uid = user.uid;
     console.log("[ADMIN] accès admin autorisé, initialisation du panel");
     initAdminPanel(data);
   }).catch((error) => {
@@ -98,12 +101,61 @@ firebase.auth().onAuthStateChanged((user) => {
   });
 });
 
+// ============== PRIVILÈGES ADMIN ==============
+let currentAdminData = null;
+
+const ADMIN_SECTIONS = [
+  ["dashboard", "Tableau de bord"],
+  ["utilisateurs", "Utilisateurs"],
+  ["entreprises", "Entreprises"],
+  ["offres", "Offres d'emploi"],
+  ["sites", "Sites"],
+  ["candidatures", "Informations"],
+  ["formations", "Administration (gestion admins)"],
+  ["moderation", "Modération"],
+  ["paiements", "Paiements"],
+  ["rapports", "Rapports"],
+  ["parametres", "Paramètres"]
+];
+
+function canAccessPanel(panel) {
+  const d = currentAdminData;
+  if (!d) return true;
+  if (d.super === true) return true;
+  if (!d.privileges || typeof d.privileges !== "object") return true; // compatibilité ascendante : accès total
+  if (panel === "dashboard") return true; // le tableau de bord reste toujours accessible
+  return !!d.privileges[panel];
+}
+
+function applyAdminPrivilegesToNav() {
+  document.querySelectorAll(".nav-item").forEach(item => {
+    const panel = item.getAttribute("data-panel");
+    if (!panel) return;
+    const lockEl = item.querySelector(".nav-lock");
+    if (canAccessPanel(panel)) {
+      item.classList.remove("locked");
+      if (lockEl) lockEl.remove();
+    } else {
+      item.classList.add("locked");
+      if (!lockEl) {
+        const span = document.createElement("span");
+        span.className = "nav-lock";
+        span.textContent = "🔒";
+        item.appendChild(span);
+      }
+    }
+  });
+}
+
 function initAdminPanel(data) {
+  currentAdminData = data || {};
   renderAdminKPIs();
   renderDashboardUserTable();
   renderAllAdminUsers();
   renderAdminCharts();
   updateNavCounts();
+  buildPrivilegesGrid();
+  applyAdminPrivilegesToNav();
 }
 
 function renderAdminKPIs() {
@@ -619,10 +671,16 @@ function renderAdminCharts() {
 
 document.querySelectorAll(".nav-item").forEach(item => {
   item.addEventListener("click", () => {
+    const panel = item.getAttribute("data-panel");
+
+    if (panel && !canAccessPanel(panel)) {
+      alert("Accès refusé : vous ne disposez pas du privilège pour accéder à la section \"" + (item.textContent || panel).trim() + "\".");
+      return;
+    }
+
     document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
     item.classList.add("active");
 
-    const panel = item.getAttribute("data-panel");
     if (panel) {
       document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
       const target = document.getElementById("panel-" + panel);
@@ -638,11 +696,21 @@ document.querySelectorAll(".nav-item").forEach(item => {
           renderSites();
           updateNavCounts();
         }, 50);
+      } else if (panel === "candidatures") {
+        setTimeout(() => {
+          renderInformations();
+          updateNavCounts();
+        }, 50);
       } else if (panel === "utilisateurs") {
         console.log("[ADMIN] Clic sur Utilisateurs, panel:", panel);
         setTimeout(() => {
           console.log("[ADMIN] Lancement renderAdminUsers pour panel utilisateurs");
           renderAllAdminUsers();
+          updateNavCounts();
+        }, 50);
+      } else if (panel === "formations") {
+        setTimeout(() => {
+          renderAdmins();
           updateNavCounts();
         }, 50);
       } else {
@@ -1364,3 +1432,625 @@ if (siteForm) {
 
 const siteSearchEl = document.getElementById("siteSearch");
 if (siteSearchEl) siteSearchEl.addEventListener("input", renderSites);
+
+// ============== CRUD INFORMATIONS / ANNONCES ==============
+let infoEditId = null;
+
+function infoRef() {
+  const user = firebase.auth().currentUser;
+  return user ? firebase.database().ref("informations") : null;
+}
+
+function infoStatusOf(item, now) {
+  const start = item.dateDebut ? new Date(item.dateDebut + "T00:00:00").getTime() : null;
+  const end = item.dateFin ? new Date(item.dateFin + "T23:59:59").getTime() : null;
+  if (start && now < start) return "attente";
+  if (end && now > end) return "inactive";
+  return "active";
+}
+
+function renderInformations() {
+  const tbody = document.getElementById("infoTableBody");
+  const countEl = document.getElementById("infoTableCount");
+  const search = document.getElementById("infoSearch");
+  const filter = document.getElementById("infoFilter");
+  if (!tbody) return;
+
+  const ref = infoRef();
+  if (!ref) return;
+
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#6b7280;">Chargement des informations...</td></tr>`;
+
+  ref.once("value").then((snapshot) => {
+    const list = [];
+    snapshot.forEach((child) => {
+      const d = child.val() || {};
+      d._key = child.key;
+      list.push(d);
+    });
+
+    const now = Date.now();
+    list.forEach((it) => { it._status = infoStatusOf(it, now); });
+
+    const q = (search && search.value || "").toString().toLowerCase().trim();
+    const f = (filter && filter.value) || "all";
+    let filtered = list;
+    if (q) {
+      filtered = filtered.filter((it) =>
+        (it.titre || "").toLowerCase().includes(q) ||
+        (it.description || "").toLowerCase().includes(q)
+      );
+    }
+    if (f !== "all") {
+      filtered = filtered.filter((it) => it._status === f);
+    }
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#6b7280;">Aucune information trouvée.</td></tr>`;
+    } else {
+      tbody.innerHTML = filtered.map((it) => {
+        const period = (it.dateDebut || "—") + " → " + (it.dateFin || "—");
+        const img = it.imageURL
+          ? `<img src="${escapeHtml(it.imageURL)}" alt="" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">`
+          : `<span style="color:#94a3b8;font-size:11px;">Aucune</span>`;
+        const desc = (it.description || "").length > 70 ? (it.description.substring(0, 70) + "…") : (it.description || "—");
+        const statusLabel = it._status === "active" ? "En cours" : (it._status === "attente" ? "À venir" : "Terminé");
+        return `
+          <tr>
+            <td><input type="checkbox" class="info-check" value="${escapeHtml(it._key)}"></td>
+            <td>${img}</td>
+            <td><div class="user-cell-name">${escapeHtml(it.titre || "Sans titre")}</div></td>
+            <td>${escapeHtml(desc)}</td>
+            <td>${escapeHtml(period)}</td>
+            <td><span class="status-badge ${escapeHtml(it._status)}">${statusLabel}</span></td>
+            <td>
+              <div class="row-menu">
+                <button type="button" class="row-menu-btn" data-id="${escapeHtml(it._key)}">⋯</button>
+                <div class="row-dropdown" id="dropdown-${escapeHtml(it._key)}">
+                  <button data-action="edit" data-id="${escapeHtml(it._key)}">✏ Modifier</button>
+                  <button data-action="delete" data-id="${escapeHtml(it._key)}" class="danger">🗑 Supprimer</button>
+                </div>
+              </div>
+            </td>
+          </tr>`;
+      }).join("");
+    }
+
+    if (countEl) {
+      countEl.textContent = `Affichage de ${filtered.length} information${filtered.length > 1 ? "s" : ""}`;
+    }
+
+    tbody.onclick = (event) => {
+      const menuBtn = event.target.closest(".row-menu-btn");
+      if (menuBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        const dropdown = document.getElementById("dropdown-" + menuBtn.dataset.id);
+        if (dropdown) {
+          const isOpen = dropdown.classList.contains("open");
+          closeAllRowDropdowns();
+          if (!isOpen) dropdown.classList.add("open");
+        }
+        return;
+      }
+      const actionBtn = event.target.closest("[data-action]");
+      if (actionBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        const key = actionBtn.getAttribute("data-id");
+        const action = actionBtn.getAttribute("data-action");
+        if (action === "edit") openInformationForm(key);
+        else if (action === "delete") deleteInformation(key);
+        closeAllRowDropdowns();
+        return;
+      }
+      if (!event.target.closest(".row-menu")) closeAllRowDropdowns();
+    };
+    updateBulkInfoBtn();
+  }).catch((err) => {
+    console.error("[INFO] erreur lecture:", err);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#ef4444;">Erreur de chargement: ${escapeHtml(err.message || err.code)}</td></tr>`;
+  });
+}
+
+function openInformationForm(id) {
+  const wrapper = document.getElementById("informationsFormWrapper");
+  const titleEl = document.getElementById("infoModalTitle");
+  const form = document.getElementById("informationForm");
+  if (!wrapper || !form || !titleEl) return;
+
+  form.reset();
+  if (id) {
+    infoEditId = id;
+    titleEl.textContent = "Modifier l'information";
+    const ref = infoRef();
+    if (ref) {
+      ref.child(id).once("value").then((snap) => {
+        const d = snap.val() || {};
+        form.titre.value = d.titre || "";
+        form.description.value = d.description || "";
+        form.dateDebut.value = d.dateDebut || "";
+        form.dateFin.value = d.dateFin || "";
+      });
+    }
+  } else {
+    infoEditId = null;
+    titleEl.textContent = "Ajouter une information";
+  }
+
+  wrapper.classList.add("active");
+}
+
+function closeInformationForm() {
+  const wrapper = document.getElementById("informationsFormWrapper");
+  if (wrapper) wrapper.classList.remove("active");
+  infoEditId = null;
+}
+
+function handleInformationSubmit(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = {
+    titre: (fd.get("titre") || "").toString().trim(),
+    description: (fd.get("description") || "").toString().trim(),
+    dateDebut: (fd.get("dateDebut") || "").toString().trim(),
+    dateFin: (fd.get("dateFin") || "").toString().trim(),
+    updatedAt: Date.now()
+  };
+
+  if (!payload.titre || !payload.description || !payload.dateDebut || !payload.dateFin) {
+    alert("Veuillez remplir le titre, la description, la date de début et la date de fin.");
+    return;
+  }
+
+  const imageFile = e.target.querySelector('input[name="logo"]').files[0];
+  const ref = infoRef();
+  if (!ref) {
+    alert("Vous devez être connecté pour enregistrer une information.");
+    return;
+  }
+
+  const saveRef = infoEditId ? ref.child(infoEditId) : ref.push();
+
+  const finish = () => {
+    closeInformationForm();
+    renderInformations();
+    updateNavCounts();
+  };
+
+  const uploadImage = () => {
+    if (!imageFile) return Promise.resolve();
+    const formData = new FormData();
+    formData.append("logo", imageFile);
+    return fetch("/upload-logo.php", { method: "POST", body: formData })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Échec de l'upload")))
+      .then((data) => {
+        if (!data.success || !data.url) throw new Error("URL de l'image non retournée");
+        return saveRef.update({ imageURL: data.url });
+      })
+      .catch((err) => {
+        console.error("[INFO] upload image:", err);
+        alert("L'information a été enregistrée mais l'image n'a pas pu être importée : " + err.message);
+      });
+  };
+
+  if (infoEditId) {
+    saveRef.update(payload).then(uploadImage).then(finish)
+      .catch((err) => { console.error("[INFO] modification:", err); alert("Échec de la modification : " + (err.message || err.code)); });
+  } else {
+    payload.createdAt = Date.now();
+    saveRef.set(payload).then(uploadImage).then(finish)
+      .catch((err) => { console.error("[INFO] création:", err); alert("Échec de la création : " + (err.message || err.code)); });
+  }
+}
+
+function deleteInformation(id) {
+  if (!confirm("Supprimer cette information ? Cette action est irréversible.")) return;
+  const ref = infoRef();
+  if (!ref) return;
+  ref.child(id).remove()
+    .then(() => { renderInformations(); updateNavCounts(); })
+    .catch((err) => { console.error("[INFO] suppression:", err); alert("Échec de la suppression : " + (err.message || err.code)); });
+}
+
+function updateBulkInfoBtn() {
+  const checks = document.querySelectorAll(".info-check");
+  const btn = document.getElementById("bulkDeleteInfoBtn");
+  if (!btn) return;
+  const anyChecked = Array.from(checks).some((c) => c.checked);
+  btn.style.display = anyChecked ? "inline-block" : "none";
+}
+
+// Listeners
+const addInformationBtn = document.getElementById("addInformationBtn");
+if (addInformationBtn) addInformationBtn.addEventListener("click", () => openInformationForm(null));
+
+const infoCloseBtn = document.getElementById("infoModalClose");
+if (infoCloseBtn) infoCloseBtn.addEventListener("click", closeInformationForm);
+
+const infoCancelBtn = document.getElementById("infoCancel");
+if (infoCancelBtn) infoCancelBtn.addEventListener("click", closeInformationForm);
+
+const informationForm = document.getElementById("informationForm");
+if (informationForm) informationForm.addEventListener("submit", handleInformationSubmit);
+
+const infoSearchEl2 = document.getElementById("infoSearch");
+if (infoSearchEl2) infoSearchEl2.addEventListener("input", renderInformations);
+
+const infoFilterEl = document.getElementById("infoFilter");
+if (infoFilterEl) infoFilterEl.addEventListener("change", renderInformations);
+
+const selectAllInfosEl = document.getElementById("selectAllInfos");
+if (selectAllInfosEl) {
+  selectAllInfosEl.addEventListener("change", () => {
+    document.querySelectorAll(".info-check").forEach((c) => { c.checked = selectAllInfosEl.checked; });
+    updateBulkInfoBtn();
+  });
+}
+
+const bulkDeleteInfoBtn = document.getElementById("bulkDeleteInfoBtn");
+if (bulkDeleteInfoBtn) {
+  bulkDeleteInfoBtn.addEventListener("click", () => {
+    const ids = Array.from(document.querySelectorAll(".info-check:checked")).map((c) => c.value);
+    if (ids.length === 0) return;
+    if (!confirm(`Supprimer ${ids.length} information(s) ? Cette action est irréversible.`)) return;
+    const ref = infoRef();
+    if (!ref) return;
+    Promise.all(ids.map((id) => ref.child(id).remove()))
+      .then(() => { renderInformations(); updateNavCounts(); })
+      .catch((err) => { console.error("[INFO] suppression multiple:", err); alert("Échec de la suppression."); });
+  });
+}
+
+document.addEventListener("change", (e) => {
+  if (e.target && e.target.classList && e.target.classList.contains("info-check")) {
+    updateBulkInfoBtn();
+  }
+});
+
+// ============== GESTION DES ADMINISTRATEURS + PRIVILÈGES ==============
+let adminEditId = null;
+let adminEditData = null;
+
+function usersRef() {
+  return firebase.database().ref("users");
+}
+
+function buildPrivilegesGrid(privileges, superMode) {
+  const grid = document.getElementById("privilegesGrid");
+  if (!grid) return;
+  const privs = privileges || {};
+  grid.innerHTML = ADMIN_SECTIONS.map(([key, label]) => {
+    const isDash = key === "dashboard";
+    const checked = isDash ? true : (superMode ? true : !!privs[key]);
+    const disabled = (isDash || superMode) ? "disabled" : "";
+    return `<label class="priv-box ${disabled ? "disabled" : ""}">
+      <input type="checkbox" class="priv-check" data-key="${key}" ${checked ? "checked" : ""} ${disabled}>
+      <span>${label}</span>
+    </label>`;
+  }).join("");
+}
+
+function collectPrivileges() {
+  const privileges = {};
+  document.querySelectorAll("#privilegesGrid .priv-check").forEach((cb) => {
+    if (cb.dataset.key === "dashboard") return; // toujours accordé
+    privileges[cb.dataset.key] = cb.checked;
+  });
+  return privileges;
+}
+
+function openAdminForm(id) {
+  const wrapper = document.getElementById("adminMgmtFormWrapper");
+  const titleEl = document.getElementById("adminMgmtModalTitle");
+  const form = document.getElementById("adminMgmtForm");
+  const superToggle = form ? form.querySelector(".admin-super-toggle") : null;
+  if (!wrapper || !form || !titleEl) return;
+
+  form.reset();
+  if (id) {
+    adminEditId = id;
+    adminEditData = null;
+    titleEl.textContent = "Modifier l'administrateur";
+    const ref = usersRef();
+    ref.child(id).once("value").then((snap) => {
+      const d = snap.val() || {};
+      adminEditData = d;
+      form.email.value = d.email || "";
+      form.name.value = d.name || d.displayName || "";
+      form.status.value = d.status === "suspendu" ? "suspendu" : "actif";
+      const isSuper = d.super === true;
+      if (superToggle) superToggle.checked = isSuper;
+      buildPrivilegesGrid(d.privileges || {}, isSuper);
+    }).catch((err) => {
+      alert("Impossible de charger le profil : " + (err.message || err.code));
+    });
+  } else {
+    adminEditId = null;
+    adminEditData = null;
+    titleEl.textContent = "Ajouter un administrateur";
+    if (superToggle) superToggle.checked = false;
+    buildPrivilegesGrid({}, false);
+  }
+
+  wrapper.classList.add("active");
+}
+
+function closeAdminForm() {
+  const wrapper = document.getElementById("adminMgmtFormWrapper");
+  if (wrapper) wrapper.classList.remove("active");
+  adminEditId = null;
+  adminEditData = null;
+}
+
+function renderAdmins() {
+  const tbody = document.getElementById("adminMgmtTableBody");
+  const countEl = document.getElementById("adminMgmtCount");
+  const searchEl = document.getElementById("adminMgmtSearch");
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#6b7280;">Chargement des administrateurs...</td></tr>`;
+
+  usersRef().once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const search = searchEl ? searchEl.value.trim().toLowerCase() : "";
+    const admins = Object.keys(data)
+      .map((id) => ({ id, ...data[id] }))
+      .filter((u) => (u.role || "").toString().toLowerCase() === "admin")
+      .sort((a, b) => (b.adminCreatedAt || b.createdAt || 0) - (a.adminCreatedAt || a.createdAt || 0))
+      .filter((u) => {
+        if (!search) return true;
+        const name = (u.name || u.displayName || "").toLowerCase();
+        const email = (u.email || "").toLowerCase();
+        return name.includes(search) || email.includes(search);
+      });
+
+    if (admins.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#6b7280;">Aucun administrateur trouvé.</td></tr>`;
+      if (countEl) countEl.textContent = "Affichage de 0 administrateur";
+      return;
+    }
+
+    const statusMap = {
+      actif: '<span class="status-badge success">Actif</span>',
+      suspendu: '<span class="status-badge danger">Suspendu</span>'
+    };
+
+    tbody.innerHTML = admins.map((u) => {
+      const name = u.name || u.displayName || "Sans nom";
+      const email = u.email || "—";
+      const avatar = u.avatar || u.photoURL || `https://i.pravatar.cc/64?u=${encodeURIComponent(u.id || name)}`;
+      const isSuper = u.super === true;
+      const privs = u.privileges || {};
+      let summary;
+      if (isSuper) {
+        summary = '<span class="super-badge">Accès total (super)</span>';
+      } else {
+        const allowed = ADMIN_SECTIONS
+          .filter(([key]) => key === "dashboard" || privs[key])
+          .map(([, label]) => label);
+        summary = allowed.length
+          ? `<span class="priv-summary">${allowed.map((l) => escapeHtml(l)).join(", ")}</span>`
+          : '<span class="priv-summary">Aucun privilège</span>';
+      }
+
+      const isCurrent = firebase.auth().currentUser && u.id === firebase.auth().currentUser.uid;
+
+      return `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}">
+              <div>
+                <div class="user-cell-name">${escapeHtml(name)}${isCurrent ? ' <span style="font-size:10px;color:var(--mint-dark);font-weight:700;">(vous)</span>' : ''}</div>
+                <div class="user-cell-email">${escapeHtml(email)}</div>
+              </div>
+            </div>
+          </td>
+          <td>${isSuper ? "Super admin" : "Admin"}</td>
+          <td>${summary}</td>
+          <td>${statusMap[u.status] || statusMap.actif}</td>
+          <td>
+            <div class="row-menu">
+              <button type="button" class="row-menu-btn" data-id="${escapeHtml(u.id)}">⋯</button>
+              <div class="row-dropdown" id="admindropdown-${escapeHtml(u.id)}">
+                <button data-action="edit" data-id="${escapeHtml(u.id)}">✏ Modifier</button>
+                ${isCurrent ? '' : '<button data-action="delete" data-id="' + escapeHtml(u.id) + '" class="danger">⤵ Rétrograder</button>'}
+              </div>
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+
+    if (countEl) countEl.textContent = `Affichage de ${admins.length} administrateur${admins.length > 1 ? "s" : ""}`;
+
+    tbody.querySelectorAll(".row-menu-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const dropdown = document.getElementById("admindropdown-" + btn.dataset.id);
+        if (dropdown) {
+          const isOpen = dropdown.classList.contains("open");
+          closeAllRowDropdowns();
+          if (!isOpen) dropdown.classList.add("open");
+        }
+      });
+    });
+    tbody.querySelectorAll("[data-action]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        closeAllRowDropdowns();
+        if (action === "edit") openAdminForm(id);
+        else if (action === "delete") demoteAdmin(id);
+      });
+    });
+  }).catch((err) => {
+    console.error("[ADMINS] erreur lecture:", err);
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement: ${escapeHtml(err.message || err.code)}</td></tr>`;
+  });
+}
+
+function demoteAdmin(id) {
+  if (!confirm("Rétrograder cet administrateur en utilisateur simple ? Ses privilèges seront supprimés.")) return;
+  usersRef().child(id).once("value").then((snap) => {
+    const d = snap.val() || {};
+    const previousRole = d.previousRole || "chercheur_emploi";
+    return usersRef().child(id).update({
+      role: previousRole,
+      super: false,
+      privileges: null,
+      adminCreatedAt: null
+    });
+  }).then(() => {
+    renderAdmins();
+    if (currentAdminData && currentAdminData.uid === id) {
+      currentAdminData.role = "chercheur_emploi";
+    }
+  }).catch((err) => alert("Échec de la rétrogradation : " + (err.message || err.code)));
+}
+
+function findUserByEmail(email) {
+  return usersRef().once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const keys = Object.keys(data);
+    for (const id of keys) {
+      if ((data[id].email || "").toString().toLowerCase() === email.toLowerCase()) {
+        return { id, data: data[id] };
+      }
+    }
+    return null;
+  });
+}
+
+function handleAdminSubmit(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const email = (fd.get("email") || "").toString().trim().toLowerCase();
+  const name = (fd.get("name") || "").toString().trim();
+  const password = (fd.get("password") || "").toString();
+  const status = (fd.get("status") || "actif").toString().trim();
+  const superMode = e.target.querySelector(".admin-super-toggle")
+    ? e.target.querySelector(".admin-super-toggle").checked
+    : false;
+
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    alert("Veuillez saisir une adresse email valide.");
+    return;
+  }
+
+  const privileges = superMode ? {} : collectPrivileges();
+
+  const saveAdminData = (id) => {
+    const payload = {
+      role: "admin",
+      email: email,
+      super: superMode,
+      privileges: superMode ? null : privileges,
+      status: status,
+      adminCreatedAt: adminEditId ? (adminEditData && adminEditData.adminCreatedAt) || Date.now() : Date.now(),
+      updatedAt: Date.now()
+    };
+    if (name) payload.name = name;
+    if (adminEditData && adminEditData.previousRole) payload.previousRole = adminEditData.previousRole;
+    return usersRef().child(id).update(payload);
+  };
+
+  if (adminEditId) {
+    // Modification d'un admin existant (pas de changement d'auth)
+    saveAdminData(adminEditId)
+      .then(() => {
+        closeAdminForm();
+        renderAdmins();
+        if (currentAdminData && currentAdminData.uid === adminEditId) {
+          currentAdminData.super = superMode;
+          currentAdminData.privileges = superMode ? null : privileges;
+          applyAdminPrivilegesToNav();
+        }
+      })
+      .catch((err) => alert("Échec de la modification : " + (err.message || err.code)));
+    return;
+  }
+
+  // Création / promotion
+  findUserByEmail(email).then((existing) => {
+    if (existing) {
+      // Promotion d'un compte existant : on conserve son uid et ses données
+      adminEditData = existing.data;
+      if (!adminEditData.previousRole) adminEditData.previousRole = existing.data.role || "chercheur_emploi";
+      saveAdminData(existing.id)
+        .then(() => {
+          closeAdminForm();
+          renderAdmins();
+          alert("L'utilisateur " + email + " a été promu administrateur.");
+        })
+        .catch((err) => alert("Échec de la promotion : " + (err.message || err.code)));
+      return;
+    }
+
+    // Aucun compte : création d'un nouveau compte Firebase Auth + entrée users
+    if (!password || password.length < 6) {
+      alert("Le mot de passe est requis (6 caractères minimum) pour créer un nouveau compte.");
+      return;
+    }
+    window.__creatingAdmin = true; // empêche la redirection de la garde pendant la création
+    firebase.auth().createUserWithEmailAndPassword(email, password)
+      .then((cred) => {
+        const uid = cred.user.uid;
+        const payload = {
+          uid: uid,
+          email: email,
+          name: name || email.split("@")[0],
+          role: "admin",
+          super: superMode,
+          privileges: superMode ? null : privileges,
+          status: status,
+          adminCreatedAt: Date.now(),
+          createdAt: Date.now(),
+          previousRole: "chercheur_emploi"
+        };
+        return usersRef().child(uid).set(payload);
+      })
+      .then(() => {
+        closeAdminForm();
+        window.__creatingAdmin = false;
+        alert("Compte administrateur créé. Rechargement de la console...");
+        window.location.reload();
+      })
+      .catch((err) => {
+        window.__creatingAdmin = false;
+        alert("Échec de la création : " + (err.message || err.code));
+      });
+  }).catch((err) => alert("Erreur : " + (err.message || err.code)));
+}
+
+// Listeners
+const addAdminBtn = document.getElementById("addAdminBtn");
+if (addAdminBtn) addAdminBtn.addEventListener("click", () => openAdminForm(null));
+
+const adminMgmtClose = document.getElementById("adminMgmtClose");
+if (adminMgmtClose) adminMgmtClose.addEventListener("click", closeAdminForm);
+
+const adminMgmtCancel = document.getElementById("adminMgmtCancel");
+if (adminMgmtCancel) adminMgmtCancel.addEventListener("click", closeAdminForm);
+
+const adminMgmtForm = document.getElementById("adminMgmtForm");
+if (adminMgmtForm) adminMgmtForm.addEventListener("submit", handleAdminSubmit);
+
+const adminMgmtSearch = document.getElementById("adminMgmtSearch");
+if (adminMgmtSearch) adminMgmtSearch.addEventListener("input", renderAdmins);
+
+const adminSuperToggle = document.querySelector(".admin-super-toggle");
+if (adminSuperToggle) {
+  adminSuperToggle.addEventListener("change", () => {
+    const superOn = adminSuperToggle.checked;
+    document.querySelectorAll("#privilegesGrid .priv-check").forEach((cb) => {
+      if (cb.dataset.key === "dashboard") return;
+      cb.checked = superOn;
+      cb.disabled = superOn;
+      cb.closest(".priv-box").classList.toggle("disabled", superOn);
+    });
+  });
+}
