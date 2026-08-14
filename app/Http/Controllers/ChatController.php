@@ -438,7 +438,7 @@ class ChatController extends Controller
                 // 7) Motivation
                 $motiv = $this->extractStatedMotivation($text);
                 if ($motiv === '') {
-                    $motiv = !empty($motivations) ? implode(', ', array_slice($motivations, 0, 2)) : "contribuer à des projets concrets et utiles";
+                    $motiv = !empty($motivations) ? implode(', ', array_slice($motivations, 0, 2)) : "l'envie de contribuer à des projets concrets et utiles";
                 }
                 $parts[] = "Je suis motivé(e) par " . $motiv . ".";
 
@@ -452,7 +452,7 @@ class ChatController extends Controller
                     $parts[] = "À moyen terme, je souhaite poursuivre mon développement en " . $goalField . " pour construire des solutions performantes.";
                 }
 
-                $introText = implode(' ', $parts);
+                $introText = implode("\n", $parts);
                 if ($introText !== '') {
                     return $introText;
                 }
@@ -462,79 +462,84 @@ class ChatController extends Controller
         }
 
         if ($question['id'] === 'values') {
-            $parts = [];
-            $statedMotivation = $this->extractStatedMotivation($text);
-
-            if ($statedMotivation !== '') {
-                $parts[] = "Ma motivation pour ce poste est " . $statedMotivation;
+            $listItems = $this->extractListItems($text);
+            $items = [];
+            if (!empty($listItems) && max(array_map('mb_strlen', $listItems)) <= 45) {
+                $items = $listItems;
+            } else {
+                $single = $this->extractStatedMotivation($text);
+                if ($single !== '') {
+                    $items = [$single];
+                }
+            }
+            if (empty($items)) {
+                $items = $motivations;
             }
 
-            if ($domaine) $parts[] = "Je suis motivé(e) par le domaine de " . $domaine;
-            if ($poste) $parts[] = "Je souhaite rejoindre une équipe en tant que " . $poste;
-            if ($valeurs) $parts[] = "Mes valeurs sont : " . implode(', ', $valeurs);
-            if ($objectifs) $parts[] = "Je souhaite " . implode(', ', $objectifs);
-            if ($motivations) $parts[] = "Ce qui me motive : " . implode(', ', $motivations);
-
-            if ($parts) {
-                return implode('. ', $parts) . ".";
+            if (!empty($items)) {
+                $sentences = [];
+                foreach (array_slice($items, 0, 3) as $item) {
+                    $sentences[] = $this->elaborateMotivationItem($item);
+                }
+                $answer = "Je suis motivé(e) par ce poste pour plusieurs raisons. " . implode(' ', $sentences);
+                if ($domaine) {
+                    $answer .= " Le domaine " . $domaine . " m'attire particulièrement car il me permet de créer des solutions utiles.";
+                }
+                if ($poste) {
+                    $answer .= " Je souhaite d'ailleurs rejoindre votre équipe en tant que " . $poste . ".";
+                }
+                return $answer;
             }
 
-            if ($text !== '') {
-                $domain = $domaine ?: 'ce poste';
-                $motivationsCsv = $motivations ? implode(', ', $motivations) : 'l’impact, l’apprentissage et la collaboration';
-
-                return "Je suis motivé(e) par " . $domain . " car il me permet d'apprendre, de contribuer à des projets utiles et de grandir au sein d'une équipe qui valorise " . $motivationsCsv . ".";
-            }
-
-            return "Je suis motivé(e) par ce poste car il correspond à mes valeurs et me permet de continuer à apprendre.";
+            return "Je suis motivé(e) par ce poste car il correspond à mes valeurs : j'accorde de l'importance au travail bien fait, à l'esprit d'équipe et à l'apprentissage continu. Je souhaite contribuer concrètement aux projets de l'entreprise et continuer à progresser au sein d'une équipe stimulante.";
         }
 
         if ($question['id'] === 'strengths') {
-            $parts = [];
+            $listItems = $this->extractListItems($text);
+            $items = !empty($listItems) ? $listItems : $forces;
 
-            $statedStrengths = $this->extractStatedStrengths($text);
-            if ($statedStrengths !== '') {
-                $parts[] = "Mes forces sont " . $statedStrengths;
+            if (!empty($items)) {
+                $sentences = [];
+                foreach (array_slice($items, 0, 3) as $item) {
+                    $sentences[] = ucfirst($this->elaborateStrengthItem($item));
+                }
+                $answer = "Mes principales forces sont : " . implode('. ', $sentences) . ".";
+                if ($technologies) {
+                    $answer .= " Sur le plan technique, je maîtrise " . implode(', ', array_slice($technologies, 0, 4)) . ".";
+                } elseif ($stages) {
+                    $answer .= " Par exemple, lors de " . $stages[0] . ", j'ai pu mettre en œuvre ces qualités.";
+                }
+                return $answer;
             }
 
-            if ($forces) $parts[] = "Mes forces sont : " . implode(', ', $forces);
-            if ($technologies) $parts[] = "Sur le plan technique, je maîtrise " . implode(', ', $technologies);
-            if ($stages) $parts[] = "Par exemple, lors de " . $stages[0] . ", j'ai pu mettre en œuvre ces qualités.";
-
-            if ($parts) {
-                return implode('. ', $parts) . ".";
-            }
-
-            if ($text !== '') {
-                $strengthsCsv = $forces ? implode(', ', $forces) : 'ma rigueur, mon autonomie et mon esprit d’équipe';
-                $techs = $technologies ? implode(', ', $technologies) : 'des outils modernes';
-
-                return "Mes forces sont notamment " . $strengthsCsv . ". Je suis également à l'aise avec " . $techs . " et j'aime résoudre des problèmes de manière structurée.";
-            }
-
-            return "Mes forces sont ma rigueur, ma capacité d'adaptation et mon esprit d'équipe.";
+            return "Mes forces sont ma rigueur, mon autonomie et mon esprit d'équipe. Par exemple, je planifie mon travail pour livrer à temps et je collabore efficacement avec les autres.";
         }
 
         if ($question['id'] === 'weaknesses') {
-            $parts = [];
-            if ($profile['faiblesses']) $parts[] = "Je peux encore améliorer " . implode(', ', $profile['faiblesses']);
-            if ($objectifs) $parts[] = "Pour progresser, je " . implode(', ', $objectifs);
+            $listItems = $this->extractListItems($text);
+            $items = !empty($listItems) ? $listItems : ($profile['faiblesses'] ?? []);
 
-            if ($parts) {
-                return implode('. ', $parts) . ".";
+            if (!empty($items)) {
+                $w = $items[0];
+                $answer = "Une faiblesse que je travaille à améliorer est " . $w . ". ";
+                $answer .= "Pour progresser, je me suis fixé(e) comme objectif de " . $this->elaborateWeaknessPlan($w)
+                    . ", afin de transformer ce point en véritable levier de croissance.";
+                return $answer;
             }
 
-            if ($text !== '') {
-                $weakness = $profile['faiblesses'] ? implode(', ', $profile['faiblesses']) : 'ma gestion du stress face à des situations complexes';
-                $goals = $objectifs ? implode(', ', $objectifs) : 'mieux organiser mon travail et solliciter de l’aide quand j’en ai besoin';
-
-                return "Je peux encore améliorer " . $weakness . ". Pour progresser, je " . $goals . ", afin de mieux appréhender les situations et renforcer mes compétences.";
-            }
-
-            return "Je peux encore améliorer ma prise de parole en public. Pour progresser, je participe à des ateliers et je présente mes projets en équipe.";
+            return "Je peux encore améliorer ma prise de parole en public. Pour progresser, je participe à des ateliers et je présente mes projets en équipe, ce qui me rend plus à l'aise et plus percutant(e).";
         }
 
         if ($question['id'] === 'scenario') {
+            if ($text !== '') {
+                $story = $this->normalizeInterviewText($text);
+                if (mb_strlen($story) > 220) {
+                    $story = mb_substr($story, 0, 220) . '...';
+                }
+                return "Pour illustrer, voici une situation que j'ai vécue : " . $story
+                    . " Ma tâche était claire : je devais trouver une solution. J'ai donc analysé le problème, pris une action concrète et obtenu un résultat positif, ce qui m'a appris l'importance de la communication et de la planification.";
+            }
+
             $situation = $stages[0] ?? $experiences[0] ?? $projets[0] ?? null;
             if ($situation) {
                 return "Situation : lors de " . $situation . ", j'ai rencontré une difficulté. "
@@ -543,15 +548,7 @@ class ChatController extends Controller
                     . "Résultat : la situation a été résolue et j'ai appris l'importance de la communication et de la planification.";
             }
 
-            if ($text !== '') {
-                $firstSentence = $text;
-                if (mb_strlen($firstSentence) > 200) {
-                    $firstSentence = mb_substr($firstSentence, 0, 200) . '...';
-                }
-                return $firstSentence;
-            }
-
-            return "J'ai déjà fait face à une situation difficile que j'ai gérée en analysant le problème, en proposant une solution et en obtenant un résultat positif.";
+            return "J'ai déjà fait face à une situation difficile que j'ai gérée en analysant le problème, en proposant une solution et en obtenant un résultat positif, ce qui a renforcé mon esprit d'équipe et mon sens de l'organisation.";
         }
 
         if ($text !== '') {
@@ -593,11 +590,11 @@ class ChatController extends Controller
 
     private function extractStatusFromText(string $text): string
     {
-        if (preg_match('/\b(étudiante|étudiant)\b/i', $text)) {
+        if (preg_match('/\b(étudiante|étudiant|etudiante|etudiant)\b/iu', $text)) {
             return 'étudiante';
         }
 
-        if (preg_match('/\b(ingénieur(?:e)?|developeur(?:se)?|développeur(?:se)?|analyste|chef\s+de\s+projet|stagiaire)\b/i', $text, $matches)) {
+        if (preg_match('/\b(ingénieur(?:e)?|ingenieur(?:e)?|developeur(?:se)?|développeur(?:se)?|developpeur(?:se)?|analyste|chef\s+de\s+projet|stagiaire)\b/iu', $text, $matches)) {
             return strtolower($matches[1]);
         }
 
@@ -720,11 +717,110 @@ class ChatController extends Controller
             }
         }
 
-        if (preg_match('/\b(?:motivation|motivé|motivée|motivé|motivée)\b/i', $cleaned)) {
-            return ucfirst(mb_strtolower($cleaned, 'UTF-8'));
+        return '';
+    }
+
+    private function extractListItems(string $text): array
+    {
+        $cleaned = trim($text);
+        if ($cleaned === '') {
+            return [];
         }
 
-        return '';
+        $rest = $cleaned;
+        if (preg_match('/(?:sont|est|sommes)\s*:?\s*(.+)$/iu', $cleaned, $m)) {
+            $rest = trim($m[1]);
+        } elseif (preg_match('/(?:sont|est)\s+(.+)$/iu', $cleaned, $m)) {
+            $rest = trim($m[1]);
+        }
+
+        $raw = preg_split('/\s*(?:,|;| et | ou | avec )\s*/iu', $rest);
+        $items = [];
+        foreach ($raw as $it) {
+            $it = trim($it, " .;:!?\"'()");
+            $it = mb_strtolower($it, 'UTF-8');
+            if ($it !== '') {
+                $items[] = $it;
+            }
+        }
+
+        return $items;
+    }
+
+    private function elaborateMotivationItem(string $item): string
+    {
+        $item = trim($item);
+        $map = [
+            'travail' => "Le travail bien fait et le sens du résultat comptent beaucoup pour moi.",
+            'esprit d\'équipe' => "Je valorise la collaboration et l'entraide pour avancer vers un objectif commun.",
+            'équipe' => "Travailler en équipe me stimule et me permet de progresser plus vite.",
+            'apprentissage' => "Je souhaite continuer à apprendre et à développer mes compétences.",
+            'apprendre' => "J'aime apprendre continuellement et découvrir de nouvelles approches.",
+            'défi' => "Les défis me motivent car ils me font grandir professionnellement.",
+            'projet' => "Je veux contribuer à des projets concrets et utiles.",
+            'évolution' => "Je souhaite évoluer et prendre davantage de responsabilités.",
+            'croissance' => "Ma croissance professionnelle et personnelle sont une priorité.",
+            'impact' => "J'ai à cœur d'avoir un impact positif et mesurable.",
+            'responsabilité' => "Assumer des responsabilités me donne du sens au travail.",
+            'autonomie' => "J'apprécie l'autonomie qui me permet d'être force de proposition.",
+            'mission' => "La mission de l'entreprise résonne avec mes propres valeurs.",
+            'valeur' => "Les valeurs de l'entreprise correspondent aux miennes.",
+        ];
+
+        foreach ($map as $keyword => $phrase) {
+            if (str_contains($item, $keyword)) {
+                return $phrase;
+            }
+        }
+
+        return "J'accorde une réelle importance à " . $item . ".";
+    }
+
+    private function elaborateStrengthItem(string $item): string
+    {
+        $item = trim($item);
+        $map = [
+            'rigueur' => "ma rigueur me permet de livrer un travail fiable et soigné",
+            'communication' => "ma communication claire facilite la collaboration avec l'équipe",
+            'autonomie' => "mon autonomie me permet d'avancer sans supervision constante",
+            'esprit d\'équipe' => "mon esprit d'équipe m'aide à progresser avec les autres",
+            'équipe' => "j'aime travailler en équipe et partager les connaissances",
+            'organisation' => "mon sens de l'organisation m'aide à respecter les délais",
+            'créativité' => "ma créativité me permet de proposer des solutions originales",
+            'leadership' => "mon leadership me permet d'encadrer et de fédérer les autres",
+            'analyse' => "mon esprit d'analyse m'aide à résoudre les problèmes efficacement",
+            'adaptabilité' => "mon adaptabilité me permet de gérer le changement sereinement",
+            'dynamisme' => "mon dynamisme donne de l'énergie à mes projets",
+        ];
+
+        foreach ($map as $keyword => $phrase) {
+            if (str_contains($item, $keyword)) {
+                return $phrase;
+            }
+        }
+
+        return "ma qualité « " . $item . " » est un atout au quotidien";
+    }
+
+    private function elaborateWeaknessPlan(string $item): string
+    {
+        $item = trim($item);
+        $map = [
+            'stress' => "m'organiser mieux et pratiquer la gestion du temps",
+            'parole' => "participer à des ateliers de prise de parole en public",
+            'public' => "participer à des ateliers de prise de parole en public",
+            'organisation' => "planifier mon travail et tenir un planning précis",
+            'confiance' => "préparer davantage et solliciter des retours constructifs",
+            'temps' => "planifier mon travail et respecter des étapes claires",
+        ];
+
+        foreach ($map as $keyword => $phrase) {
+            if (str_contains($item, $keyword)) {
+                return $phrase;
+            }
+        }
+
+        return "m'organiser davantage et demander régulièrement du feedback";
     }
 
     private function isValidInterviewAnswer(string $message, array $question): bool
