@@ -6,7 +6,7 @@
 <link rel="icon" href="/image/vera1.png">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>VERA - Connexion / Inscription</title>
-<link rel="stylesheet" href="/style_L.css?v=8">
+<link rel="stylesheet" href="/style_L.css?v=9">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
@@ -18,9 +18,9 @@
   <aside class="brand-panel">
     <div class="brand-panel-content">
         <div class="brand" style="flex-direction:column;align-items:center;text-align:center;">
-        <div class="brand-logo" style="background:none;border:none;border-radius:0;backdrop-filter:none;width:224px;height:140px; margin: 0 10px -58px -27px;"><img src="/image/veras1.png" alt="VERA" style="width:100%;height:100%;object-fit:contain;"></div>
+        <div class="brand-logo" style="background:none;border:none;border-radius:0;backdrop-filter:none;width:224px;height:140px; margin: 0 10px -100px -27px;"><img src="/image/veras1.png" alt="VERA" style="width:100%;height:100%;object-fit:contain;"></div>
         <div>
-          <div class="brand-name">VERA</div>
+          <img class="brand-name-img" src="/image/veras2.png" alt="VERA">
           <div class="brand-tag">Real Opportunities, Smart Jobs</div>
         </div>
       </div>
@@ -29,9 +29,9 @@
       <p>VERA analyse ton profil et trouve les opportunités adaptées à ton profil pour booster ta carrière 24h/24, 7j/7 .</p>
 
       <ul class="feature-list">
-        <li><span class="feature-icon"><img src="/image/mission.png" alt="" style="width:18px;height:18px;object-fit:contain;"></span> Des offres qui correspondent vraiment à ton profil</li>
-        <li><span class="feature-icon"><img src="/image/3914260.png" alt="" style="width:18px;height:18px;object-fit:contain;"></span> Les offres d'emploi boostées automatiquement par l'IA</li>
-        <li><span class="feature-icon"><img src="/image/3916740.png" alt="" style="width:18px;height:18px;object-fit:contain;"></span> Un coaching carrière personnalisé</li>
+        <li><span class="feature-icon"><span class="feature-glyph" style="-webkit-mask-image:url(/image/mission.png);mask-image:url(/image/mission.png);"></span></span> Des offres qui correspondent vraiment à ton profil</li>
+        <li><span class="feature-icon"><span class="feature-glyph" style="-webkit-mask-image:url(/image/3914260.png);mask-image:url(/image/3914260.png);"></span></span> Les offres d'emploi boostées automatiquement par l'IA</li>
+        <li><span class="feature-icon"><span class="feature-glyph" style="-webkit-mask-image:url(/image/3916740.png);mask-image:url(/image/3916740.png);"></span></span> Un coaching carrière personnalisé</li>
       </ul>
 
       <div class="stats-row">
@@ -43,11 +43,11 @@
 
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
-    <div class="floating-robot" style="filter:none;"><img src="/image/1_nobg.png" alt="" style="width:60px;height:60px;object-fit:contain;"></div>
   </aside>
 
   <!-- RIGHT PANEL -->
   <main class="form-panel">
+    <div class="floating-robot" style="filter:none;"><img src="/image/1_nobg.png" alt="" style="width:180px;height:180px;object-fit:contain;"></div>
     <div class="form-wrap">
 
       <div class="mobile-brand">
@@ -270,16 +270,34 @@
 <script>
   fetch('/login-stats').then(function(r){return r.json();}).then(function(data){
     var m = document.getElementById('statMembers');
-    var c = document.getElementById('statCompanies');
     var s = document.getElementById('statSatisfaction');
     if(m) m.textContent = data.members >= 1000 ? Math.round(data.members/1000) + 'K+' : data.members + '+';
-    if(c) c.textContent = data.companies >= 1000 ? Math.round(data.companies/1000) + 'K+' : data.companies + '+';
     if(s) s.textContent = data.satisfaction + '%';
   }).catch(function(){
     var m = document.getElementById('statMembers'); if(m) m.textContent = '120K+';
-    var c = document.getElementById('statCompanies'); if(c) c.textContent = '8 500+';
     var s = document.getElementById('statSatisfaction'); if(s) s.textContent = '92%';
   });
+
+  // Nombre réel de comptes entreprise présents dans Firebase (users avec role = entreprise)
+  function countCompanyAccounts() {
+    var c = document.getElementById('statCompanies');
+    if (!c || typeof firebase === 'undefined' || !firebase.database) return;
+    firebase.database().ref('users').once('value').then(function(snapshot){
+      var data = snapshot.val() || {};
+      var count = 0;
+      Object.keys(data).forEach(function(id){
+        if ((data[id].role || '').toString().toLowerCase() === 'entreprise') count++;
+      });
+      c.textContent = count + '+';
+    }).catch(function(){
+      if (c && c.textContent === '0') c.textContent = '8 500+';
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', countCompanyAccounts);
+  } else {
+    countCompanyAccounts();
+  }
 </script>
 </body>
 </html>

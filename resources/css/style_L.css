@@ -113,7 +113,7 @@ a{color:inherit;text-decoration:none;}
 /* FORMS */
 .auth-form{display:none;flex-direction:column;gap:8px;}
 .auth-form.active{display:flex;}
-.auth-form h2{font-size:20px;font-weight:800;margin-bottom:2px;}
+.auth-form h2{font-size:20px;font-weight:800;margin-bottom:2px;color: #38bdf8;}
 .form-sub{font-size:12px;color:var(--muted);margin-top:-4px;margin-bottom:2px;}
 
 .social-row{display:flex;gap:8px;}
@@ -132,7 +132,11 @@ a{color:inherit;text-decoration:none;}
 .field-row .field-group{flex:1;}
 
 .field-group{display:flex;flex-direction:column;gap:2px;}
-.field-group label{font-size:11.5px;font-weight:700;color:var(--text);}
+.field-group label{font-size:11.5px;font-weight:700;color: #16a34a;}
+
+/* Connexion + Inscription : titre et labels en couleurs personnalisées */
+#loginForm h2, #signupForm h2{color:#03A9F4;}
+#loginForm .field-group label, #signupForm .field-group label{color:#21c464;}
 .field-group input{
   border:1px solid var(--border);border-radius:10px;padding:9px 12px;
   font-size:12.5px;outline:none;transition:border-color .15s ease, box-shadow .15s ease;
