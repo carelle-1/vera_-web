@@ -65,7 +65,7 @@ a{color:inherit;text-decoration:none;}
 .stat-block{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
 .stat-block strong{
   display:flex;align-items:center;justify-content:center;text-align:center;
-  background:#fff;color:#0690d3;
+  background:#fff;color:#21c369;
   border-radius:999px;
   padding:8px 24px;min-width:100px;min-height:38px;
   font-size:18px;font-weight:800;

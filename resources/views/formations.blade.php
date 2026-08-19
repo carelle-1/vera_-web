@@ -47,7 +47,7 @@
             <div class="hero-streak">
                <div class="streak-trophy"><img src="/image/3914133.png" alt="" style="width:24px;height:24px;object-fit:contain;"></div>
               <div class="streak-label">Série d'apprentissage</div>
-              <div class="streak-value" id="heroStreakValue">0 jour 🔥</div>
+               <div class="streak-value" id="heroStreakValue">0 jour <img src="/image/3914133.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div>
               <div class="streak-sub" id="heroStreakSub">Continuez ainsi !</div>
             </div>
           </section>
@@ -117,25 +117,25 @@
             </div>
             <div class="stats-grid">
               <div class="stat-item">
-                <div class="stat-icon">⏱</div>
+                <div class="stat-icon"><img src="/image/3917292.png" alt="Temps" style="width:20px;height:20px;object-fit:contain;"></div>
                 <div class="stat-label">Temps d'apprentissage</div>
                 <div class="stat-value">24h 30m</div>
                 <div class="stat-diff up">+18% vs le mois dernier</div>
               </div>
               <div class="stat-item">
-                <div class="stat-icon">🎓</div>
+                <div class="stat-icon"><img src="/image/formation.png" alt="Formations" style="width:20px;height:20px;object-fit:contain;"></div>
                 <div class="stat-label">Formations complétées</div>
                 <div class="stat-value">3</div>
                 <div class="stat-diff up">+2 vs le mois dernier</div>
               </div>
               <div class="stat-item">
-                <div class="stat-icon">📜</div>
+                <div class="stat-icon"><img src="/image/3917505.png" alt="Certificats" style="width:20px;height:20px;object-fit:contain;"></div>
                 <div class="stat-label">Certificats obtenus</div>
                 <div class="stat-value">1</div>
                 <div class="stat-diff up">+1 vs le mois dernier</div>
               </div>
               <div class="stat-item">
-                <div class="stat-icon">🔥</div>
+                <div class="stat-icon"><img src="/image/3914133.png" alt="Série" style="width:20px;height:20px;object-fit:contain;"></div>
                 <div class="stat-label">Série actuelle</div>
                 <div class="stat-value">7 jours</div>
                 <div class="stat-diff neutral">Continuez ainsi !</div>
@@ -146,12 +146,12 @@
           <div class="card">
             <div class="card-head-row"><span>Certifications récentes</span><a href="#" class="see-all">Voir tout →</a></div>
             <div class="cert-item">
-              <div class="cert-icon">🎨</div>
+              <div class="cert-icon"><img src="/image/3917361.png" alt="Certificat" style="width:20px;height:20px;object-fit:contain;"></div>
               <div class="cert-info">
                 <div class="cert-title">Certificat Figma Avancé</div>
                 <div class="cert-date">Obtenu le 15 Mai 2024</div>
               </div>
-              <button class="cert-download">⬇ Télécharger</button>
+              <button class="cert-download"><img src="/image/download.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Télécharger</button>
             </div>
           </div>
 

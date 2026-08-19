@@ -30,7 +30,7 @@
           <div class="toolbar">
             <span class="result-count" id="resultCount">16 offres d'emploi</span>
             <div class="toolbar-actions">
-              <button class="btn-outline" id="exportBtn">⬆ Exporter</button>
+              <button class="btn-outline" id="exportBtn"><img src="/image/mission.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:6px;">Exporter</button>
               <div class="sort-wrap">
                 <span>Trier par :</span>
                 <select id="sortSelect">
@@ -106,7 +106,7 @@
           <div class="card advice-card">
             <div class="card-head-row"><span>Conseil VERA</span></div>
             <p>Activez les alertes pour être informé en temps réel des nouvelles opportunités similaires.</p>
-            <button class="btn-white-outline full">🔔 Créer une alerte</button>
+            <button class="btn-white-outline full"><img src="/image/3917508.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:6px;">Créer une alerte</button>
           </div>
 
         </aside>

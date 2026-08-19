@@ -8,10 +8,10 @@
     <!-- PAGE HEAD -->
     <div class="page-head">
       <div>
-        <h1 style="color: #12b3c9;">Messages <span class="cap">💬</span></h1>
+        <h1 style="color: #12b3c9;">Messages <img src="/image/discussion.png" alt="" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"></h1>
         <p>&Eacute;changez avec l'assistant VERA et notre &eacute;quipe. Nous sommes là pour vous accompagner.</p>
       </div>
-      <button class="btn-primary" id="newMsgBtn">✉ Nouveau message</button>
+      <button class="btn-primary" id="newMsgBtn"><img src="/image/mail.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Nouveau message</button>
     </div>
 
     <!-- TABS -->
@@ -41,28 +41,28 @@
       <section class="chat-panel">
         <div class="chat-header">
           <div class="chat-header-left">
-            <div class="chat-avatar" id="chatAvatar">🤖</div>
+            <div class="chat-avatar" id="chatAvatar"><img src="/image/1_nobg.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
             <div>
               <div class="chat-name">VERA (Assistant IA) <span class="ia-badge">IA</span></div>
               <div class="chat-status"><span class="dot-online"></span>En ligne</div>
             </div>
           </div>
           <div class="chat-header-actions">
-            <button class="icon-btn-round">ⓘ</button>
-            <button class="icon-btn-round">⋯</button>
+            <button class="icon-btn-round"><img src="/image/3917317.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+            <button class="icon-btn-round"><img src="/image/3917293.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
           </div>
         </div>
 
         <div class="chat-messages" id="chatMessages"></div>
 
         <div class="chat-input">
-          <button class="input-icon" id="attachImageBtn" title="Ajouter une image">🖼️</button>
-          <button class="input-icon" id="attachFileBtn" title="Ajouter un fichier">📎</button>
-          <button class="input-icon">😊</button>
+          <button class="input-icon" id="attachImageBtn" title="Ajouter une image"><img src="/image/1.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+          <button class="input-icon" id="attachFileBtn" title="Ajouter un fichier"><img src="/image/3917361.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+          <button class="input-icon"><img src="/image/3916880.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
           <input type="file" id="imageInput" accept="image/*" style="display:none;">
           <input type="file" id="fileInput" style="display:none;">
           <input type="text" id="chatInput" placeholder="Écrivez votre message...">
-          <button class="send-btn" id="sendBtn">➤</button>
+          <button class="send-btn" id="sendBtn"><img src="/image/envoyez.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
         </div>
         <div id="previewArea" style="display:none; padding: 10px 18px; background: #fff; border-top: 1px solid var(--border);">
           <div id="previewContent" style="display: flex; gap: 10px; align-items: center;"></div>
@@ -76,7 +76,7 @@
       <!-- CONTACT INFO -->
       <aside class="contact-panel">
         <div class="card contact-card">
-          <div class="contact-avatar">🤖</div>
+          <div class="contact-avatar"><img src="/image/1_nobg.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
           <div class="contact-name">VERA (Assistant IA) <span class="ia-badge">IA</span></div>
           <div class="contact-status"><span class="dot-online"></span>En ligne</div>
           <p>Votre assistant carrière intelligent. VERA vous aide à trouver des opportunités, postuler automatiquement et booster votre carrière.</p>
@@ -86,19 +86,19 @@
         <div class="card">
           <div class="card-head-row"><span>Actions rapides</span></div>
           <div class="quick-action">
-            <div class="quick-icon blue">🔍</div>
+            <div class="quick-icon blue"><img src="/image/3917754.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
             <div><div class="quick-title">Découvrir des opportunités</div><div class="quick-sub">VERA recherche pour vous</div></div>
           </div>
           <div class="quick-action">
-            <div class="quick-icon purple">📈</div>
+            <div class="quick-icon purple"><img src="/image/7653263.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
             <div><div class="quick-title">Améliorer mon profil</div><div class="quick-sub">Conseils personnalisés</div></div>
           </div>
           <div class="quick-action">
-            <div class="quick-icon green">📤</div>
+            <div class="quick-icon green"><img src="/image/mission.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
             <div><div class="quick-title">Postuler automatiquement</div><div class="quick-sub">VERA postule pour vous</div></div>
           </div>
           <div class="quick-action">
-            <div class="quick-icon orange">🎯</div>
+            <div class="quick-icon orange"><img src="/image/3917361.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
             <div><div class="quick-title">Mes recommandations</div><div class="quick-sub">Formations &amp; conseils</div></div>
           </div>
         </div>
@@ -114,20 +114,20 @@
         <div class="card">
           <div class="card-head-row"><span>Fichiers et ressources partagés</span></div>
           <div class="file-item">
-            <div class="file-icon">📄</div>
+            <div class="file-icon"><img src="/image/3917505.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
             <div class="file-info">
               <div class="file-name">Guide_Optimisation_Profil.pdf</div>
               <div class="file-meta">PDF · 1.2 MB · 02 mai 2024</div>
             </div>
-            <button class="file-download">⬇</button>
+            <button class="file-download"><img src="/image/download.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
           </div>
           <div class="file-item">
-            <div class="file-icon">📄</div>
+            <div class="file-icon"><img src="/image/3917505.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
             <div class="file-info">
               <div class="file-name">Top_Competences_2024.pdf</div>
               <div class="file-meta">PDF · 892 KB · 28 avr 2024</div>
             </div>
-            <button class="file-download">⬇</button>
+            <button class="file-download"><img src="/image/download.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
           </div>
           <a href="#" class="see-all">Voir tous les fichiers →</a>
         </div>

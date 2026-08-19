@@ -1,25 +1,25 @@
 // ============== DONNÉES DE SECOURS ==============
 const defaultContinueCourses = [
-  { icon: "🎨", bg: "#f24e1e", title: "Design System avec Figma", level: "Intermédiaire", levelClass: "intermediate", value: 75, remaining: "2h 15m restantes" },
-  { icon: "🧩", bg: "#6d28d9", title: "Prototyping avancé", level: "Intermédiaire", levelClass: "intermediate", value: 60, remaining: "1h 30m restantes" },
-  { icon: "🔍", bg: "#0ea5e9", title: "User Research Méthodes", level: "Intermédiaire", levelClass: "intermediate", value: 40, remaining: "1h restantes" },
-  { icon: "🧑‍🤝‍🧑", bg: "#16a34a", title: "Leadership & Soft Skills", level: "Débutant", levelClass: "beginner", value: 25, remaining: "45m restantes" }
+  { icon: "/image/3917361.png", bg: "#f24e1e", title: "Design System avec Figma", level: "Intermédiaire", levelClass: "intermediate", value: 75, remaining: "2h 15m restantes" },
+  { icon: "/image/3917361.png", bg: "#6d28d9", title: "Prototyping avancé", level: "Intermédiaire", levelClass: "intermediate", value: 60, remaining: "1h 30m restantes" },
+  { icon: "/image/3917754.png", bg: "#0ea5e9", title: "User Research Méthodes", level: "Intermédiaire", levelClass: "intermediate", value: 40, remaining: "1h restantes" },
+  { icon: "/image/3917361.png", bg: "#16a34a", title: "Leadership & Soft Skills", level: "Débutant", levelClass: "beginner", value: 25, remaining: "45m restantes" }
 ];
 
 const defaultRecoCourses = [
-  { icon: "✍️", bg: "#f59e0b", title: "UX Writing", level: "Intermédiaire", duration: "6h", rating: "4.7", reviews: 89, category: "Design" },
-  { icon: "📊", bg: "#ef4444", title: "Data Visualization", level: "Intermédiaire", duration: "8h", rating: "4.6", reviews: 74, category: "Data" },
-  { icon: "🗂", bg: "#3b6bf5", title: "Gestion de projet Agile", level: "Intermédiaire", duration: "10h", rating: "4.8", reviews: 126, category: "Business" },
-  { icon: "📈", bg: "#16a34a", title: "SEO Avancé", level: "Intermédiaire", duration: "7h", rating: "4.5", reviews: 63, category: "Marketing" }
+  { icon: "/image/edit.png", bg: "#f59e0b", title: "UX Writing", level: "Intermédiaire", duration: "6h", rating: "4.7", reviews: 89, category: "Design" },
+  { icon: "/image/7653263.png", bg: "#ef4444", title: "Data Visualization", level: "Intermédiaire", duration: "8h", rating: "4.6", reviews: 74, category: "Data" },
+  { icon: "/image/3917505.png", bg: "#3b6bf5", title: "Gestion de projet Agile", level: "Intermédiaire", duration: "10h", rating: "4.8", reviews: 126, category: "Business" },
+  { icon: "/image/7653263.png", bg: "#16a34a", title: "SEO Avancé", level: "Intermédiaire", duration: "7h", rating: "4.5", reviews: 63, category: "Marketing" }
 ];
 
 const defaultCategories = [
-  { icon: "🎨", title: "Design & UX", count: "24 formations" },
-  { icon: "💻", title: "Développement", count: "36 formations" },
-  { icon: "💼", title: "Business", count: "28 formations" },
-  { icon: "📣", title: "Marketing", count: "22 formations" },
-  { icon: "📊", title: "Data & IA", count: "18 formations" },
-  { icon: "🤝", title: "Soft Skills", count: "16 formations" }
+  { icon: "/image/3917361.png", title: "Design & UX", count: "24 formations" },
+  { icon: "/image/3916670.png", title: "Développement", count: "36 formations" },
+  { icon: "/image/mission.png", title: "Business", count: "28 formations" },
+  { icon: "/image/discussion.png", title: "Marketing", count: "22 formations" },
+  { icon: "/image/7653263.png", title: "Data & IA", count: "18 formations" },
+  { icon: "/image/3917361.png", title: "Soft Skills", count: "16 formations" }
 ];
 
 const defaultGoals = [
@@ -67,12 +67,12 @@ function renderContinueCourses(courses) {
 
   grid.innerHTML = courses.map((c, i) => `
     <div class="course-card">
-      <div class="course-icon" style="background:${c.bg}">${c.icon}</div>
+      <div class="course-icon" style="background:${c.bg}"><img src="${c.icon}" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
       <div class="course-title">${c.title}</div>
       <span class="course-level ${c.levelClass}">${c.level}</span>
       <div class="course-bar"><div class="course-fill" id="courseFill${i}"></div></div>
       <div class="course-percent">${c.value}%</div>
-      <div class="course-remain">🕐 ${c.remaining}</div>
+      <div class="course-remain"><img src="/image/3917292.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;">${c.remaining}</div>
       <button class="btn-continue">Continuer</button>
     </div>
   `).join("");
@@ -99,10 +99,10 @@ function renderRecoCourses(courses) {
 
   grid.innerHTML = courses.map(c => `
     <div class="reco-card">
-      <div class="reco-icon" style="background:${c.bg}">${c.icon}</div>
+      <div class="reco-icon" style="background:${c.bg}"><img src="${c.icon}" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
       <div class="reco-title">${c.title}</div>
       <span class="reco-level">${c.level}</span>
-      <div class="reco-meta">${c.duration || ''} · Certificat · ⭐ ${c.rating || '—'} (${c.reviews || '—'})</div>
+      <div class="reco-meta">${c.duration || ''} · Certificat · <img src="/image/3914133.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"> ${c.rating || '—'} (${c.reviews || '—'})</div>
       <button class="btn-reco">Voir la formation</button>
     </div>
   `).join("");
@@ -120,7 +120,7 @@ function renderCategories(categories) {
 
   grid.innerHTML = categories.map(c => `
     <div class="category-card">
-      <div class="category-icon">${c.icon}</div>
+      <div class="category-icon"><img src="${c.icon}" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
       <div class="category-title">${c.title}</div>
       <div class="category-count">${c.count}</div>
     </div>
@@ -216,7 +216,7 @@ async function loadHeroData(serverHero) {
         const safeStreak = isNaN(streak) ? 0 : streak;
 
         if (streakValueEl) {
-          streakValueEl.textContent = safeStreak + " jour" + (safeStreak > 1 ? "s" : "") + " 🔥";
+           streakValueEl.textContent = safeStreak + " jour" + (safeStreak > 1 ? "s" : "") + " <img src='/image/3914133.png' alt='' style='width:14px;height:14px;object-fit:contain;vertical-align:middle;'>";
         }
         if (streakSubEl) {
           streakSubEl.textContent = safeStreak > 0 ? "Continuez ainsi !" : "Commencez votre série !";
@@ -233,7 +233,7 @@ async function loadHeroData(serverHero) {
     if (progressFillEl) progressFillEl.style.width = globalProgress + "%";
 
     if (streakValueEl) {
-      streakValueEl.textContent = streak + " jour" + (streak > 1 ? "s" : "") + " 🔥";
+      streakValueEl.textContent = streak + " jour" + (streak > 1 ? "s" : "") + " <img src='/image/3914133.png' alt='' style='width:14px;height:14px;object-fit:contain;vertical-align:middle;'>";
     }
     if (streakSubEl) {
       streakSubEl.textContent = streak > 0 ? "Continuez ainsi !" : "Commencez votre série !";
@@ -270,7 +270,7 @@ async function loadFormationsData() {
         levelClass: mapLevelToClass(f.level)
       }));
       const recoCourses = (data.recoFormations || []).map(f => ({
-        icon: f.icon || "🎓",
+        icon: f.icon || "/image/formation.png",
         bg: f.bg || "#3b6bf5",
         title: f.title || "Formation",
         level: f.level || "Intermédiaire",
@@ -352,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (addGoalBtn) {
     addGoalBtn.addEventListener("click", function () {
       const original = this.textContent;
-      this.textContent = "✓ Objectif ajouté";
+      this.innerHTML = '<img src="/image/3917505.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:6px;">Objectif ajouté';
       setTimeout(() => { this.textContent = original; }, 1200);
     });
   }
@@ -369,7 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (certDownload) {
     certDownload.addEventListener("click", function () {
       const original = this.textContent;
-      this.textContent = "✓ Téléchargé";
+      this.innerHTML = '<img src="/image/3917505.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:6px;">Téléchargé';
       setTimeout(() => { this.textContent = original; }, 1200);
     });
   }

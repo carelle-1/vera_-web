@@ -1,10 +1,10 @@
 :root{
   --navy:#0b1130;
   --navy-2:#0e1640;
-  --blue:#3b6bf5;
-  --blue-dark:#1e40c9;
-  --blue-light:#5b8bff;
-  --green:#16a34a;
+  --blue:#00BCD4;
+  --blue-dark:#0097a7;
+  --blue-light:#4dd0e1;
+  --green:#15a55c;
   --orange:#f59e0b;
   --purple:#8b5cf6;
   --pink:#ec4899;
@@ -38,7 +38,7 @@ select{font-family:inherit;}
 /* ================= SIDEBAR ================= */
 .sidebar{
   width:230px;flex-shrink:0;height:100vh;
-  background:linear-gradient(180deg,#16a34a 0%, #12b3c9 100%);
+  background:linear-gradient(180deg,#15a55c 0%, #00BCD4 100%);
   color:#fff;padding:20px 15px;display:flex;flex-direction:column;gap:16px;
   overflow-y:auto;
   transition:width .2s ease;
@@ -72,18 +72,18 @@ select{font-family:inherit;}
 .nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;}
 .nav-item.active{
   background:#f4f6fb;
-  color:#12b3c9;
+  color:#00BCD4;
   box-shadow:none;
 }
 .nav-item.active .nav-icon{
   filter:invert(52%) sepia(83%) saturate(1017%) hue-rotate(140deg) brightness(91%) contrast(89%);
 }
 .pill{margin-left:auto;font-size:9.5px;font-weight:700;background:#eef1fb;padding:2px 6px;border-radius:20px;color: #000;}
-.pill.blue{background:#12b3c9;color:#fff;}
+.pill.blue{background:#00BCD4;color:#fff;}
 .pill.red{background:var(--red);color:#fff;}
 
 .premium-card{
-  background:linear-gradient(160deg,#16a34a, #16a34a);
+  background:linear-gradient(160deg,#15a55c, #15a55c);
   border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-md);padding:14px;
 }
 .premium-crown{font-size:18px;margin-bottom:6px;}
@@ -120,7 +120,7 @@ select{font-family:inherit;}
 .user{display:flex;align-items:center;gap:9px;cursor:pointer;}
 .user img{width:34px;height:34px;border-radius:50%;object-fit:cover;}
 .user-text{font-size:12.5px;font-weight:600;line-height:1.5;}
-.verified{font-size:11px;color:#16a34a;font-weight:600;}
+.verified{font-size:11px;color:#15a55c;font-weight:600;}
 .chev{color:var(--muted);}
 
 /* PAGE HEAD */
@@ -248,7 +248,33 @@ select{font-family:inherit;}
 .btn-white-outline.full:hover{background:rgba(255,255,255,0.18);}
 
 /* RESPONSIVE */
-@media (max-width:1150px){
+
+/* Icon color filter - blue #00BCD4 */
+.quick-icon img,
+.pref-icon img,
+.notif-icon img,
+.info-icon img,
+.skill-card-icon img,
+.formation-icon img,
+.objectif-icon img,
+.file-icon img,
+.msg-avatar-sm img,
+.robot-icon img,
+.streak-trophy img,
+.plan-goal-icon img,
+.cv-icon img,
+.shield-icon img,
+.settings-icon img,
+.help-icon img,
+.icon-btn img,
+.input-icon img,
+.send-btn img,
+.file-download img,
+.cert-download img,
+.verified-tag img,
+.verified-dot img {
+    filter: brightness(0) invert(1) sepia(90%) saturate(500%) hue-rotate(175deg) brightness(95%) contrast(90%);
+}`n@media (max-width:1150px){
   .layout{grid-template-columns:1fr;}
 }
 @media (max-width:820px){

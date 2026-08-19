@@ -17,7 +17,7 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="brand">
-        <div class="brand-logo"><img src="/image/veras1.png" alt="VERA" style="width:100%;height:100%;object-fit:contain;border-radius:8px;"></div>
+        <!-- <div class="brand-logo"><img src="/image/veras1.png" alt="VERA" style="width:100%;height:100%;object-fit:contain;border-radius:8px;"></div> -->
       <div>
         <img class="brand-name-img" src="/image/veras2.png" alt="VERA">
         <div class="brand-tag">Real Opportunities, Smart Jobs</div>

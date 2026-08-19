@@ -34,8 +34,8 @@
               <input type="checkbox" id="selectAll"> Tout sélectionner
             </label>
             <div class="toolbar-actions">
-              <button class="link-btn" id="markAllRead">✉ Marquer tout comme lu</button>
-              <button class="btn-filter">Filtres ⚙</button>
+              <button class="link-btn" id="markAllRead"><img src="/image/mail.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:6px;">Marquer tout comme lu</button>
+              <button class="btn-filter">Filtres <img src="/image/3917317.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-left:4px;"></button>
             </div>
           </div>
 
@@ -56,32 +56,32 @@
           <div class="card">
             <div class="card-head-row"><span>Préférences de notifications</span></div>
             <div class="pref-item">
-              <div class="pref-icon blue">💼</div>
+              <div class="pref-icon blue"><img src="/image/mission.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
               <div class="pref-text"><div class="pref-title">Opportunités d'emploi</div><div class="pref-sub">Nouvelles offres et recommandations</div></div>
               <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
             </div>
             <div class="pref-item">
-              <div class="pref-icon blue">✉</div>
+              <div class="pref-icon blue"><img src="/image/mail.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
               <div class="pref-text"><div class="pref-title">Messages</div><div class="pref-sub">Messages des recruteurs et équipes VERA</div></div>
               <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
             </div>
             <div class="pref-item">
-              <div class="pref-icon green">📄</div>
+              <div class="pref-icon green"><img src="/image/3917505.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
               <div class="pref-text"><div class="pref-title">Candidatures</div><div class="pref-sub">Statuts et mises à jour de vos candidatures</div></div>
               <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
             </div>
             <div class="pref-item">
-              <div class="pref-icon green">🎓</div>
+              <div class="pref-icon green"><img src="/image/formation.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
               <div class="pref-text"><div class="pref-title">Formations</div><div class="pref-sub">Recommandations et rappels de formation</div></div>
               <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
             </div>
             <div class="pref-item">
-              <div class="pref-icon gray">🧭</div>
+              <div class="pref-icon gray"><img src="/image/3916880.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
               <div class="pref-text"><div class="pref-title">Coaching &amp; Conseils</div><div class="pref-sub">Nouveaux conseils et contenus</div></div>
               <label class="switch"><input type="checkbox"><span class="slider"></span></label>
             </div>
             <div class="pref-item">
-              <div class="pref-icon blue">⚙</div>
+              <div class="pref-icon blue"><img src="/image/3917317.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
               <div class="pref-text"><div class="pref-title">Système</div><div class="pref-sub">Mises à jour et informations générales</div></div>
               <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
             </div>
