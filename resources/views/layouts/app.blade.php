@@ -18,7 +18,7 @@
     <div class="brand">
         <div class="brand-logo"><img src="/image/veras1.png" alt="VERA" style="width:100%;height:100%;object-fit:contain;border-radius:8px;"></div>
       <div>
-        <div class="brand-name">VERA</div>
+        <img class="brand-name-img" src="/image/veras2.png" alt="VERA">
         <div class="brand-tag">Real Opportunities, Smart Jobs</div>
       </div>
     </div>
@@ -77,12 +77,12 @@
       </a>
     </nav>
 
-    <div class="premium-card">
+    <!-- <div class="premium-card">
       <div class="premium-crown">👑</div>
       <div class="premium-title">Passez à Premium</div>
       <div class="premium-text">Débloquez toutes les fonctionnalités et multipliez vos opportunités</div>
       <button class="premium-btn">Passer Premium ✨</button>
-    </div>
+    </div> -->
 
     <div class="help">
       <div class="help-icon"><img src="/image/3917604.png" alt="Besoin d'aide" style="width:100%;height:100%;object-fit:contain;"></div>
@@ -120,7 +120,7 @@
               <!-- <div class="verified">Profil vérifié ✓</div> -->
             </div>
           </div>
-          <button id="logoutBtn" style="margin-left:12px;background:none;border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;">Déconnexion</button>
+          <button id="logoutBtn" style="margin-left:12px;background:#12b3c9;border:1px solid #12b3c9;color:#fff;padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;">Déconnexion</button>
         </div>
     </header>
 

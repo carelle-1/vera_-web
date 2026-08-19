@@ -272,10 +272,10 @@ function renderDonut() {
   if (!svg || !legend) return;
 
   const legendData = [
-    { label: "Entretiens", color: "#8b5cf6", value: candidatures.filter(c => c.status === "interview").length },
-    { label: "Réponses", color: "#16a34a", value: candidatures.filter(c => c.status === "response").length },
-    { label: "Envoyées", color: "#3b6bf5", value: candidatures.filter(c => c.status === "sent").length },
-    { label: "En attente", color: "#f59e0b", value: candidatures.filter(c => c.status === "pending").length }
+    { label: "Entretiens", color: "#16a34c", value: candidatures.filter(c => c.status === "interview").length },
+    { label: "Réponses", color: "#16a34c", value: candidatures.filter(c => c.status === "response").length },
+    { label: "Envoyées", color: "#16a34c", value: candidatures.filter(c => c.status === "sent").length },
+    { label: "En attente", color: "#16a34c", value: candidatures.filter(c => c.status === "pending").length }
   ];
 
   const total = legendData.reduce((s, d) => s + d.value, 0);

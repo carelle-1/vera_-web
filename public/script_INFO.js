@@ -11,13 +11,27 @@
     });
   }
 
-  // Informations fermées pendant la session courante (réinitialisé à chaque recharge)
-  var dismissedKeys = {};
+  // Informations fermées pendant la session (persistées via sessionStorage pour ne pas réapparaître
+  // lors de la navigation entre onglets ; réinitialisé quand l'onglet/fenêtre est fermé(e)).
+  var STORAGE_KEY = "vera_info_modal_dismissed";
+
+  function loadDismissed() {
+    try {
+      return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "{}") || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  var dismissedKeys = loadDismissed();
 
   function markDismissed(keys) {
     keys.forEach(function (k) {
       dismissedKeys[k] = true;
     });
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dismissedKeys));
+    } catch (e) {}
   }
 
   function render(items) {

@@ -10,10 +10,11 @@
       <!-- PAGE HEAD -->
       <div class="page-head">
         <div>
-          <h1 style="color: #12b3c9;">Mon Profil <span class="verif-badge">✓</span></h1>
+          <!-- <h1 style="color: #12b3c9;">Mon Profil <span class="verif-badge">✓</span></h1> -->
+          <h1 style="color: #12b3c9;">Mon Profil</h1>
           <p>Gérez vos informations et améliorez votre profil pour plus d'opportunités.</p>
         </div>
-        <button class="btn-outline">👁 Voir mon profil public</button>
+        <!-- <button class="btn-outline">👁 Voir mon profil public</button> -->
       </div>
 
       <!-- PROFILE CARD -->
@@ -22,7 +23,7 @@
           <img id="profileAvatar" src="" alt="Photo de profil" style="display:none;">
           <div id="profileInitial" class="avatar-initial">?</div>
           <div id="avatarSpinner" class="avatar-spinner">⏳</div>
-          <button class="avatar-edit" id="avatarEditBtn" title="Changer la photo"><img src="/image/3917317.png" alt="Changer la photo" style="width:16px;height:16px;object-fit:contain;filter:invert(1);"></button>
+          <button class="avatar-edit" id="avatarEditBtn" title="Changer la photo"><img src="/image/3917317.png" alt="Changer la photo" style="width:25px;height:25px;object-fit:contain;filter:invert(1);"></button>
           <input type="file" id="avatarInput" accept="image/*" style="display:none;">
         </div>
         <div id="avatarError" class="avatar-input-error" style="display:none;"></div>
@@ -33,15 +34,19 @@
           </div>
           <div class="profile-role" id="profileRole">Non renseigné</div>
           <div class="profile-meta">
-            <span><img src="/image/3916880.png" alt="Résidence" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span id="profileResidence">Non renseigné</span></span>
+            <span><img src="/image/3916880.png" alt="Résidence" style="filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg)
+            brightness(90%) contrast(100%); width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span id="profileResidence">Non renseigné</span></span>
             <span class="dot-sep">•</span>
             <span class="avail-dot"></span>
             <span id="profileAvailability">Non renseigné</span>
           </div>
           <div class="profile-contacts">
-            <span><img src="/image/contact.png" alt="WhatsApp" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span id="profileWhatsapp">Non renseigné</span></span>
-            <span><img src="/image/mail.png" alt="Email" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span id="profileEmail">Non renseigné</span></span>
-            <span><img src="/image/7653263.png" alt="GitHub" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span id="profileLinkedin">Non renseigné</span></span>
+            <span><img src="/image/contact.png" alt="WhatsApp" style="filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg)
+            brightness(90%) contrast(100%);width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span id="profileWhatsapp">Non renseigné</span></span>
+            <span><img src="/image/mail.png" alt="Email" style="filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg)
+            brightness(90%) contrast(100%);width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span id="profileEmail">Non renseigné</span></span>
+            <span><img src="/image/7653263.png" alt="GitHub" style="filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg)
+            brightness(90%) contrast(100%);width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span id="profileLinkedin">Non renseigné</span></span>
           </div>
         </div>
         <div class="profile-completion">
@@ -76,7 +81,8 @@
 
           <!-- SCORE VERA -->
           <div class="card score-card">
-            <div class="score-head">Score VERA <span class="info">ⓘ</span></div>
+            <!-- <div class="score-head">Score VERA <span class="info">ⓘ</span></div> -->
+             <div class="score-head">Score VERA <span class="info"></span></div>
             <div class="score-ring">
               <svg viewBox="0 0 120 120">
                 <circle cx="60" cy="60" r="52" class="ring-bg"></circle>
@@ -84,7 +90,7 @@
               </svg>
               <div class="score-num" id="scoreNum">0<span>/100</span></div>
             </div>
-            <div class="score-badge" id="scoreBadge">🏆 —</div>
+            <div class="score-badge" id="scoreBadge">—</div>
             <div class="score-text" id="scoreText">—</div>
             <button class="btn-primary full">↗ Améliorer encore</button>
           </div>
@@ -132,7 +138,7 @@
             </div>
 
             <div class="ai-suggestion">
-              <span>💡 Suggestion IA : Ajoute une certification en Design System pour augmenter ton score de 5%</span>
+              <span>Suggestion IA : Ajoute une certification en Design System pour augmenter ton score de 5%</span>
               <button class="btn-primary-sm">Voir les formations</button>
             </div>
           </div>
@@ -196,17 +202,17 @@
           <div class="card">
             <div class="card-head-row"><span>Documents &amp; Vérifications</span><span class="verified-pill">✓ Vérifié</span></div>
             <ul class="doc-list">
-              <li><span class="info-icon">🪪</span><span class="info-label">Pièce d'identité</span><span class="doc-status ok">Vérifié ✓</span></li>
-              <li><span class="info-icon">🎓</span><span class="info-label">Diplômes</span><span class="doc-status ok">Vérifiés ✓</span></li>
-              <li><span class="info-icon">📜</span><span class="info-label">Certifications</span><span class="doc-status ok">Vérifiés ✓</span></li>
-              <li><span class="info-icon">🛡</span><span class="info-label">Badge Bleu</span><span class="doc-status ok">Actif ✓</span></li>
+              <li><span class="info-icon"><img src="/image/3917505.png" alt="Pièce d'identité"></span><span class="info-label">Pièce d'identité</span><span class="doc-status ok">Vérifié ✓</span></li>
+              <li><span class="info-icon"><img src="/image/formation.png" alt="Diplômes"></span><span class="info-label">Diplômes</span><span class="doc-status ok">Vérifiés ✓</span></li>
+              <li><span class="info-icon"><img src="/image/3917361.png" alt="Certifications"></span><span class="info-label">Certifications</span><span class="doc-status ok">Vérifiés ✓</span></li>
+              <li><span class="info-icon"><img src="/image/3917385.png" alt="Badge Bleu"></span><span class="info-label">Badge Bleu</span><span class="doc-status ok">Actif ✓</span></li>
             </ul>
           </div>
 
           <div class="card cv-card">
             <div class="card-head-row"><span>Mon CV</span></div>
             <div class="cv-file">
-              <div class="cv-icon">📄</div>
+              <div class="cv-icon"><img src="/image/3917505.png" alt="CV" style="width:20px;height:20px;object-fit:contain;"></div>
               <div class="cv-info">
                 <div class="cv-name">CV généré à partir de votre profil</div>
                 <div class="cv-date" id="cvStatusText">Prêt à générer</div>
@@ -214,8 +220,8 @@
               <button class="cv-download" id="cvDownloadBtn" title="Télécharger le CV">⬇</button>
             </div>
             <div class="cv-actions">
-              <button class="btn-primary-sm" id="cvGenerateBtn" type="button">✨ Générer mon CV</button>
-              <button class="btn-outline-sm" id="cvEditBtn" type="button">✎ Modifier les informations du CV</button>
+              <button class="btn-primary-sm" id="cvGenerateBtn" type="button">Générer mon CV</button>
+              <button class="btn-outline-sm" id="cvEditBtn" type="button"><img src="/image/edit.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Modifier les informations du CV</button>
             </div>
           </div>
 

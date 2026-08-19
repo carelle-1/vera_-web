@@ -55,7 +55,7 @@ function renderSkills() {
   grid.innerHTML = skills.map((s, i) => `
     <div class="skill-card">
       <div class="skill-card-head">
-        <div class="skill-card-icon">${s.icon}</div>
+        <div class="skill-card-icon">${s.icon || s.title.charAt(0)}</div>
         <div>
           <div class="skill-card-title">${s.title}</div>
           <span class="skill-priority ${s.priority}">${s.priorityLabel}</span>
@@ -81,7 +81,7 @@ function renderFormations() {
   const grid = document.getElementById("formationsGrid");
   grid.innerHTML = formations.map(f => `
     <div class="formation-card">
-      <div class="formation-icon" style="background:${f.bg}">${f.icon}</div>
+      <div class="formation-icon" style="background:${f.bg}">${f.icon || f.title.charAt(0)}</div>
       <div class="formation-title">${f.title}</div>
       <span class="formation-level">${f.level}</span>
       <div class="formation-meta">${f.duration} · ⭐ ${f.rating} (${f.reviews})</div>
@@ -101,7 +101,7 @@ function renderObjectifs() {
     return `
       <div class="objectif-card">
         <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-          <div class="objectif-icon" style="background:${o.bg}">${o.icon}</div>
+          <div class="objectif-icon" style="background:${o.bg}">${o.icon || o.title.charAt(0)}</div>
           <div style="min-width:0;">
             <div class="objectif-title">${o.title}</div>
             <div class="objectif-date">${o.date}</div>
@@ -469,7 +469,7 @@ const userNamePromise = userRef.once("value").then((snap) => {
           return `
             <div class="objectif-card">
               <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-                <div class="objectif-icon" style="background:${bg}">🎯</div>
+                 <div class="objectif-icon" style="background:${bg}">${o.icon || (o.title || "Objectif").charAt(0)}</div>
                 <div style="min-width:0;">
                   <div class="objectif-title">${escapeHtml(o.title || "Objectif")}</div>
                   <div class="objectif-date">${escapeHtml(o.targetDate || "—")}</div>
@@ -521,7 +521,7 @@ const userNamePromise = userRef.once("value").then((snap) => {
               return `
                 <div class="skill-card">
                   <div class="skill-card-head">
-                    <div class="skill-card-icon">💡</div>
+                     <div class="skill-card-icon">${(s.icon || s.name || "Compétence").charAt(0)}</div>
                     <div>
                       <div class="skill-card-title">${escapeHtml(s.name || "Compétence")}</div>
                       <span class="skill-priority ${priority}">${priorityLabel}</span>
@@ -556,7 +556,7 @@ const userNamePromise = userRef.once("value").then((snap) => {
               const level = f.level || "En cours";
               return `
                 <div class="formation-card">
-                  <div class="formation-icon" style="background:${bg}">🎓</div>
+                  <div class="formation-icon" style="background:${bg}">${f.icon || (f.diploma || f.title || "Formation").charAt(0)}</div>
                   <div class="formation-title">${escapeHtml(f.diploma || f.title || "Formation")}</div>
                   <span class="formation-level">${escapeHtml(level)}</span>
                   <div class="formation-meta">${escapeHtml(f.school || "")} · ${escapeHtml(f.startYear || "")}${f.endYear && f.endYear !== "Présent" ? " → " + escapeHtml(f.endYear) : ""}</div>

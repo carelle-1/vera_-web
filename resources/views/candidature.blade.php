@@ -35,9 +35,9 @@
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
             <input type="text" id="searchInput" placeholder="Rechercher une candidature...">
           </div>
-          <button class="icon-square">🔧</button>
-          <button class="icon-square active" data-view="list">☰</button>
-          <button class="icon-square" data-view="grid">▦</button>
+          <!-- <button class="icon-square">🔧</button> -->
+          <button class="icon-square active" data-view="list"><img src="/image/list2.png" alt="Liste" style="width:18px;height:18px;object-fit:contain;"></button>
+          <button class="icon-square" data-view="grid"><img src="/image/7653263.png" alt="Grille" style="width:18px;height:18px;object-fit:contain;"></button>
         </div>
 
         <div class="cand-list" id="candList"></div>
@@ -77,21 +77,24 @@
         <div class="card reco-card">
           <div class="card-head-row"><span>Actions recommandées par VERA</span></div>
           <div class="reco-item">
-            <div class="reco-icon blue">✉</div>
+            <div class="reco-icon green"><img src="/image/discussion.png" alt="" style="width:20px;height:20px;object-fit:contain;filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg)
+            brightness(90%) contrast(100%);"></div>
             <div class="reco-text">Envoie un message de relance</div>
           </div>
           <div class="reco-item">
-            <div class="reco-icon orange">📅</div>
+            <div class="reco-icon green"><img src="/image/3917361.png" alt="" style="width:20px;height:20px;object-fit:contain; filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg)
+            brightness(90%) contrast(100%);"></div>
             <div class="reco-text">Prépare ton entretien</div>
           </div>
           <div class="reco-item">
-            <div class="reco-icon green">🎯</div>
+            <div class="reco-icon green"><img src="/image/mission.png" alt="" style="width:20px;height:20px;object-fit:contain;filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg)
+            brightness(90%) contrast(100%);"></div>
             <div class="reco-text">Postule à 3 offres suggérées</div>
           </div>
         </div>
 
         <div class="card autopilot-card">
-          <div class="autopilot-head">🚀 Laisse VERA travailler pour toi</div>
+          <div class="autopilot-head">Laisse VERA travailler pour toi</div>
           <p>Active l'auto-postulation pour ne rater aucune opportunité qui correspond à ton profil.</p>
           <button class="btn-white full">Activer l'auto-postulation</button>
         </div>

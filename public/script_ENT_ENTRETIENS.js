@@ -366,7 +366,7 @@ function renderConversationMessages(messages) {
 
     return `
       <div class="msg-row ${rowClass}">
-        ${!isUser ? `<div class="msg-avatar-sm">🤖</div>` : ""}
+        ${!isUser ? `<div class="msg-avatar-sm"><img src="/image/1.png" alt="" style="width:40px;height:40px;object-fit:contain;"></div>` : ""}
         <div class="msg-bubble" style="${bubbleStyle}">
           ${contentHtml}
           <span class="msg-time" style="color:${isUser ? '#0c4a6e' : '#14532d'}">${formatTime(m.timestamp)} <span class="msg-status">${getMessageStatusIcon(m, isUser)}</span></span>
@@ -405,7 +405,7 @@ function appendVeraMessageToChat(messageData) {
   const text = messageData.text || "";
   const messageHtml = `
     <div class="msg-row vera">
-      <div class="msg-avatar-sm">🤖</div>
+      <div class="msg-avatar-sm"><img src="/image/1.png" alt="" style="width:40px;height:40px;object-fit:contain;"></div>
       <div class="msg-bubble" style="background:#86efac;color:#0f1730;border-color:#22c55e;">
         ${escapeHtml(text).replace(/\n/g, '<br>')}
         <span class="msg-time" style="color:#14532d;">${formatTime(Date.now())}</span>
@@ -424,7 +424,7 @@ function showTypingIndicator() {
   hideTypingIndicator();
   const typingHtml = `
     <div class="msg-row vera" id="typingIndicator">
-      <div class="msg-avatar-sm">🤖</div>
+      <div class="msg-avatar-sm"><img src="/image/1.png" alt="" style="width:40px;height:40px;object-fit:contain;"></div>
       <div class="typing-indicator" style="background:#86efac;border-color:#22c55e;color:#14532d;">
         <div class="typing-dots"><span></span><span></span><span></span></div>
         <span>VERA est en train d'écrire...</span>

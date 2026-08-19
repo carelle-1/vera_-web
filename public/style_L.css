@@ -47,7 +47,7 @@ a{color:inherit;text-decoration:none;}
 }
 .brand-name{font-weight:800;font-size:20px;letter-spacing:0.5px;}
 .brand-name-img{height:38px;width:auto;object-fit:contain;margin-top:26px;}
-.brand-tag{font-size:11px;color:rgba(255,255,255,0.8);font-weight:500;}
+.brand-tag{font-size:11px;color:#fff;font-weight:500;}
 
 .brand-panel-content h1{font-size:28px;font-weight:800;line-height:1.25;margin-bottom:12px;}
 .brand-panel-content p{font-size:13.5px;color:rgba(255,255,255,0.9);line-height:1.5;margin-bottom:20px;}

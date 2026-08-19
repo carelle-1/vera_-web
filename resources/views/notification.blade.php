@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'VERA - Notifications')
 @section('styles')
-<link rel="stylesheet" href="style_N.css">
+<link rel="stylesheet" href="style_N.css?v=2">
 @endsection
 
 @section('content')

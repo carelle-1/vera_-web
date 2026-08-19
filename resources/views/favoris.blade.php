@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'VERA - Favoris')
 @section('styles')
-<link rel="stylesheet" href="style_FA.css">
+<link rel="stylesheet" href="style_FA.css?v=2">
 @endsection
 
 @section('content')

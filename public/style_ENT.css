@@ -79,8 +79,12 @@ table{border-collapse:collapse;width:100%;}
 .nav-icon img{width:100%;height:100%;object-fit:contain;display:block;filter: brightness(0) invert(1);}
 .nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;}
 .nav-item.active{
-  background:linear-gradient(90deg, var(--mint-light), #22c55e);color:#ffff;font-weight:700;
-  box-shadow:0 4px 14px rgba(34,197,94,0.3);
+  background:#f4f6fb;
+  color:#12b3c9;
+  box-shadow:none;
+}
+.nav-item.active .nav-icon{
+  filter:invert(52%) sepia(83%) saturate(1017%) hue-rotate(140deg) brightness(91%) contrast(89%);
 }
 .nav-count{margin-left:auto;font-size:10px;font-weight:700;background:#16a34a;padding:1px 7px;border-radius:20px;color:#ffffff;}
 .nav-count.green{background:var(--mint);color:#ffff;}

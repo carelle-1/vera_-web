@@ -603,6 +603,9 @@ document.querySelector(".filter-input")?.addEventListener("input", (e) => {
 });
 
 document.getElementById("salaryRange")?.addEventListener("input", (e) => {
+  const el = e.target;
+  const min = +el.min || 0, max = +el.max || 10000;
+  el.style.setProperty("--salary-percent", ((el.value - min) / (max - min) * 100) + "%");
   document.getElementById("salaryValue").textContent = `${parseInt(e.target.value).toLocaleString("fr-FR")} $`;
   applyFilters();
 });
@@ -612,7 +615,7 @@ document.getElementById("resetFilters")?.addEventListener("click", () => {
   document.querySelector(".filter-input") ? document.querySelector(".filter-input").value = "" : null;
   const salaryRange = document.getElementById("salaryRange");
   const salaryValue = document.getElementById("salaryValue");
-  if (salaryRange) salaryRange.value = 0;
+  if (salaryRange) { salaryRange.value = 0; salaryRange.style.setProperty("--salary-percent", "0%"); }
   if (salaryValue) salaryValue.textContent = "0 $";
   applyFilters();
 });

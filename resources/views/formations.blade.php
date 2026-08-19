@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'VERA - Formations')
 @section('styles')
-<link rel="stylesheet" href="style_F.css">
+<link rel="stylesheet" href="style_F.css?v=2">
 @endsection
 
 @section('content')
@@ -10,10 +10,10 @@
       <!-- PAGE HEAD -->
       <div class="page-head">
         <div>
-          <h1 style="color: #12b3c9;">Formations <span class="cap">🎓</span></h1>
+          <h1 style="color: #12b3c9;">Formations <span class="cap"></span></h1>
           <p>Développez vos compétences et boostez votre carrière avec des formations adaptées à vos objectifs.</p>
         </div>
-        <button class="btn-primary" id="coachSearchBtn">✨ Rechercher avec coach IA</button>
+        <button class="btn-primary" id="coachSearchBtn">Rechercher avec coach IA</button>
       </div>
 
       <!-- TABS -->
@@ -45,7 +45,7 @@
               </div>
             </div>
             <div class="hero-streak">
-              <div class="streak-trophy">🏆</div>
+               <div class="streak-trophy"><img src="/image/3914133.png" alt="" style="width:24px;height:24px;object-fit:contain;"></div>
               <div class="streak-label">Série d'apprentissage</div>
               <div class="streak-value" id="heroStreakValue">0 jour 🔥</div>
               <div class="streak-sub" id="heroStreakSub">Continuez ainsi !</div>
@@ -94,7 +94,7 @@
         <div class="col-right">
 
           <div class="card coach-card">
-            <div class="robot-icon">🤖</div>
+            <div class="robot-icon"><img src="/image/1_nobg.png" alt="" style="width:40px;height:40px;object-fit:contain;"></div>
             <div class="coach-title">Coach IA</div>
             <p>Je vous recommande de suivre "Design System avec Figma" pour renforcer votre profil de Product Designer.</p>
             <a href="#" class="see-all">Voir la recommandation →</a>

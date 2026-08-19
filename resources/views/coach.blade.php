@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'VERA - Coaching & Carrière')
 @section('styles')
-<link rel="stylesheet" href="style_CO.css">
+<link rel="stylesheet" href="style_CO.css?v=2">
 @endsection
 
 @section('content')
@@ -10,10 +10,10 @@
       <!-- PAGE HEAD -->
       <div class="page-head">
         <div>
-          <h1 style="color: #12b3c9;">Coaching &amp; Carrière <span class="cap">&#127891;</span></h1>
+          <h1 style="color: #12b3c9;">Coaching & Carrière <span class="cap"></span></h1>
           <p>Développez vos compétences, atteignez vos objectifs et construisez la carrière que vous méritez.</p>
         </div>
-        <button class="btn-primary" id="coachBtn">&#10024; Discuter avec coach IA</button>""
+        <button class="btn-primary" id="coachBtn">Discuter avec coach IA</button>
       </div>
 
       <!-- TABS -->
@@ -37,7 +37,7 @@
           <!-- SCORE HERO -->
           <section class="score-hero">
             <div class="score-block">
-              <div class="score-title">Score de carrière <span class="info">&#9405;</span></div>
+              <div class="score-title">Score de carrière <span class="info"></span></div>
               <div class="score-ring">
                 <svg viewBox="0 0 120 120">
                   <circle cx="60" cy="60" r="52" class="ring-bg"></circle>
@@ -54,7 +54,7 @@
             </div>
 
             <div class="score-progress">
-              <div class="progress-title">Progression globale <span class="info">&#9405;</span></div>
+              <div class="progress-title">Progression globale <span class="info"></span></div>
               <div class="progress-value">+28% <small>depuis le mois dernier</small></div>
               <svg class="mini-chart" viewBox="0 0 160 60" preserveAspectRatio="none">
                 <polyline points="0,45 55,35 110,22 160,6"></polyline>
@@ -137,7 +137,8 @@
           <div class="card plan-card">
             <div class="card-head-row"><span>Plan de carrière</span><a href="#" class="see-all">Voir tout &rarr;</a></div>
             <div class="plan-goal">
-              <div class="plan-goal-icon">&#127891;</div>
+              <div class="plan-goal-icon"><img src="/image/formation.png" alt="" style="width:90px;height:90px;object-fit:contain;filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg)
+            brightness(90%) contrast(100%);"></div>
               <div>
                 <div class="plan-goal-label">Objectif professionnel</div>
                 <div class="plan-goal-value" id="planGoalValue">À définir</div>
@@ -152,9 +153,9 @@
           </div>
 
           <div class="card advice-card">
-            <div class="card-head-row"><span>Conseils de votre coach IA &#10024;</span></div>
+            <div class="card-head-row"><span>Conseils de votre coach IA</span></div>
             <div id="adviceAiContent" class="ai-text-content">Sauvegardez votre objectif pour recevoir des conseils personnalisés.</div>
-            <div class="robot-mini"><img src="/image/1.png" alt="VERA" style="width:34px;height:34px;object-fit:contain;"></div>
+            <!-- <div class="robot-mini"><img src="/image/1.png" alt="VERA" style="width:34px;height:34px;object-fit:contain;"></div> -->
             <button class="btn-white-outline full" id="adviceCardBtn">Voir mes recommandations personnalisées &rarr;</button>
           </div>
 

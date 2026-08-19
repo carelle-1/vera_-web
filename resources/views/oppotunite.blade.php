@@ -13,7 +13,7 @@
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <button class="btn-refresh" id="refreshBtn"><img src="/image/3917293.png" alt="Rafraîchir" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;"> Rafraîchir les offres</button>
-        <button class="btn-refresh" id="scrapeBtn" style="background:linear-gradient(90deg,#16a34a,#3b6bf5);color:#fff;border-color:transparent;">🕷 Scraper les sites</button>
+        <!-- <button class="btn-refresh" id="scrapeBtn" style="background:linear-gradient(90deg,#16a34a,#3b6bf5);color:#fff;border-color:transparent;">🕷 Scraper les sites</button> -->
         <span id="scrapeStatus" style="display:none;font-size:12px;font-weight:600;"></span>
       </div>
     </div>

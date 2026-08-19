@@ -28,8 +28,9 @@
     padding: 8px 0 12px;
   }
   .score-circle {
-    width: 76px;
-    height: 53px;
+    padding: 4px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: linear-gradient(135deg, #12b3c9, #7dd3fc);
     color: white;
@@ -47,7 +48,7 @@
   }
   .score-meta strong {
     font-size: 14px;
-    color: var(--text);
+    color: #16a55b;
   }
   .score-meta small {
     color: var(--muted, #64748b);
@@ -112,28 +113,30 @@
           <div class="chat-header-left">
             <div class="chat-avatar" id="chatAvatar"><img src="/image/1_nobg.png" alt="VERA"></div>
             <div>
-              <div class="chat-name">VERA (Assistant IA) <span class="ia-badge">IA</span></div>
+              <div class="chat-name">VERA (Assistant IA) <span class="ia-badge"></span></div>
               <div class="chat-status"><span class="dot-online"></span>En ligne</div>
             </div>
           </div>
-          <div class="chat-header-actions">
+          <!-- <div class="chat-header-actions">
             <button class="icon-btn-round">ⓘ</button>
             <button class="icon-btn-round">⋯</button>
-          </div>
+          </div> -->
         </div>
 
         <div class="chat-messages" id="chatMessages"></div>
 
         <div class="chat-input">
-          <button class="input-icon" id="attachImageBtn" title="Ajouter une image">🖼️</button>
-          <button class="input-icon" id="attachFileBtn" title="Ajouter un fichier">📎</button>
-          <button class="input-icon" id="voiceInputBtn" title="Parler pour envoyer un message">🎙️</button>
-          <button class="input-icon" id="voiceOutputBtn" title="Lire la réponse à voix haute">🔊</button>
+          <!-- <button class="input-icon" id="attachImageBtn" title="Ajouter une image">🖼️</button> -->
+          <!-- <button class="input-icon" id="attachFileBtn" title="Ajouter un fichier">📎</button> -->
+          <button class="input-icon" id="voiceInputBtn" title="Parler pour envoyer un message"><img src="/image/3917645.png" alt="" style="width:20px;height:20px;object-fit:contain;filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg)
+            brightness(90%) contrast(100%);"></button>
+          <button class="input-icon" id="voiceOutputBtn" title="Lire la réponse à voix haute"><img src="/image/3917508.png" alt="" style="width:20px;height:20px;object-fit:contain;filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg)
+            brightness(90%) contrast(100%);"></button>
           <input type="file" id="imageInput" accept="image/*" style="display:none;">
           <input type="file" id="fileInput" style="display:none;">
           <input type="text" id="chatInput" placeholder="Écrivez votre message...">
-          <button class="send-btn" id="sendBtn">➤</button>
-        </div>
+          <button class="send-btn" id="sendBtn"><img src="/image/envoyez.png" alt="" style="width:20px;height:20px;object-fit:contain;filter: brightness(0) invert(1);"></button>
+         </div>
         <div id="previewArea" style="display:none; padding: 10px 18px; background: #fff; border-top: 1px solid var(--border);">
           <div id="previewContent" style="display: flex; gap: 10px; align-items: center;"></div>
           <div style="display: flex; gap: 8px; margin-top: 8px;">
@@ -147,7 +150,7 @@
       <aside class="contact-panel">
         <div class="card contact-card">
           <div class="contact-avatar"><img src="/image/1_nobg.png" alt="VERA"></div>
-          <div class="contact-name">VERA (Assistant IA) <span class="ia-badge">IA</span></div>
+          <div class="contact-name">VERA (Assistant IA) <span class="ia-badge"></span></div>
           <div class="contact-status"><span class="dot-online"></span>En ligne</div>
           <p>Votre assistant carrière intelligent. VERA vous aide à préparer vos entretiens et booster votre candidature.</p>
           <button class="btn-outline full">Voir le profil de VERA</button>
@@ -156,15 +159,15 @@
         <div class="card">
           <div class="card-head-row"><span>Actions rapides</span></div>
           <div class="quick-action" data-action="simulate" tabindex="0" role="button" aria-label="Simuler un entretien">
-            <div class="quick-icon blue">🎙️</div>
+            <div class="quick-icon blue"><img src="/image/3917645.png" alt="" style="width:20px;height:20px;object-fit:contain;filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg) brightness(90%) contrast(100%);"></div>
             <div><div class="quick-title">Simuler un entretien</div><div class="quick-sub">Questions types &amp; conseils</div></div>
           </div>
           <div class="quick-action" data-action="prepare" tabindex="0" role="button" aria-label="Préparer mes réponses">
-            <div class="quick-icon purple">📝</div>
+            <div class="quick-icon purple"><img src="/image/3917361.png" alt="" style="width:20px;height:20px;object-fit:contain; filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg) brightness(90%) contrast(100%);"></div>
             <div><div class="quick-title">Préparer mes réponses</div><div class="quick-sub">Feedback personnalisé</div></div>
           </div>
           <div class="quick-action" data-action="coaching" tabindex="0" role="button" aria-label="Coaching express">
-            <div class="quick-icon green">🧠</div>
+            <div class="quick-icon green"><img src="/image/3917385.png" alt="" style="width:20px;height:20px;object-fit:contain;filter: invert(57%) sepia(95%) saturate(1350%) hue-rotate(145deg) brightness(90%) contrast(100%);"></div>
             <div><div class="quick-title">Coaching express</div><div class="quick-sub">Tips pour le jour J</div></div>
           </div>
         </div>

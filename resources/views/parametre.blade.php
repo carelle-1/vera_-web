@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'VERA - Param&eacute;tres')
 @section('styles')
-<link rel="stylesheet" href="style_PA.css">
+<link rel="stylesheet" href="style_PA.css?v=2">
 @endsection
 
 @section('content')

@@ -111,3 +111,9 @@
 .info-modal-ok:hover {
   filter: brightness(1.05);
 }
+
+/* Logo VERA (remplace le texte .brand-name sur les interfaces chercheur) */
+.brand-name-img{height:auto;width:130px;max-width:100%;object-fit:contain;display:block;margin:0 auto;margin-top: -56px;}
+
+/* Slogan VERA en blanc sur toutes les interfaces chercheur */
+.brand-tag{color:#fff !important;}

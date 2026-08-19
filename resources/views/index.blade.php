@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="/image/vera1.png">
 <title>VERA - Tableau de bord</title>
-<link rel="stylesheet" href="/styleI.css">
-<link rel="stylesheet" href="/style_INFO.css">
+<link rel="stylesheet" href="/styleI.css?v=2">
+<link rel="stylesheet" href="/style_INFO.css?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
@@ -19,7 +19,7 @@
     <div class="brand">
         <div class="brand-logo"><img src="/image/veras1.png" alt="VERA" style="width:100%;height:100%;object-fit:contain;border-radius:8px;"></div>
       <div>
-        <div class="brand-name">VERA</div>
+        <img class="brand-name-img" src="/image/veras2.png" alt="VERA">
         <div class="brand-tag">Real Opportunities, Smart Jobs</div>
       </div>
     </div>
@@ -74,12 +74,12 @@
       </a>
     </nav>
 
-    <div class="premium-card">
+    <!-- <div class="premium-card">
       <div class="premium-crown">&#128081;</div>
       <div class="premium-title">Passez à Premium</div>
       <div class="premium-text">Débloquez toutes les fonctionnalités et multipliez vos opportunités</div>
       <button class="premium-btn">Passer Premium &#10024;</button>
-    </div>
+    </div> -->
 
     <div class="help">
       <div class="help-icon"><img src="/image/3917604.png" alt="Besoin d'aide" style="width:100%;height:100%;object-fit:contain;"></div>
@@ -116,7 +116,7 @@
             </div>
             <span class="chev"></span>
           </div>
-          <button id="logoutBtn" style="margin-left:12px;background:none;border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;">Déconnexion</button>
+          <button id="logoutBtn" style="margin-left:12px;background:#12b3c9;border:1px solid #12b3c9;color:#fff;padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;">Déconnexion</button>
         </div>
     </header>
 
@@ -242,7 +242,7 @@
               <circle cx="60" cy="60" r="52" class="ring-bg"></circle>
               <circle cx="60" cy="60" r="52" class="ring-fg" id="scoreRingIndex"></circle>
             </svg>
-            <div class="score-num" id="scoreNumIndex">0<span>/100</span></div>
+            <div class="score-num" id="scoreNumIndex"style="color: #207c04">0<span>/100</span></div>
           </div>
           <div class="score-badge" id="scoreBadgeIndex">&#9733; —</div>
           <div class="score-text" id="scoreTextIndex">—</div>
@@ -250,7 +250,7 @@
         </div>
 
         <div class="card actions-card">
-          <div class="card-head"><img src="/image/mission.png" alt="Actions prioritaires" style="width:18px;height:18px;object-fit:contain;margin-right:6px;vertical-align:middle;"> Actions prioritaires</div>
+          <div class="card-head"><img class="head-icon" src="/image/mission.png" alt="Actions prioritaires" style="width:18px;height:18px;object-fit:contain;margin-right:6px;vertical-align:middle;"> Actions prioritaires</div>
           <div class="action-item" id="actionAddSkill">
             <div class="action-icon blue"><img src="/image/3917361.png" alt="Compétence" style="width:20px;height:20px;object-fit:contain;"></div>
             <div class="action-text">
@@ -268,7 +268,7 @@
             <span class="chev">&#8250;</span>
           </div>
           <div class="action-item" id="actionFollowTraining">
-            <div class="action-icon green">&#127891;</div>
+            <div class="action-icon green"><img class="formation-icon" src="image\formation.png" alt="Formation" style="width:50px;height:50px;object-fit:contain;"></div>
             <div class="action-text">
               <div>Suis une formation recommandée</div>
               <div class="action-sub">+15% sur ton score</div>
@@ -287,7 +287,7 @@
             <li>&#10004; Développer la compétence Docker</li>
             <li>&#10004; Postuler à 5 nouvelles offres</li>
           </ul>
-          <div class="coach-logo">V</div>
+          <!-- <div class="coach-logo">V</div> -->
           <button class="btn-white full" onclick="window.location.href='/messages'">Discuter avec VERA &#8594;</button>
         </div>
 

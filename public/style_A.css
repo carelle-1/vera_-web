@@ -56,8 +56,8 @@ a{color:inherit;}
 .sidebar.collapsed .pill{display:none;}
 .brand{display:flex;align-items:center;gap:10px;padding:0 6px;}
 .brand-logo{
-  width:34px;height:34px;border-radius:9px;
-  background:linear-gradient(135deg,#12b3c9, #12b3c9);
+  width:80px;height:80px;border-radius:14px;
+  background:transparent;
   display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;
 }
 .brand-name{font-weight:800;font-size:16px;letter-spacing:0.5px;}
@@ -163,7 +163,7 @@ a{color:inherit;}
 }
 .category-card:hover{box-shadow:0 6px 18px rgba(15,23,48,0.06);}
 .category-icon{
-  width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;
+  width:80px;height:80px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:17px;
 }
 .category-title{font-size:13.5px;font-weight:700;}
 .category-desc{font-size:11.5px;color:var(--muted);line-height:1.5;}
@@ -175,7 +175,7 @@ a{color:inherit;}
   border-radius:var(--radius-md);padding:18px 20px;flex-wrap:wrap;
 }
 .banner-icon{
-  width:44px;height:44px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;
+  width:80px;height:80px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;
   font-size:19px;flex-shrink:0;
 }
 .banner-text{flex:1;min-width:200px;}
@@ -199,7 +199,7 @@ a{color:inherit;}
   display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border);cursor:pointer;
 }
 .contact-option:first-of-type{border-top:none;padding-top:0;}
-.contact-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.contact-icon{width:80px;height:80px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
 .contact-icon.blue{background:#e7effe;}
 .contact-icon.purple{background:#f3ecff;}
 .contact-icon.green{background:#e6f7ec;}

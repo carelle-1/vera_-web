@@ -190,6 +190,7 @@ a{color:inherit;}
   background:#fff;border:1px solid var(--border);color:var(--text);
   padding:6px 12px;border-radius:8px;font-size:11.5px;font-weight:600;cursor:pointer;
 }
+#cvEditBtn img{filter:brightness(0) invert(1);}
 
 /* SCORE CARD */
 .score-card{text-align:center;}
@@ -198,10 +199,10 @@ a{color:inherit;}
 .score-ring{position:relative;width:130px;height:130px;margin:0 auto 10px;}
 .score-ring svg{width:100%;height:100%;transform:rotate(-90deg);}
 .ring-bg{fill:none;stroke:#eef1fb;stroke-width:10;}
-.ring-fg{fill:none;stroke:var(--blue);stroke-width:10;stroke-linecap:round;}
-.score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:30px;font-weight:800;}
+.ring-fg{fill:none;stroke:#00BCD4;stroke-width:10;stroke-linecap:round;}
+.score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:30px;font-weight:800;color:#00BCD4;}
 .score-num span{font-size:11px;font-weight:600;color:var(--muted);}
-.score-badge{display:inline-block;background:#e8f8ee;color:var(--green);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:8px;}
+.score-badge{display:inline-block;background:#e0f7fa;color:#00BCD4;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:8px;}
 .score-text{font-size:12.5px;color:var(--muted);margin-bottom:16px;}
 .btn-primary.full{width:100%;background:var(--blue);color:#fff;border:none;padding:11px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;}
 .btn-primary.full:hover{background:var(--blue-dark);}
@@ -246,7 +247,8 @@ a{color:inherit;}
 /* INFO LISTS */
 .info-list,.doc-list{list-style:none;display:flex;flex-direction:column;gap:13px;}
 .info-list li,.doc-list li{display:flex;align-items:center;gap:10px;font-size:12.5px;}
-.info-icon{width:26px;text-align:center;flex-shrink:0;}
+.info-icon{width:26px;text-align:center;flex-shrink:0;background:#00BCD4;color:#fff;border-radius:12px;}
+.info-icon img{filter:brightness(0) invert(1);}
 .info-label{color:var(--muted);flex:1;}
 .info-value{font-weight:600;text-align:right;}
 .doc-status{font-weight:700;font-size:11.5px;}
@@ -256,6 +258,7 @@ a{color:inherit;}
 /* CV CARD */
 .cv-file{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:14px;}
 .cv-icon{font-size:22px;}
+.cv-icon img{width:20px;height:20px;object-fit:contain;filter:invert(40%) sepia(90%) saturate(500%) hue-rotate(175deg) brightness(95%) contrast(90%);}
 .cv-info{flex:1;min-width:0;}
 .cv-name{font-size:12.5px;font-weight:700;}
 .cv-date{font-size:11px;color:var(--muted);}

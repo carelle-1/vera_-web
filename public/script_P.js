@@ -275,7 +275,7 @@ function renderCompletion() {
     if (scoreNum) scoreNum.innerHTML = `${pct}<span>/100</span>`;
     if (scoreBadge) {
       if (pct >= 90) scoreBadge.textContent = "🏆 Excellent";
-      else if (pct >= 75) scoreBadge.textContent = "🌟 Très bon";
+      else if (pct >= 75) scoreBadge.textContent = "Très bon";
       else if (pct >= 50) scoreBadge.textContent = "👍 Bon début";
       else if (pct > 0) scoreBadge.textContent = "📝 À compléter";
       else scoreBadge.textContent = "😶 Vide";

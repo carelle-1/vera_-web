@@ -445,7 +445,7 @@ function updateFavoriteButtons() {
     
     if (userFavorites.has(jobId)) {
       btn.classList.add("saved");
-      btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--blue);"><path d="M5 3h14a2 2 0 0 1 2 2v16l-7-3-7 3V5a2 2 0 0 1 2-2z"/></svg>`;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:#15a455;stroke:#15a455;stroke-width:1.5;"><path d="M5 3h14a2 2 0 0 1 2 2v16l-7-3-7 3V5a2 2 0 0 1 2-2z"/></svg>`;
     } else {
       btn.classList.remove("saved");
       btn.innerHTML = `<img src="/image/3916600.png" alt="Sauvegarder" style="width:18px;height:18px;object-fit:contain;">`;
