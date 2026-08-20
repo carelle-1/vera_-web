@@ -605,20 +605,67 @@ function renderAllAdminUsers() {
 function renderAdminCharts() {
   const growthChart = document.getElementById("growthChart");
   if (growthChart) {
-    const points = "0,180 40,160 80,140 120,150 160,100 200,90 240,80 280,85 320,50 360,40 400,60 440,30 480,25 520,35 560,20 600,15";
+    const width = 720;
+    const height = 260;
+    const padding = { top: 24, right: 24, bottom: 32, left: 52 };
+    const chartW = width - padding.left - padding.right;
+    const chartH = height - padding.top - padding.bottom;
+
+    const users = [120, 180, 250, 320, 410, 520, 640, 780, 920, 1100, 1350, 1600];
+    const offers = [40, 65, 90, 120, 160, 210, 270, 340, 420, 510, 600, 700];
+    const labels = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Août", "Sep", "Oct", "Nov", "Déc"];
+    const maxVal = Math.max(...users, ...offers);
+
+    const xStep = chartW / labels.length;
+    const groupWidth = xStep * 0.55;
+    const barWidth = groupWidth / 2;
+
+    let gridLines = "";
+    for (let i = 0; i <= 4; i++) {
+      const y = padding.top + (chartH / 4) * i;
+      const val = Math.round(maxVal - (maxVal / 4) * i);
+      gridLines += `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+      gridLines += `<text x="${padding.left - 10}" y="${y + 4}" text-anchor="end" font-size="10" fill="#6b7280">${val}</text>`;
+    }
+
+    let bars = "";
+    users.forEach((val, i) => {
+      const x = padding.left + i * xStep + (xStep - groupWidth) / 2;
+      const h = (val / maxVal) * chartH;
+      const y = padding.top + chartH - h;
+      bars += `<rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" fill="#00BCD4" opacity="0.9"/>`;
+      bars += `<text x="${x + barWidth / 2}" y="${y - 6}" text-anchor="middle" font-size="9" fill="#00BCD4" font-weight="700">${val}</text>`;
+    });
+
+    offers.forEach((val, i) => {
+      const x = padding.left + i * xStep + (xStep - groupWidth) / 2 + barWidth;
+      const h = (val / maxVal) * chartH;
+      const y = padding.top + chartH - h;
+      bars += `<rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" fill="#15a55c" opacity="0.9"/>`;
+      bars += `<text x="${x + barWidth / 2}" y="${y - 6}" text-anchor="middle" font-size="9" fill="#15a55c" font-weight="700">${val}</text>`;
+    });
+
+    let xLabels = "";
+    labels.forEach((label, i) => {
+      const x = padding.left + i * xStep + xStep / 2;
+      xLabels += `<text x="${x}" y="${height - 10}" text-anchor="middle" font-size="10" fill="#6b7280">${label}</text>`;
+    });
+
+    growthChart.setAttribute("viewBox", `0 0 ${width} ${height}`);
     growthChart.innerHTML = `
-      <polyline fill="none" stroke="#3b6bf5" stroke-width="3" points="${points}" />
-      <polyline fill="none" stroke="#12b3c9" stroke-width="3" points="${points.replace(/180/g, "200").replace(/160/g, "180").replace(/140/g, "160").replace(/150/g, "170").replace(/100/g, "120").replace(/90/g, "110").replace(/80/g, "100").replace(/85/g, "105").replace(/50/g, "70").replace(/40/g, "60").replace(/60/g, "80").replace(/30/g, "50").replace(/25/g, "45").replace(/35/g, "55").replace(/20/g, "40").replace(/15/g, "35")}" />
+      ${gridLines}
+      ${bars}
+      ${xLabels}
     `;
   }
 
   const donut = document.getElementById("categoryDonut");
   if (donut) {
     const segments = [
-      { percent: 35, color: "#3b6bf5", label: "Tech" },
-      { percent: 25, color: "#12b3c9", label: "Marketing" },
+      { percent: 35, color: "#00BCD4", label: "Tech" },
+      { percent: 25, color: "#15a55c", label: "Marketing" },
       { percent: 20, color: "#f59e0b", label: "Finance" },
-      { percent: 20, color: "#10b981", label: "Autre" }
+      { percent: 20, color: "#8b5cf6", label: "Autre" }
     ];
 
     let currentAngle = -90;
@@ -653,10 +700,10 @@ function renderAdminCharts() {
   const legend = document.getElementById("categoryLegend");
   if (legend) {
     const categories = [
-      { label: "Tech", count: 542, color: "#3b6bf5" },
-      { label: "Marketing", count: 386, color: "#12b3c9" },
+      { label: "Tech", count: 542, color: "#00BCD4" },
+      { label: "Marketing", count: 386, color: "#15a55c" },
       { label: "Finance", count: 309, color: "#f59e0b" },
-      { label: "Autre", count: 309, color: "#10b981" }
+      { label: "Autre", count: 309, color: "#8b5cf6" }
     ];
 
     legend.innerHTML = categories.map(cat => `

@@ -195,13 +195,13 @@
               <div class="activity-list" id="activityList"></div>
             </div>
 
-            <div class="card quick-card">
+            <!-- <div class="card quick-card">
               <div class="card-title">Actions rapides</div>
               <button class="quick-action-btn">➕ Ajouter un administrateur</button>
               <button class="quick-action-btn">📢 Envoyer une annonce</button>
               <button class="quick-action-btn">🛡 Voir la file de modération</button>
               <button class="quick-action-btn">📤 Exporter les données</button>
-            </div>
+            </div> -->
           </aside>
         </div>
 

@@ -173,9 +173,7 @@
                   Compte entreprise
                 </span>
                 <button type="button" class="toggle-switch" id="signupIsCompany" role="switch" aria-checked="false" aria-label="Activer le compte entreprise">
-                  <span class="toggle-switch-knob">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  </span>
+                  <span class="toggle-switch-knob" id="companyToggleKnob">—</span>
                 </button>
               </div>
 
@@ -214,7 +212,10 @@
          </label>
          <span class="field-error" id="termsError"></span>
 
-        <button type="submit" class="btn-submit">Créer mon compte</button>
+        <button type="submit" class="btn-submit" id="signupSubmitBtn">
+          <span class="btn-state-icon" id="signupBtnIcon">—</span>
+          <span class="btn-label">Créer mon compte</span>
+        </button>
 
         <p class="switch-line">Déjà un compte ? <button type="button" class="link-switch" data-form="login">Se connecter</button></p>
       </form>

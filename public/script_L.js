@@ -14,22 +14,23 @@ function switchTo(formName) {
   forms.forEach(f => {
     if (f.id === formName + "Form") {
       f.classList.add("active");
-      f.style.display = "flex";
     } else {
       f.classList.remove("active");
-      f.style.display = "none";
     }
   });
   indicator.style.transform = formName === "signup" ? "translateX(100%)" : "translateX(0)";
   successBox.classList.remove("active");
+  if (formName === "signup") {
+    setTimeout(updateSignupButtonState, 0);
+  }
 }
 
 function showForm(formId) {
   tabs.forEach(t => t.classList.remove("active"));
-  forms.forEach(f => { f.classList.remove("active"); f.style.display = "none"; });
+  forms.forEach(f => f.classList.remove("active"));
   successBox.classList.remove("active");
   const f = document.getElementById(formId);
-  if (f) { f.classList.add("active"); f.style.display = "flex"; }
+  if (f) f.classList.add("active");
 }
 
 tabs.forEach(tab => {
@@ -226,6 +227,10 @@ if (signupIsCompany && companyDocSection) {
     const isChecked = signupIsCompany.getAttribute("aria-checked") === "true";
     const newState = !isChecked;
     signupIsCompany.setAttribute("aria-checked", String(newState));
+    const knob = document.getElementById("companyToggleKnob");
+    if (knob) {
+      knob.textContent = newState ? "✓" : "—";
+    }
     if (companyToggleWrap) {
       companyToggleWrap.classList.toggle("active", newState);
     }
@@ -303,6 +308,36 @@ if (companyDocRemove) {
 }
 
 // ============== SIGNUP FORM ==============
+const signupBtnIcon = document.getElementById("signupBtnIcon");
+const signupSubmitBtn = document.getElementById("signupSubmitBtn");
+
+function updateSignupButtonState() {
+  const firstName = document.getElementById("signupFirstName").value.trim();
+  const lastName = document.getElementById("signupLastName").value.trim();
+  const email = document.getElementById("signupEmail").value.trim();
+  const password = document.getElementById("signupPassword").value;
+  const confirm = document.getElementById("signupConfirm").value;
+  const terms = document.getElementById("termsCheckbox").checked;
+  const isCompany = signupIsCompany ? signupIsCompany.getAttribute("aria-checked") === "true" : false;
+  const companyDocInput = document.getElementById("signupCompanyDoc");
+
+  const valid = firstName && lastName && email && isValidEmail(email) && password && password.length >= 6 && confirm && confirm === password && terms && (!isCompany || (companyDocInput && companyDocInput.files.length > 0));
+
+  if (signupBtnIcon) {
+    signupBtnIcon.textContent = valid ? "✓" : "—";
+  }
+}
+
+const signupInputs = ["signupFirstName", "signupLastName", "signupEmail", "signupPassword", "signupConfirm"];
+signupInputs.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("input", updateSignupButtonState);
+});
+const termsCheckbox = document.getElementById("termsCheckbox");
+if (termsCheckbox) termsCheckbox.addEventListener("change", updateSignupButtonState);
+if (companyDocInput) companyDocInput.addEventListener("change", updateSignupButtonState);
+if (signupIsCompany) signupIsCompany.addEventListener("click", () => setTimeout(updateSignupButtonState, 50));
+
 const signupForm = document.getElementById("signupForm");
 signupForm.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -541,14 +576,14 @@ if (forgotBackBtn) {
 function showSuccess(title, text) {
   document.getElementById("successTitle").textContent = title;
   document.getElementById("successText").textContent = text;
-  forms.forEach(f => f.style.display = "none");
+  forms.forEach(f => f.classList.remove("active"));
   successBox.classList.add("active");
 }
 
 document.getElementById("successBtn").addEventListener("click", () => {
   successBox.classList.remove("active");
   const activeTab = document.querySelector(".auth-tab.active").dataset.form;
-  document.getElementById(activeTab + "Form").style.display = "flex";
+  document.getElementById(activeTab + "Form").classList.add("active");
   loginForm.reset();
   signupForm.reset();
   strengthFill.style.width = "0%";
