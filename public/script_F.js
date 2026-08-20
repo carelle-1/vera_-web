@@ -216,7 +216,7 @@ async function loadHeroData(serverHero) {
         const safeStreak = isNaN(streak) ? 0 : streak;
 
         if (streakValueEl) {
-           streakValueEl.textContent = safeStreak + " jour" + (safeStreak > 1 ? "s" : "") + " <img src='/image/3914133.png' alt='' style='width:14px;height:14px;object-fit:contain;vertical-align:middle;'>";
+           streakValueEl.textContent = safeStreak + " jour" + (safeStreak > 1 ? "s" : "");
         }
         if (streakSubEl) {
           streakSubEl.textContent = safeStreak > 0 ? "Continuez ainsi !" : "Commencez votre série !";
@@ -233,7 +233,7 @@ async function loadHeroData(serverHero) {
     if (progressFillEl) progressFillEl.style.width = globalProgress + "%";
 
     if (streakValueEl) {
-      streakValueEl.textContent = streak + " jour" + (streak > 1 ? "s" : "") + " <img src='/image/3914133.png' alt='' style='width:14px;height:14px;object-fit:contain;vertical-align:middle;'>";
+      streakValueEl.textContent = streak + " jour" + (streak > 1 ? "s" : "");
     }
     if (streakSubEl) {
       streakSubEl.textContent = streak > 0 ? "Continuez ainsi !" : "Commencez votre série !";

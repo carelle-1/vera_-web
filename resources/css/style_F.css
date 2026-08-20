@@ -273,10 +273,11 @@ select{font-family:inherit;}
 .cert-download:hover{background:var(--bg);}
 
 /* RESPONSIVE */
-/* Icon color filter - blue #00BCD4 */
-.course-icon img,.reco-icon img,.category-icon img,.stat-icon img,.cert-icon img,.goal-row .goal-icon img,.streak-trophy img,.robot-icon img,.plan-goal-icon img,.cv-icon img{
-    filter:invert(40%) sepia(90%) saturate(500%) hue-rotate(175deg) brightness(95%) contrast(90%);
+/* Icon color filter - white */
+.course-icon img,.reco-icon img,.category-icon img,.stat-icon img,.cert-icon img,.goal-row .goal-icon img,.streak-trophy img,.plan-goal-icon img,.cv-icon img{
+    filter:brightness(0) invert(1);
 }
+.robot-icon img{filter:none !important;}
 
 @media (max-width:1300px){
   .courses-grid,.reco-grid{grid-template-columns:repeat(2,1fr);}

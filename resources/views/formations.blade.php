@@ -47,7 +47,7 @@
             <div class="hero-streak">
                <div class="streak-trophy"><img src="/image/3914133.png" alt="" style="width:24px;height:24px;object-fit:contain;"></div>
               <div class="streak-label">Série d'apprentissage</div>
-               <div class="streak-value" id="heroStreakValue">0 jour <img src="/image/3914133.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div>
+               <div class="streak-value" id="heroStreakValue">0 jour</div>
               <div class="streak-sub" id="heroStreakSub">Continuez ainsi !</div>
             </div>
           </section>
@@ -161,5 +161,5 @@
     </div>
 @endsection
 @section('scripts')
-<script src="script_F.js"></script>
+<script src="script_F.js?v=21"></script>
 @endsection
