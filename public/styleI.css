@@ -206,10 +206,59 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke
 .stat-value .up{font-size:10.5px;font-weight:700;color:#FFEB3B;}
 .stat-period{font-size:10px;color:#0e1640;margin-top:1px;}
 
-.hero-robot{position:relative;z-index:1;width:210px;height:220px;flex-shrink:0;animation:heroFloat 3.5s ease-in-out infinite;}
-@keyframes heroFloat{
-  0%,100%{transform:translateY(0);}
-  50%{transform:translateY(-14px);}
+.hero-robot{
+  position:relative;z-index:1;width:210px;height:220px;flex-shrink:0;
+  animation:robotSearch 4s ease-in-out infinite;
+}
+@keyframes robotSearch{
+  0%,100%{transform:translateY(0) rotate(0deg);}
+  25%{transform:translateY(-8px) rotate(-2deg);}
+  50%{transform:translateY(-12px) rotate(0deg);}
+  75%{transform:translateY(-8px) rotate(2deg);}
+}
+.hero-robot::before{
+  content:"";position:absolute;inset:-20px;border-radius:50%;
+  background:radial-gradient(circle,rgba(18,179,201,0.15) 0%,transparent 70%);
+  animation:pulseGlow 2s ease-in-out infinite;
+}
+@keyframes pulseGlow{
+  0%,100%{opacity:0.4;transform:scale(1);}
+  50%{opacity:0.8;transform:scale(1.1);}
+}
+.hero-robot::after{
+  content:"";position:absolute;top:50%;left:50%;width:120px;height:4px;
+  background:linear-gradient(90deg,transparent,#12b3c9,transparent);
+  border-radius:50%;transform:translate(-50%,-50%);
+  animation:scanLine 3s ease-in-out infinite;
+}
+@keyframes scanLine{
+  0%{top:20%;opacity:0;}
+  20%{opacity:1;}
+  80%{opacity:1;}
+  100%{top:80%;opacity:0;}
+}
+.robot-data-stream{
+  position:absolute;left:-30px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:4px;
+}
+.robot-data-stream span{
+  width:8px;height:8px;border-radius:50%;background:#fff;
+  animation:dataFloat 1.5s ease-in-out infinite;
+}
+.robot-data-stream span:nth-child(2){animation-delay:0.3s;}
+.robot-data-stream span:nth-child(3){animation-delay:0.6s;}
+@keyframes dataFloat{
+  0%,100%{opacity:0;transform:translateX(0);}
+  50%{opacity:1;transform:translateX(-10px);}
+}
+.robot-status{
+  position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);
+  font-size:9px;color:#fff;font-weight:600;
+  animation:statusPulse 2s ease-in-out infinite;
+}
+@keyframes statusPulse{
+  0%,100%{opacity:0.6;}
+  50%{opacity:1;}
 }
 .robot{position:relative;width:100%;height:100%;}
 .robot-head{

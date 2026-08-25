@@ -161,6 +161,12 @@
           </div>
           <div class="hero-robot" aria-hidden="true">
             <img src="/image/1.png" alt="" style="width:100%;height:100%;object-fit:contain;">
+            <div class="robot-data-stream">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="robot-status">Recherche en cours...</div>
           </div>
         </section>
 
