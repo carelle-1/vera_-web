@@ -140,7 +140,7 @@ select{font-family:inherit;}
 .settings-nav-item:hover{background:#fff;}
 .settings-nav-item.active{background:#fff;box-shadow:0 2px 8px rgba(15,23,48,0.06);border:1px solid var(--border);}
 .settings-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
-.settings-title{font-size:12.5px;font-weight:700;}
+.settings-title{font-size:12.5px;font-weight:700;color: #14a662;}
 .settings-nav-item.active .settings-title{color:var(--blue);}
 .settings-sub{font-size:10.5px;color:var(--muted);}
 
@@ -148,14 +148,14 @@ select{font-family:inherit;}
   margin-top:14px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);
   padding:16px;
 }
-.help-box-title{font-size:12.5px;font-weight:700;margin-bottom:8px;}
+.help-box-title{font-size:12.5px;font-weight:700;margin-bottom:8px;color: #00BCD4;}
 .help-box p{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px;}
 
 /* CARDS */
 .content-col,.side-col{display:flex;flex-direction:column;gap:18px;min-width:0;}
 .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;}
 .card-head-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;gap:12px;flex-wrap:wrap;}
-.card-title{font-size:14.5px;font-weight:700;margin-bottom:4px;}
+.card-title{font-size:14.5px;font-weight:700;margin-bottom:4px;color: #03A9F4;}
 .card-title.danger{color:var(--red);}
 .card-sub{font-size:11.5px;color:var(--muted);margin-bottom:16px;}
 .card-title-row{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px;}
@@ -167,11 +167,11 @@ select{font-family:inherit;}
 .card-title-row .card-sub{margin-bottom:0;}
 
 .btn-outline{
-  background:#fff;border:1px solid var(--border);color:var(--text);
+  background:#14a55d;border:1px solid #14a55f;color:#ffffff;
   padding:9px 15px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;
 }
 .btn-outline:hover{background:var(--bg);}
-.btn-outline.full{width:100%;}
+.btn-outline.full{width:100%;color: #fff;background: linear-gradient(45deg, #00BCD4, #15a661);}
 
 /* PROFILE INFO */
 .profile-info-row{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;}

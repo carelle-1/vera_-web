@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Kreait\Firebase\Auth;
 use App\Services\VeraContextService;
-use Illuminate\Support\Facades\Auth as LaravelAuth;
+use App\Models\User;
 
 class ChatController extends Controller
 {
@@ -77,8 +77,9 @@ class ChatController extends Controller
             $interviewMode = filter_var($request->input('interviewMode', false), FILTER_VALIDATE_BOOLEAN);
             $interviewStep = (int) $request->input('interviewStep', 0);
 
-            $user = LaravelAuth::user();
-            $profile = $user ? $this->veraContext->getUserProfile($user) : [];
+            $user = new User();
+            $user->uid = $uid;
+            $profile = $this->veraContext->getUserProfile($user);
 
             if ($interviewMode) {
                 $replyData = $this->getInterviewReply($message, $interviewStep, $profile);
@@ -156,6 +157,7 @@ class ChatController extends Controller
 
         $profileSummary = $this->veraContext->summarizeProfile($profile);
         $poste = $profile['poste_recherche'] ?? null;
+        \Log::info('[INTERVIEW] poste_recherche=' . ($poste ?? 'null') . ' profile=' . json_encode($profile, JSON_UNESCAPED_UNICODE));
         $systemPrompt = "Tu es VERA, un recruteur senior / manager d'entreprise qui mène un véritable entretien d'embauche. "
             . "Tu adoptes le ton professionnel, exigeant mais bienveillant, d'un DRH ou d'un chef d'entreprise face à un candidat. "
             . ($poste ? "Poste visé : " . $poste . ". " : "")
@@ -170,7 +172,8 @@ class ChatController extends Controller
             . "5) Si l'utilisateur dit qu'il est étudiant, la réponse modèle doit être celle d'un étudiant ; si cadre, celle d'un cadre ; garde son vrai statut. "
             . "6) Si l'utilisateur mentionne une école, un stage, un projet, une techno précis, réutilise ces éléments exacts. "
             . "7) Ne remplace pas son profil par un autre et n'invente pas de domaine (n'impose pas 'développement web' si l'utilisateur parle d'autre chose). "
-            . ($poste ? "8) La Réponse modèle DOIT être adaptée au poste visé : " . $poste . ". Mentionne explicitement ce poste dans la réponse modèle si cela est pertinent. " : "")
+            . ($poste ? "8) RÈGLE ABSOLUE : La Réponse modèle DOIT systématiquement mentionner le poste visé \"" . $poste . "\", même si le candidat ne l'a pas mentionné dans sa réponse. Intègre ce poste naturellement dans la réponse modèle. " : "")
+            . ($poste ? "9) EXEMPLE OBLIGATOIRE : Si le poste visé est \"" . $poste . "\", la réponse modèle doit contenir une phrase comme \"Je suis motivé(e) par le poste de " . $poste . " car...\" ou \"Ce poste de " . $poste . " correspond à...\". " : "")
             . "Formate la réponse exactement ainsi :\n"
             . "📝 Feedback : ...\n\n"
             . "💡 Réponse modèle : ...\n\n"
@@ -184,7 +187,8 @@ class ChatController extends Controller
             . "Ne change PAS les noms, les durées, les entreprises, les projets, les technologies. "
             . "Réécris seulement pour améliorer la formulation, mais garde TOUS les faits. "
             . "INTERDICTION : n'utilise pas de nom générique comme Sarah, Jeanne, Marie, Thomas, Lucas, Sophie, Camille, Alexandre, Julie. "
-            . "Si tu ne connais pas le nom de l'utilisateur, ne mets pas de nom du tout.";
+            . "Si tu ne connais pas le nom de l'utilisateur, ne mets pas de nom du tout. "
+            . ($poste ? "RÈGLE ABSOLUE SUR LE POSTE : Le profil indique que l'utilisateur vise le poste de \"" . $poste . "\". Même si l'utilisateur ne le mentionne pas dans sa réponse, la Réponse modèle DOIT intégrer ce poste de manière naturelle. Exemples : 'Je suis intéressé(e) par le poste de " . $poste . " car...', 'Ce poste correspond à mon profil de...', 'Pour le poste de " . $poste . ", je...'. NE PAS GÉNÉRISER : utilise exactement \"" . $poste . "\" et non un autre poste. " : "");
 
         try {
             $response = Http::timeout(20)
@@ -222,22 +226,19 @@ class ChatController extends Controller
                         $feedback = $this->extractSection($reply, 'Feedback');
                         $modelAnswerFromOllama = $this->extractSection($reply, 'Réponse modèle');
                         $nextQuestionText = $this->extractSection($reply, 'Question suivante');
+                        $nextQuestion = $this->interviewQuestions[$this->getNextQuestionIndex($question['id'])] ?? null;
+                        if ($nextQuestion) {
+                            $nextQuestionText = "❓ Question suivante : " . $this->getInterviewQuestionText($nextQuestion, $profile);
+                        }
 
                         $candidate = $modelAnswerFromOllama ?: '';
-                        if ($candidate === '' || $this->isUserMessageEcho($message, $candidate) || mb_strlen(trim($candidate)) < 140) {
+                        if ($question['id'] === 'intro' || $candidate === '' || $this->isUserMessageEcho($message, $candidate) || mb_strlen(trim($candidate)) < 140) {
                             $candidate = $this->buildPersonalizedModelAnswer($message, $question, $profile);
                         }
                         $modelAnswer = "💡 Réponse modèle : " . $candidate;
 
                         if (!$feedback) {
                             $feedback = $this->buildAdaptiveFeedback($message, $question, $scoreData, $profile);
-                        }
-
-                        if (!$nextQuestionText) {
-                            $nextQuestion = $this->interviewQuestions[$this->getNextQuestionIndex($question['id'])] ?? null;
-                            if ($nextQuestion) {
-                                $nextQuestionText = "❓ Question suivante : " . $nextQuestion['question'];
-                            }
                         }
 
                         $finalReply = $feedback;
@@ -253,7 +254,7 @@ class ChatController extends Controller
         }
 
         $nextQuestion = $this->interviewQuestions[$this->getNextQuestionIndex($question['id'])] ?? null;
-        $nextQuestionText = $nextQuestion ? "❓ Question suivante : " . $nextQuestion['question'] : "";
+        $nextQuestionText = $nextQuestion ? "❓ Question suivante : " . $this->getInterviewQuestionText($nextQuestion, $profile) : "";
 
         $personalizedModel = $this->buildPersonalizedModelAnswer($message, $question, $profile);
 
@@ -343,39 +344,43 @@ class ChatController extends Controller
         if ($question['id'] === 'intro') {
             $hasProfileData = $statut || $formation || $niveauEtude || $ecole || $domaine || $poste || !empty($stages) || !empty($experiences) || !empty($technologies) || !empty($competences) || !empty($projets) || !empty($certifications) || !empty($motivations);
 
-            if ($hasProfileData) {
+            if ($question['id'] === 'intro') {
                 $parts = [];
-
-                if ($normalizedName && $normalizedName !== '[Prénom]') {
-                    $parts[] = "Je m'appelle " . $normalizedName;
+                $additional = $profile['informations_supplementaires'] ?? [];
+                $profileName = $this->formatProfileName($normalizedName);
+                $nationality = $this->cleanProfileValue($additional['nationality'] ?? '') ?: 'non renseignée';
+                $residence = $this->cleanProfileValue($additional['residence'] ?? '') ?: 'non renseigné';
+                $maritalStatus = $this->cleanProfileValue($additional['maritalStatus'] ?? '') ?: 'non renseignée';
+                $mainLanguage = $this->cleanProfileValue($additional['mainLanguage'] ?? '') ?: 'non renseignée';
+                $availability = $this->cleanProfileValue($additional['availability'] ?? '') ?: 'non renseignée';
+                $contractType = $this->cleanProfileValue($additional['contractType'] ?? '') ?: 'non renseigné';
+                $salary = $this->cleanProfileValue($additional['salary'] ?? '') ?: 'non renseigné';
+                $role = $this->cleanProfileValue($poste ?: $statut) ?: 'professionnel dans mon domaine';
+                $uniqueExperiences = $this->uniqueProfileItems(array_merge($stages, $experiences));
+                $uniqueSkills = $this->uniqueProfileItems(array_merge($competences, $technologies));
+                $skillsText = $uniqueSkills ? implode(', ', array_slice($uniqueSkills, 0, 6)) : 'mes compétences professionnelles';
+                $projectsCount = $this->cleanProfileValue((string) ($additional['projectsCount'] ?? ''));
+                $projectsCount = $projectsCount !== '' ? $projectsCount : (string) count($projets);
+                $clientsCount = $this->cleanProfileValue((string) ($additional['clientsCount'] ?? '')) ?: 'non renseigné';
+                $study = $this->cleanProfileValue($formation ?: $niveauEtude) ?: 'une formation professionnelle';
+                $school = $this->cleanProfileValue($ecole) ?: 'un établissement d’enseignement supérieur';
+                $qualities = $this->uniqueProfileItems($forces);
+                if (!$qualities) {
+                    $qualities = ['à l’écoute', 'adaptable', 'orienté(e) vers les résultats'];
                 }
+                $qualitiesText = implode(', ', array_slice($qualities, 0, 4));
 
-                $descriptor = [];
-                if ($statut) $descriptor[] = $statut;
-                if ($formation) $descriptor[] = "diplômé(e) en " . $formation;
-                if ($niveauEtude && !$formation) $descriptor[] = $niveauEtude;
-                if ($ecole) $descriptor[] = "de " . $ecole;
-                if ($domaine) $descriptor[] = "dans le domaine de " . $domaine;
-                if ($poste) $descriptor[] = "et je souhaite devenir " . $poste;
-                if ($descriptor) {
-                    $parts[] = implode(', ', $descriptor) . ".";
-                }
+                $parts[] = "Bonjour, je m'appelle " . ($profileName ?: '[Prénom] [Nom]') . ".";
+                $parts[] = "Je suis de nationalité " . $nationality . " et je réside actuellement à " . $residence . ". Je suis " . $maritalStatus . " et ma langue principale est " . $mainLanguage . ".";
+                $parts[] = "Sur le plan professionnel, je suis " . $role . ". Je suis actuellement " . $availability . " et je recherche principalement un contrat de type " . $contractType . ". En termes de rémunération, mes attentes se situent autour de " . $salary . ", tout en restant ouvert(e) à une discussion en fonction des responsabilités du poste et des conditions proposées.";
+                $parts[] = "Au cours de mon parcours, j'ai développé plusieurs compétences, notamment " . $skillsText . ". Ces compétences m'ont permis de réaliser " . $projectsCount . " projets, dans lesquels j'ai pu mettre en pratique mes connaissances et développer mon expérience professionnelle.";
+                $parts[] = "J'ai également eu l'occasion de travailler avec différents clients et j'ai contribué à la satisfaction de " . $clientsCount . " clients, ce qui m'a permis de développer non seulement mes compétences techniques, mais également mon sens de l'écoute, ma capacité d'adaptation et mon orientation vers les résultats.";
+                $parts[] = "Concernant ma formation, j'ai suivi " . $study . " à " . $school . ". Cette formation m'a permis d'acquérir les connaissances nécessaires pour évoluer dans mon domaine professionnel.";
+                $parts[] = "Aujourd'hui, je souhaite mettre mes compétences et mon expérience au service d'une entreprise qui me permettra de relever de nouveaux défis, de contribuer à des projets intéressants et de continuer à développer mes compétences.";
+                $parts[] = "Je suis une personne " . $qualitiesText . ", motivée et prête à m'investir pleinement dans les missions qui me seront confiées. Je serais donc ravi(e) de pouvoir échanger davantage sur ma candidature et sur la manière dont je pourrais contribuer aux objectifs de votre entreprise.";
+                $parts[] = "Je vous remercie pour votre attention.";
 
-                $details = [];
-                if ($stages) $details[] = "J'ai effectué " . implode(' et ', $stages);
-                if ($experiences) $details[] = "J'ai " . implode(', ', $experiences);
-                if ($technologies) $details[] = "Je maîtrise notamment " . implode(', ', $technologies);
-                if ($competences) $details[] = "Mes compétences clés sont : " . implode(', ', $competences);
-                if ($projets) $details[] = "J'ai réalisé " . implode(', ', $projets);
-                if ($certifications) $details[] = "Je suis certifié(e) en " . implode(', ', $certifications);
-                if ($motivations) $details[] = "Je suis motivé(e) par " . implode(', ', $motivations);
-                if ($details) {
-                    $parts[] = implode('. ', $details) . ".";
-                }
-
-                if ($parts) {
-                    return implode('. ', $parts) . ".";
-                }
+                return implode("\n\n", $parts);
             }
 
             if ($text !== '') {
@@ -393,6 +398,9 @@ class ChatController extends Controller
             }
             if ($status !== '') {
                 $identity .= $identity !== '' ? ", je suis " . strtolower($status) : "Je suis " . strtolower($status);
+            }
+            if ($poste) {
+                $identity .= $identity !== '' ? " et je souhaite devenir " . $poste : "Je souhaite devenir " . $poste;
             }
             if ($effectiveDomain) {
                 $identity .= $identity !== '' ? " en " . $effectiveDomain : "Je travaille dans le domaine " . $effectiveDomain;
@@ -566,6 +574,45 @@ class ChatController extends Controller
         }
 
         return "Je m'appelle " . $normalizedName . ". Je suis motivé(e) et je souhaite mettre mes compétences au service d'une entreprise qui partage mes valeurs.";
+    }
+
+    private function cleanProfileValue(?string $value): string
+    {
+        return trim((string) preg_replace('/\s+/u', ' ', trim((string) $value)), " .,:;!?\t\n\r");
+    }
+
+    private function formatProfileName(string $name): string
+    {
+        $name = $this->cleanProfileValue($name);
+        if ($name === '' || $name === '[Prénom]') {
+            return '';
+        }
+
+        return implode(' ', array_map(
+            static fn (string $part): string => ucfirst(mb_strtolower($part, 'UTF-8')),
+            preg_split('/\s+/u', $name, -1, PREG_SPLIT_NO_EMPTY)
+        ));
+    }
+
+    private function uniqueProfileItems(array $items): array
+    {
+        $result = [];
+        $seen = [];
+
+        foreach ($items as $item) {
+            $value = $this->cleanProfileValue(is_scalar($item) ? (string) $item : '');
+            if ($value === '') {
+                continue;
+            }
+
+            $key = mb_strtolower($value, 'UTF-8');
+            if (!isset($seen[$key])) {
+                $seen[$key] = true;
+                $result[] = $value;
+            }
+        }
+
+        return $result;
     }
 
     private function extractUserNameFromText(string $text): ?string
@@ -1220,6 +1267,17 @@ class ChatController extends Controller
         $model = trim((string) env('OLLAMA_MODEL', 'llama3.2:1b'));
 
         return $model !== '' ? $model : 'llama3.2:1b';
+    }
+
+    private function getInterviewQuestionText(array $question, array $profile = []): string
+    {
+        $poste = trim((string) ($profile['poste_recherche'] ?? ''));
+
+        if (($question['id'] ?? '') === 'values' && $poste !== '') {
+            return 'Quelles sont vos motivations pour le poste de ' . $poste . ' ?';
+        }
+
+        return $question['question'] ?? '';
     }
 
     private function getNextQuestionIndex(string $currentId): int
