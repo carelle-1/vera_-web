@@ -197,7 +197,7 @@ function renderFavorites(jobs) {
         <div class="job-logo">${logoHtml}</div>
         <div class="job-info">
           <div class="job-title">${escapeHtml(job.title || "Sans titre")} ${job.verified ? '<span class="verified-dot">✓</span>' : ""}</div>
-          <div class="job-sub">${escapeHtml(job.company || "—")} · 📍 ${escapeHtml(job.location || "—")} ${job.country ? "· " + escapeHtml(job.country) : ""}</div>
+          <div class="job-sub">${escapeHtml(job.company || "—")} · <img src="/image/3916880.png" class="location-pin" alt=""> ${escapeHtml(job.location || "—")} ${job.country ? "· " + escapeHtml(job.country) : ""}</div>
           <div class="job-tags">${tagsHtml}</div>
         </div>
         <div class="job-metrics">

@@ -91,6 +91,7 @@ async function ensureNotifRealtimeListener() {
         chips: Array.isArray(n.chips) ? n.chips : [],
         time: (n.time || "").toString(),
         createdAt: (n.createdAt || "").toString(),
+        logoURL: (n.logoURL || "").toString(),
       }));
 
       items.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
@@ -169,7 +170,7 @@ function renderNotifications() {
       ${items.map(n => `
         <div class="notif-item ${n.unread ? 'unread' : ''}" data-id="${n.id}">
           <input type="checkbox" class="notif-checkbox">
-          <div class="notif-icon" style="background:${escapeHtml(n.iconBg)}">${escapeHtml(n.icon)}</div>
+          ${n.type === "candidatures" && n.logoURL ? `<div class="job-logo" style="width:80px;height:80px;flex-shrink:0;"><img src="${escapeHtml(n.logoURL)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:14px;"></div>` : `<div class="notif-icon" style="background:${escapeHtml(n.iconBg)}">${escapeHtml(n.icon)}</div>`}
           <div class="notif-body">
             <span class="notif-tag ${escapeHtml(n.tagClass)}">${escapeHtml(n.tag)}</span>
             <div class="notif-title">${escapeHtml(n.title)}</div>

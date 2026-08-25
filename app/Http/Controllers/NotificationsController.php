@@ -74,6 +74,7 @@ class NotificationsController extends Controller
                             'chips' => is_array($notif['chips'] ?? null) ? $notif['chips'] : [],
                             'time' => (string) ($notif['time'] ?? ''),
                             'createdAt' => (string) ($notif['createdAt'] ?? ''),
+                            'logoURL' => (string) ($notif['logoURL'] ?? ''),
                         ];
                     }
 

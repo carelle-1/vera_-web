@@ -4,7 +4,14 @@
 <link rel="stylesheet" href="style_N.css?v=2">
 @endsection
 
-@section('content')
+ @section('content')
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <filter id="icon-color-14a660">
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0784  0 0 0 0 0.651  0 0 0 0 0.3765  0 0 0 1 0"/>
+    </filter>
+  </defs>
+</svg>
 <div class="scroll-area">
 
       <!-- PAGE HEAD -->

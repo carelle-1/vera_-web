@@ -146,14 +146,14 @@ select{font-family:inherit;}
 
 /* TOOLBAR */
 .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
-.result-count{font-size:13px;font-weight:700;}
+.result-count{font-size:13px;font-weight:700;color: #14a55e;}
 .toolbar-actions{display:flex;gap:10px;align-items:center;}
 .btn-outline{
-  background:#fff;border:1px solid var(--border);color:var(--text);
+  background:#fff;border:1px solid var(--border);color:#03A9F4;
   padding:9px 14px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;
 }
 .btn-outline:hover{background:var(--bg);}
-.btn-outline.full{width:100%;}
+.btn-outline.full{width:100%;background: #f4f6fb;border: none;}
 .sort-wrap{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);}
 .sort-wrap select{
   border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12.5px;
@@ -176,7 +176,7 @@ select{font-family:inherit;}
 .job-tag{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:6px;}
 .job-tag.new{background:#e6f7ec;color:var(--green);}
 .job-tag.popular{background:#fdf1de;color:var(--orange);}
-.job-title{font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.job-title{font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;color: #03A9F4;}
 .verified-dot{color:var(--blue);font-size:13px;}
 .job-sub{font-size:12.5px;color:var(--muted);margin-bottom:10px;}
 .job-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
@@ -191,7 +191,7 @@ select{font-family:inherit;}
 .job-match-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:var(--green);}
 .job-match-label{font-size:9px;color:var(--muted);margin-top:2px;}
 
-.job-price{font-size:14px;font-weight:800;text-align:right;min-width:130px;}
+.job-price{font-size:14px;font-weight:800;text-align:right;min-width:130px;color: #14a662;}
 .job-price span{display:block;font-size:11px;font-weight:500;color:var(--muted);}
 
 .job-actions{display:flex;flex-direction:column;gap:8px;align-items:center;}
@@ -216,11 +216,11 @@ select{font-family:inherit;}
 /* SIDE PANEL */
 .side-panel{display:flex;flex-direction:column;gap:18px;}
 .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;}
-.card-head-row{font-size:14px;font-weight:700;margin-bottom:14px;}
+.card-head-row{font-size:14px;font-weight:700;margin-bottom:14px;color: #14a55e;}
 .side-text{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
 .see-all{font-size:12px;color:var(--blue);font-weight:600;text-decoration:none;display:inline-block;margin-top:8px;}
 
-.list-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);font-size:12.5px;}
+.list-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);font-size:12.5px;color:#6b7280;}
 .list-item:first-of-type{border-top:none;padding-top:0;}
 .list-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .list-dot.purple{background:var(--purple);}
@@ -228,7 +228,7 @@ select{font-family:inherit;}
 .list-dot.pink{background:var(--pink);}
 .list-dot.green{background:var(--green);}
 .list-name{flex:1;font-weight:600;}
-.list-count{color:var(--muted);font-weight:700;}
+.list-count{color:#03A9F4;font-weight:700;}
 
 .boost-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
 .boost-ring{position:relative;width:70px;height:70px;flex-shrink:0;}
@@ -246,6 +246,9 @@ select{font-family:inherit;}
   padding:10px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;
 }
 .btn-white-outline.full:hover{background:rgba(255,255,255,0.18);}
+.btn-white-outline img {
+    filter: brightness(0) invert(1);
+}
 
 /* RESPONSIVE */
 
@@ -274,6 +277,13 @@ select{font-family:inherit;}
 .verified-tag img,
 .verified-dot img {
     filter: brightness(0) invert(1) sepia(90%) saturate(500%) hue-rotate(175deg) brightness(95%) contrast(90%);
+}
+
+.location-pin {
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    filter: brightness(0) url(#icon-color-green);
 }`n@media (max-width:1150px){
   .layout{grid-template-columns:1fr;}
 }

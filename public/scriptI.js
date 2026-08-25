@@ -1198,6 +1198,7 @@ document.addEventListener("click", (e) => {
             chips: ["Postulé", job.company || "Offre"],
             time: timeStr,
             createdAt: dateStr,
+            logoURL: job.logoURL || "",
           }).catch((err) => {
             console.error("[JOBS] erreur notification:", err);
           });

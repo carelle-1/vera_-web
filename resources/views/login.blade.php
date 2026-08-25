@@ -47,8 +47,7 @@
 
   <!-- RIGHT PANEL -->
   <main class="form-panel">
-    <div class="floating-robot" style="filter:none;"><img src="/image/1_nobg.png" alt="" style="width:180px;height:180px;object-fit:contain;"></div>
-    <div class="form-wrap">
+     <div class="form-wrap">
 
       <div class="mobile-brand">
         <div class="brand-logo">V</div>

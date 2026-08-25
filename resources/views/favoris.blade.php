@@ -4,12 +4,19 @@
 <link rel="stylesheet" href="style_FA.css?v=2">
 @endsection
 
-@section('content')
+ @section('content')
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <filter id="icon-color-green">
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0784  0 0 0 0 0.647  0 0 0 0 0.3647  0 0 0 1 0"/>
+    </filter>
+  </defs>
+</svg>
 <div class="scroll-area">
 
       <!-- PAGE HEAD -->
       <div class="page-head">
-        <h1 style="color: #12b3c9;">Favoris <span class="heart">♡</span> <span class="sparkle"></span></h1>
+        <h1 style="color: #12b3c9;">Favoris <span class="heart"></span> <span class="sparkle"></span></h1>
         <p>Retrouvez tous les emplois, entreprises et formations que vous avez enregistrés.</p>
       </div>
 

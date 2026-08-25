@@ -4,7 +4,14 @@
 <link rel="stylesheet" href="style_PA.css?v=2">
 @endsection
 
-@section('content')
+ @section('content')
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <filter id="icon-color-12b3c9">
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0706  0 0 0 0 0.702  0 0 0 0 0.788  0 0 0 1 0"/>
+    </filter>
+  </defs>
+</svg>
 <div class="scroll-area">
 
       <!-- PAGE HEAD -->
@@ -445,7 +452,8 @@
         <aside class="side-col">
 
            <div class="card">
-             <div class="card-title-row"><span class="shield-icon purple"><img src="/image/3916880.png" alt="" style="width:20px;height:20px;object-fit:contain;"></span><div><div class="card-title">Confidentialit&eacute;</div><div class="card-sub">G&eacute;rez vos donn&eacute;es et votre visibilit&eacute;.</div></div></div>
+            <div class="card-title-row"><div><div class="card-title">Confidentialit&eacute;</div><div class="card-sub">G&eacute;rez vos donn&eacute;es et votre visibilit&eacute;.</div></div></div>
+             <!-- <div class="card-title-row"><span class="shield-icon purple"><img src="/image/3916880.png" alt="" style="width:20px;height:20px;object-fit:contain;"></span><div><div class="card-title">Confidentialit&eacute;</div><div class="card-sub">G&eacute;rez vos donn&eacute;es et votre visibilit&eacute;.</div></div></div> -->
 
              <div class="sec-row">
                <div class="pref-icon"><img src="/image/oeil.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
@@ -470,7 +478,8 @@
            </div>
 
            <div class="card">
-             <div class="card-title-row"><span class="shield-icon green"><img src="/image/3917385.png" alt="" style="width:20px;height:20px;object-fit:contain;"></span><div><div class="card-title">S&eacute;curit&eacute; du compte</div><div class="card-sub">Prot&eacute;gez votre compte et vos donn&eacute;es.</div></div></div>
+            <div class="card-title-row"><div><div class="card-title">S&eacute;curit&eacute; du compte</div><div class="card-sub">Prot&eacute;gez votre compte et vos donn&eacute;es.</div></div></div> 
+             <!-- <div class="card-title-row"><span class="shield-icon green"><img src="/image/3917385.png" alt="" style="width:20px;height:20px;object-fit:contain;"></span><div><div class="card-title">S&eacute;curit&eacute; du compte</div><div class="card-sub">Prot&eacute;gez votre compte et vos donn&eacute;es.</div></div></div> -->
 
              <div class="sec-row">
                <div class="pref-icon"><img src="/image/3917505.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
