@@ -117,7 +117,7 @@
             </div>
             <div class="stats-grid">
               <div class="stat-item">
-                <div class="stat-icon"><img src="/image/3917292.png" alt="Temps" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div  class="stat-icon"><img src="/image/3917292.png" alt="Temps" style="width:20px;height:20px;object-fit:contain;"></div>
                 <div class="stat-label">Temps d'apprentissage</div>
                 <div class="stat-value">24h 30m</div>
                 <div class="stat-diff up">+18% vs le mois dernier</div>

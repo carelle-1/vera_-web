@@ -147,38 +147,121 @@ function applyAdminPrivilegesToNav() {
   });
 }
 
-function initAdminPanel(data) {
+async function initAdminPanel(data) {
   currentAdminData = data || {};
   renderAdminKPIs();
   renderDashboardUserTable();
   renderAllAdminUsers();
-  renderAdminCharts();
+  await renderAdminCharts();
   updateNavCounts();
   buildPrivilegesGrid();
   applyAdminPrivilegesToNav();
 }
 
-function renderAdminKPIs() {
-  const kpis = [
-    { label: "Utilisateurs", value: "4 218", sub: "+12% ce mois", icon: "/image/users.png", color: "blue" },
-    { label: "Offres publiées", value: "1 546", sub: "+8% ce mois", icon: "/image/3916670.png", color: "mint" },
-    { label: "Candidatures", value: "8 932", sub: "+15% ce mois", icon: "/image/3917505.png", color: "purple" },
-    { label: "Revenus", value: "124 500 €", sub: "+22% ce mois", icon: "/image/7928164.png", color: "green" }
-  ];
-
+async function renderAdminKPIs() {
   const grid = document.getElementById("kpiGrid");
   if (!grid) return;
 
-  grid.innerHTML = kpis.map(kpi => `
+  grid.innerHTML = `
     <div class="kpi-card">
-      <div class="kpi-icon ${kpi.color}"><img class="kpi-icon-img" src="${kpi.icon}" alt="${kpi.label}"></div>
-      <div>
-        <div class="kpi-value">${kpi.value}</div>
-        <div class="kpi-label">${kpi.label}</div>
-        <div class="kpi-sub">${kpi.sub}</div>
-      </div>
+      <div class="kpi-icon blue"><img class="kpi-icon-img" src="/image/users.png" alt="Utilisateurs"></div>
+      <div><div class="kpi-value">…</div><div class="kpi-label">Chargement…</div></div>
     </div>
-  `).join("");
+    <div class="kpi-card">
+      <div class="kpi-icon mint"><img class="kpi-icon-img" src="/image/3916670.png" alt="Offres publiées"></div>
+      <div><div class="kpi-value">…</div><div class="kpi-label">Chargement…</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon purple"><img class="kpi-icon-img" src="/image/3917505.png" alt="Candidatures"></div>
+      <div><div class="kpi-value">…</div><div class="kpi-label">Chargement…</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green"><img class="kpi-icon-img" src="/image/7928164.png" alt="Revenus"></div>
+      <div><div class="kpi-value">…</div><div class="kpi-label">Chargement…</div></div>
+    </div>
+  `;
+
+  try {
+    const [usersSnap, jobsSnap, candsSnap] = await Promise.all([
+      firebase.database().ref("users").once("value"),
+      firebase.database().ref("jobs").once("value"),
+      firebase.database().ref("candidatures").once("value")
+    ]);
+
+    const users = usersSnap.val() || {};
+    const jobs = jobsSnap.val() || {};
+    const cands = candsSnap.val() || {};
+
+    const now = Date.now();
+    const oneMonthMs = 30 * 24 * 60 * 60 * 1000;
+    const monthStart = now - oneMonthMs;
+    const prevMonthStart = monthStart - oneMonthMs;
+
+    const userCount = Object.keys(users).length;
+    const jobCount = Object.keys(jobs).length;
+    const candCount = Object.keys(cands).length;
+
+    const usersThisMonth = Object.values(users).filter(u => (u.createdAt || 0) >= monthStart).length;
+    const jobsThisMonth = Object.values(jobs).filter(j => (j.createdAt || 0) >= monthStart).length;
+    const candsThisMonth = Object.values(cands).filter(c => (c.createdAt || 0) >= monthStart).length;
+
+    const usersPrevMonth = Object.values(users).filter(u => {
+      const t = u.createdAt || 0;
+      return t >= prevMonthStart && t < monthStart;
+    }).length;
+    const jobsPrevMonth = Object.values(jobs).filter(j => {
+      const t = j.createdAt || 0;
+      return t >= prevMonthStart && t < monthStart;
+    }).length;
+    const candsPrevMonth = Object.values(cands).filter(c => {
+      const t = c.createdAt || 0;
+      return t >= prevMonthStart && t < monthStart;
+    }).length;
+
+    function growth(current, previous) {
+      if (previous <= 0) return current > 0 ? "+100% ce mois" : "N/A";
+      const pct = ((current - previous) / previous) * 100;
+      return (pct >= 0 ? "+" : "") + pct.toFixed(0) + "% ce mois";
+    }
+
+    const kpis = [
+      { label: "Utilisateurs", value: userCount.toLocaleString('fr-FR'), sub: growth(usersThisMonth, usersPrevMonth), icon: "/image/users.png", color: "blue" },
+      { label: "Offres publiées", value: jobCount.toLocaleString('fr-FR'), sub: growth(jobsThisMonth, jobsPrevMonth), icon: "/image/3916670.png", color: "mint" },
+      { label: "Candidatures", value: candCount.toLocaleString('fr-FR'), sub: growth(candsThisMonth, candsPrevMonth), icon: "/image/3917505.png", color: "purple" },
+      { label: "Revenus", value: "0 €", sub: "Aucune donnée", icon: "/image/7928164.png", color: "green" }
+    ];
+
+    grid.innerHTML = kpis.map(kpi => `
+      <div class="kpi-card">
+        <div class="kpi-icon ${kpi.color}"><img class="kpi-icon-img" src="${kpi.icon}" alt="${kpi.label}"></div>
+        <div>
+          <div class="kpi-value">${kpi.value}</div>
+          <div class="kpi-label">${kpi.label}</div>
+          <div class="kpi-sub">${kpi.sub}</div>
+        </div>
+      </div>
+    `).join("");
+  } catch (err) {
+    console.error("[ADMIN] erreur chargement KPIs:", err);
+    grid.innerHTML = `
+      <div class="kpi-card">
+        <div class="kpi-icon blue"><img class="kpi-icon-img" src="/image/users.png" alt="Utilisateurs"></div>
+        <div><div class="kpi-value">—</div><div class="kpi-label">Utilisateurs</div><div class="kpi-sub">Erreur</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon mint"><img class="kpi-icon-img" src="/image/3916670.png" alt="Offres publiées"></div>
+        <div><div class="kpi-value">—</div><div class="kpi-label">Offres publiées</div><div class="kpi-sub">Erreur</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon purple"><img class="kpi-icon-img" src="/image/3917505.png" alt="Candidatures"></div>
+        <div><div class="kpi-value">—</div><div class="kpi-label">Candidatures</div><div class="kpi-sub">Erreur</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon green"><img class="kpi-icon-img" src="/image/7928164.png" alt="Revenus"></div>
+        <div><div class="kpi-value">—</div><div class="kpi-label">Revenus</div><div class="kpi-sub">Erreur</div></div>
+      </div>
+    `;
+  }
 }
 
 function renderDashboardUserTable() {
@@ -602,7 +685,59 @@ function renderAllAdminUsers() {
   });
 }
 
-function renderAdminCharts() {
+function renderCompanies() {
+  const tbody = document.getElementById("companyTableBody");
+  const countEl = document.getElementById("companyTableCount");
+  const searchEl = document.getElementById("companySearch");
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#6b7280;">Chargement des entreprises...</td></tr>`;
+
+  firebase.database().ref("users").once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const search = searchEl ? searchEl.value.trim().toLowerCase() : "";
+    const companies = Object.keys(data)
+      .map((id) => ({ id, ...data[id] }))
+      .filter((u) => (u.role || "").toString().toLowerCase() === "entreprise")
+      .filter((c) => {
+        const name = (c.name || c.displayName || c.email || "").toString().toLowerCase();
+        const matchesSearch = !search || name.includes(search);
+        return matchesSearch;
+      })
+      .sort((a, b) => (a.name || a.displayName || a.email || "").localeCompare(b.name || b.displayName || b.email || ""));
+
+    if (companies.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#6b7280;">Aucune entreprise trouvée.</td></tr>`;
+      if (countEl) countEl.textContent = "Affichage de 0 entreprise";
+      return;
+    }
+
+    tbody.innerHTML = companies.map((c) => {
+      const name = c.name || c.displayName || c.email || "Sans nom";
+      const email = c.email || "—";
+      const avatar = c.avatar || c.photoURL || `https://i.pravatar.cc/64?u=${encodeURIComponent(c.id || name)}`;
+
+      return `
+        <tr>
+          <td style="text-align:center;vertical-align:middle;"><img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;"></td>
+          <td><div class="user-cell"><div><div class="user-cell-name">${escapeHtml(name)}</div><div class="user-cell-email">${escapeHtml(email)}</div></div></div></td>
+          <td>${escapeHtml(c.role || "entreprise")}</td>
+          <td>${c.website ? `<a href="${escapeHtml(c.website)}" target="_blank" rel="noopener">${escapeHtml(c.website)}</a>` : "—"}</td>
+          <td class="exp-action-cell">
+            <button class="row-menu-btn" data-id="${escapeHtml(c.id)}" title="Actions">⋯</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    if (countEl) countEl.textContent = `Affichage de ${companies.length} entreprise${companies.length > 1 ? "s" : ""}`;
+  }).catch((err) => {
+    console.error("[ADMIN] Erreur chargement entreprises:", err);
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#ef4444;">Erreur de chargement: ${err.message || err.code}</td></tr>`;
+  });
+}
+
+async function renderAdminCharts() {
   const growthChart = document.getElementById("growthChart");
   if (growthChart) {
     const width = 720;
@@ -611,108 +746,168 @@ function renderAdminCharts() {
     const chartW = width - padding.left - padding.right;
     const chartH = height - padding.top - padding.bottom;
 
-    const users = [120, 180, 250, 320, 410, 520, 640, 780, 920, 1100, 1350, 1600];
-    const offers = [40, 65, 90, 120, 160, 210, 270, 340, 420, 510, 600, 700];
-    const labels = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Août", "Sep", "Oct", "Nov", "Déc"];
-    const maxVal = Math.max(...users, ...offers);
+    growthChart.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    growthChart.innerHTML = `<text x="360" y="130" text-anchor="middle" font-size="14" fill="#6b7280">Chargement du graphique...</text>`;
 
-    const xStep = chartW / labels.length;
-    const groupWidth = xStep * 0.55;
-    const barWidth = groupWidth / 2;
+    try {
+      const [usersSnap, jobsSnap] = await Promise.all([
+        firebase.database().ref("users").once("value"),
+        firebase.database().ref("jobs").once("value")
+      ]);
 
-    let gridLines = "";
-    for (let i = 0; i <= 4; i++) {
-      const y = padding.top + (chartH / 4) * i;
-      const val = Math.round(maxVal - (maxVal / 4) * i);
-      gridLines += `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
-      gridLines += `<text x="${padding.left - 10}" y="${y + 4}" text-anchor="end" font-size="10" fill="#6b7280">${val}</text>`;
+      const users = usersSnap.val() || {};
+      const jobs = jobsSnap.val() || {};
+
+      const now = new Date();
+      const monthLabels = [];
+      const monthEnds = [];
+
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        monthLabels.push(["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"][d.getMonth()]);
+        const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+        monthEnds.push(endOfMonth.getTime());
+      }
+
+      const userCounts = [];
+      const jobCounts = [];
+
+      monthEnds.forEach((endTs, idx) => {
+        const isCurrentMonth = idx === monthEnds.length - 1;
+        const uCount = Object.values(users).filter(u => {
+          const t = typeof u.createdAt === 'number' ? u.createdAt : (isCurrentMonth ? Date.now() : 0);
+          return t <= endTs;
+        }).length;
+        const jCount = Object.values(jobs).filter(j => {
+          const t = typeof j.createdAt === 'number' ? j.createdAt : (isCurrentMonth ? Date.now() : 0);
+          return t <= endTs;
+        }).length;
+        userCounts.push(uCount);
+        jobCounts.push(jCount);
+      });
+
+      const labels = monthLabels;
+      const userCountsArr = userCounts;
+      const offerCountsArr = jobCounts;
+      const maxVal = Math.max(...userCountsArr, ...offerCountsArr, 1);
+
+      const xStep = chartW / labels.length;
+      const groupWidth = xStep * 0.55;
+      const barWidth = groupWidth / 2;
+
+      let gridLines = "";
+      for (let i = 0; i <= 4; i++) {
+        const y = padding.top + (chartH / 4) * i;
+        const val = Math.round(maxVal - (maxVal / 4) * i);
+        gridLines += `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+        gridLines += `<text x="${padding.left - 10}" y="${y + 4}" text-anchor="end" font-size="10" fill="#6b7280">${val}</text>`;
+      }
+
+      let bars = "";
+      userCountsArr.forEach((val, i) => {
+        const x = padding.left + i * xStep + (xStep - groupWidth) / 2;
+        const h = (val / maxVal) * chartH;
+        const y = padding.top + chartH - h;
+        bars += `<rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" fill="#00BCD4" opacity="0.9"/>`;
+        bars += `<text x="${x + barWidth / 2}" y="${y - 6}" text-anchor="middle" font-size="9" fill="#00BCD4" font-weight="700">${val}</text>`;
+      });
+
+      offerCountsArr.forEach((val, i) => {
+        const x = padding.left + i * xStep + (xStep - groupWidth) / 2 + barWidth;
+        const h = (val / maxVal) * chartH;
+        const y = padding.top + chartH - h;
+        bars += `<rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" fill="#15a55c" opacity="0.9"/>`;
+        bars += `<text x="${x + barWidth / 2}" y="${y - 6}" text-anchor="middle" font-size="9" fill="#15a55c" font-weight="700">${val}</text>`;
+      });
+
+      let xLabels = "";
+      labels.forEach((label, i) => {
+        const x = padding.left + i * xStep + xStep / 2;
+        xLabels += `<text x="${x}" y="${height - 10}" text-anchor="middle" font-size="10" fill="#6b7280">${label}</text>`;
+      });
+
+      growthChart.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      growthChart.innerHTML = `
+        ${gridLines}
+        ${bars}
+        ${xLabels}
+      `;
+    } catch (err) {
+      console.error("[ADMIN] Erreur chargement graphique croissance:", err);
+      growthChart.innerHTML = `<text x="360" y="130" text-anchor="middle" font-size="14" fill="#ef4444">Erreur de chargement</text>`;
+    }
+  }
+
+  try {
+    const jobsSnap = await firebase.database().ref("jobs").once("value");
+    const jobs = jobsSnap.val() || {};
+
+    const counts = {};
+    Object.values(jobs).forEach(j => {
+      const raw = (j.contractType || j.status || "Autre").toString().trim();
+      const cat = raw ? raw : "Autre";
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+
+    const sorted = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4);
+
+    const total = sorted.reduce((sum, [, count]) => sum + count, 0) || 1;
+    const palette = ["#00BCD4", "#15a55c", "#f59e0b", "#8b5cf6"];
+    const segments = sorted.map(([label], idx) => ({
+      percent: Math.round((counts[label] / total) * 100),
+      color: palette[idx],
+      label,
+      count: counts[label]
+    }));
+
+    const donut = document.getElementById("categoryDonut");
+    if (donut) {
+      let currentAngle = -90;
+      let paths = "";
+      const radius = 50;
+      const innerRadius = 35;
+
+      segments.forEach(seg => {
+        const angle = (seg.percent / 100) * 360;
+        const startAngle = currentAngle;
+        const endAngle = currentAngle + angle;
+        currentAngle = endAngle;
+
+        const x1 = 60 + radius * Math.cos((startAngle * Math.PI) / 180);
+        const y1 = 60 + radius * Math.sin((startAngle * Math.PI) / 180);
+        const x2 = 60 + radius * Math.cos((endAngle * Math.PI) / 180);
+        const y2 = 60 + radius * Math.sin((endAngle * Math.PI) / 180);
+        const x3 = 60 + innerRadius * Math.cos((endAngle * Math.PI) / 180);
+        const y3 = 60 + innerRadius * Math.sin((endAngle * Math.PI) / 180);
+        const x4 = 60 + innerRadius * Math.cos((startAngle * Math.PI) / 180);
+        const y4 = 60 + innerRadius * Math.sin((startAngle * Math.PI) / 180);
+
+        const largeArc = angle > 180 ? 1 : 0;
+        const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+
+        paths += `<path d="${pathData}" fill="${seg.color}" stroke="#fff" stroke-width="2"/>`;
+      });
+
+      donut.innerHTML = paths;
     }
 
-    let bars = "";
-    users.forEach((val, i) => {
-      const x = padding.left + i * xStep + (xStep - groupWidth) / 2;
-      const h = (val / maxVal) * chartH;
-      const y = padding.top + chartH - h;
-      bars += `<rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" fill="#00BCD4" opacity="0.9"/>`;
-      bars += `<text x="${x + barWidth / 2}" y="${y - 6}" text-anchor="middle" font-size="9" fill="#00BCD4" font-weight="700">${val}</text>`;
-    });
+    const donutTotal = document.getElementById("donutTotalCat");
+    if (donutTotal) donutTotal.textContent = total.toLocaleString("fr-FR");
 
-    offers.forEach((val, i) => {
-      const x = padding.left + i * xStep + (xStep - groupWidth) / 2 + barWidth;
-      const h = (val / maxVal) * chartH;
-      const y = padding.top + chartH - h;
-      bars += `<rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6" fill="#15a55c" opacity="0.9"/>`;
-      bars += `<text x="${x + barWidth / 2}" y="${y - 6}" text-anchor="middle" font-size="9" fill="#15a55c" font-weight="700">${val}</text>`;
-    });
-
-    let xLabels = "";
-    labels.forEach((label, i) => {
-      const x = padding.left + i * xStep + xStep / 2;
-      xLabels += `<text x="${x}" y="${height - 10}" text-anchor="middle" font-size="10" fill="#6b7280">${label}</text>`;
-    });
-
-    growthChart.setAttribute("viewBox", `0 0 ${width} ${height}`);
-    growthChart.innerHTML = `
-      ${gridLines}
-      ${bars}
-      ${xLabels}
-    `;
-  }
-
-  const donut = document.getElementById("categoryDonut");
-  if (donut) {
-    const segments = [
-      { percent: 35, color: "#00BCD4", label: "Tech" },
-      { percent: 25, color: "#15a55c", label: "Marketing" },
-      { percent: 20, color: "#f59e0b", label: "Finance" },
-      { percent: 20, color: "#8b5cf6", label: "Autre" }
-    ];
-
-    let currentAngle = -90;
-    let paths = "";
-    const radius = 50;
-    const innerRadius = 35;
-
-    segments.forEach(seg => {
-      const angle = (seg.percent / 100) * 360;
-      const startAngle = currentAngle;
-      const endAngle = currentAngle + angle;
-      currentAngle = endAngle;
-
-      const x1 = 60 + radius * Math.cos((startAngle * Math.PI) / 180);
-      const y1 = 60 + radius * Math.sin((startAngle * Math.PI) / 180);
-      const x2 = 60 + radius * Math.cos((endAngle * Math.PI) / 180);
-      const y2 = 60 + radius * Math.sin((endAngle * Math.PI) / 180);
-      const x3 = 60 + innerRadius * Math.cos((endAngle * Math.PI) / 180);
-      const y3 = 60 + innerRadius * Math.sin((endAngle * Math.PI) / 180);
-      const x4 = 60 + innerRadius * Math.cos((startAngle * Math.PI) / 180);
-      const y4 = 60 + innerRadius * Math.sin((startAngle * Math.PI) / 180);
-
-      const largeArc = angle > 180 ? 1 : 0;
-      const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
-
-      paths += `<path d="${pathData}" fill="${seg.color}" stroke="#fff" stroke-width="2"/>`;
-    });
-
-    donut.innerHTML = paths;
-  }
-
-  const legend = document.getElementById("categoryLegend");
-  if (legend) {
-    const categories = [
-      { label: "Tech", count: 542, color: "#00BCD4" },
-      { label: "Marketing", count: 386, color: "#15a55c" },
-      { label: "Finance", count: 309, color: "#f59e0b" },
-      { label: "Autre", count: 309, color: "#8b5cf6" }
-    ];
-
-    legend.innerHTML = categories.map(cat => `
-      <li class="legend-item">
-        <span class="legend-dot" style="background:${cat.color}"></span>
-        <span>${cat.label}</span>
-        <span class="legend-count">${cat.count}</span>
-      </li>
-    `).join("");
+    const legend = document.getElementById("categoryLegend");
+    if (legend) {
+      legend.innerHTML = segments.map(cat => `
+        <li class="legend-item">
+          <span class="dot" style="background:${cat.color}"></span>
+          <span>${cat.label}</span>
+          <span class="count">${cat.count}</span>
+        </li>
+      `).join("");
+    }
+  } catch (err) {
+    console.error("[ADMIN] Erreur chargement donut:", err);
   }
 }
 
@@ -753,6 +948,11 @@ document.querySelectorAll(".nav-item").forEach(item => {
         setTimeout(() => {
           console.log("[ADMIN] Lancement renderAdminUsers pour panel utilisateurs");
           renderAllAdminUsers();
+          updateNavCounts();
+        }, 50);
+      } else if (panel === "entreprises") {
+        setTimeout(() => {
+          renderCompanies();
           updateNavCounts();
         }, 50);
       } else if (panel === "formations") {

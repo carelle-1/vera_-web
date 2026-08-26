@@ -135,7 +135,7 @@
                 <span><i class="dot mint"></i>Offres</span>
               </div>
             </div>
-            <svg class="line-chart" id="growthChart" viewBox="0 0 640 220" preserveAspectRatio="none"></svg>
+            <svg class="line-chart" id="growthChart" viewBox="0 0 720 260" preserveAspectRatio="none"></svg>
             <div class="chart-labels" id="growthLabels"></div>
           </div>
 
@@ -521,6 +521,42 @@
         </div>
       </div>
 
+      <!-- ENTREPRISES PANEL -->
+      <div class="panel" id="panel-entreprises">
+        <div class="page-head">
+          <div>
+            <h1>Entreprises</h1>
+            <p>Liste de toutes les entreprises enregistrées sur la plateforme.</p>
+          </div>
+          <div class="page-actions">
+            <div class="filter-wrap">
+              <span class="filter-label">Rechercher</span>
+              <input type="text" id="companySearch" placeholder="Rechercher une entreprise..." style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;width:220px;">
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-row bottom-row--full" style="padding:0 26px 40px;">
+          <section class="card table-card">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width:50px;">Avatar</th>
+                  <th>Utilisateur</th>
+                  <th>Email</th>
+                  <th>Site web</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="companyTableBody"></tbody>
+            </table>
+            <div class="table-footer">
+              <span id="companyTableCount">Affichage de 0 entreprise</span>
+            </div>
+          </section>
+        </div>
+      </div>
+
       <!-- INFORMATIONS PANEL -->
       <div class="panel" id="panel-candidatures">
         <div class="page-head">
@@ -611,12 +647,23 @@
   </main>
 </div>
 
+<!-- ============== MODAL DÉTAILS ENTREPRISE ============== -->
+<div class="modal-overlay" id="companyDetailOverlay">
+  <div class="modal-card company-detail-modal" id="companyDetailModal">
+    <div class="modal-head">
+      <div class="modal-title" id="companyDetailTitle">Détails de l'entreprise</div>
+      <button class="modal-close" id="companyDetailClose" type="button">&#215;</button>
+    </div>
+    <div class="modal-body" id="companyDetailBody"></div>
+  </div>
+</div>
+
 <!-- ============== FIREBASE JS SDK + GARDE DE SESSION ============== -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="{{ asset('firebase-init.js') }}"></script>
-<script src="{{ asset('scriptAD.js') }}?v=14"></script>
+<script src="{{ asset('scriptAD.js') }}?v=15"></script>
 </body>
 </html>
