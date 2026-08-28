@@ -176,6 +176,10 @@ async function renderAdminKPIs() {
       <div><div class="kpi-value">…</div><div class="kpi-label">Chargement…</div></div>
     </div>
     <div class="kpi-card">
+      <div class="kpi-icon orange"><img class="kpi-icon-img" src="/image/mission.png" alt="Recrutements"></div>
+      <div><div class="kpi-value">…</div><div class="kpi-label">Chargement…</div></div>
+    </div>
+    <div class="kpi-card">
       <div class="kpi-icon green"><img class="kpi-icon-img" src="/image/7928164.png" alt="Revenus"></div>
       <div><div class="kpi-value">…</div><div class="kpi-label">Chargement…</div></div>
     </div>
@@ -200,10 +204,12 @@ async function renderAdminKPIs() {
     const userCount = Object.keys(users).length;
     const jobCount = Object.keys(jobs).length;
     const candCount = Object.keys(cands).length;
+    const acceptedCount = Object.values(cands).filter(c => (c.status || "").toLowerCase() === "accepted").length;
 
     const usersThisMonth = Object.values(users).filter(u => (u.createdAt || 0) >= monthStart).length;
     const jobsThisMonth = Object.values(jobs).filter(j => (j.createdAt || 0) >= monthStart).length;
     const candsThisMonth = Object.values(cands).filter(c => (c.createdAt || 0) >= monthStart).length;
+    const acceptedThisMonth = Object.values(cands).filter(c => (c.status || "").toLowerCase() === "accepted" && (c.createdAt || 0) >= monthStart).length;
 
     const usersPrevMonth = Object.values(users).filter(u => {
       const t = u.createdAt || 0;
@@ -217,6 +223,10 @@ async function renderAdminKPIs() {
       const t = c.createdAt || 0;
       return t >= prevMonthStart && t < monthStart;
     }).length;
+    const acceptedPrevMonth = Object.values(cands).filter(c => {
+      const t = c.createdAt || 0;
+      return (c.status || "").toLowerCase() === "accepted" && t >= prevMonthStart && t < monthStart;
+    }).length;
 
     function growth(current, previous) {
       if (previous <= 0) return current > 0 ? "+100% ce mois" : "N/A";
@@ -228,6 +238,7 @@ async function renderAdminKPIs() {
       { label: "Utilisateurs", value: userCount.toLocaleString('fr-FR'), sub: growth(usersThisMonth, usersPrevMonth), icon: "/image/users.png", color: "blue" },
       { label: "Offres publiées", value: jobCount.toLocaleString('fr-FR'), sub: growth(jobsThisMonth, jobsPrevMonth), icon: "/image/3916670.png", color: "mint" },
       { label: "Candidatures", value: candCount.toLocaleString('fr-FR'), sub: growth(candsThisMonth, candsPrevMonth), icon: "/image/3917505.png", color: "purple" },
+      { label: "Recrutements", value: acceptedCount.toLocaleString('fr-FR'), sub: growth(acceptedThisMonth, acceptedPrevMonth), icon: "/image/mission.png", color: "orange" },
       { label: "Revenus", value: "0 €", sub: "Aucune donnée", icon: "/image/7928164.png", color: "green" }
     ];
 
@@ -255,6 +266,10 @@ async function renderAdminKPIs() {
       <div class="kpi-card">
         <div class="kpi-icon purple"><img class="kpi-icon-img" src="/image/3917505.png" alt="Candidatures"></div>
         <div><div class="kpi-value">—</div><div class="kpi-label">Candidatures</div><div class="kpi-sub">Erreur</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon orange"><img class="kpi-icon-img" src="/image/mission.png" alt="Recrutements"></div>
+        <div><div class="kpi-value">—</div><div class="kpi-label">Recrutements</div><div class="kpi-sub">Erreur</div></div>
       </div>
       <div class="kpi-card">
         <div class="kpi-icon green"><img class="kpi-icon-img" src="/image/7928164.png" alt="Revenus"></div>
@@ -737,6 +752,303 @@ function renderCompanies() {
   });
 }
 
+let adminActiveDiscussionUid = null;
+let adminMsgListener = null;
+let adminActiveConversationId = null;
+let adminActiveCounterparty = null;
+let adminConvListener = null;
+let adminActiveUserAvatar = null;
+
+function getAvatarColor(name) {
+  const colors = ["#3b6bf5", "#16a34a", "#8b5cf6", "#0ea5e9", "#f59e0b", "#ef4444"];
+  let hash = 0;
+  const s = name || "";
+  for (let i = 0; i < s.length; i++) hash = s.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+// Choisit le bon fil de conversation à afficher pour un utilisateur :
+// priorité au fil direct avec l'admin connecté, sinon le fil VERA, sinon le plus récent.
+function pickCounterparty(userConvs, adminUid) {
+  if (!userConvs) return null;
+  const keys = Object.keys(userConvs).filter((k) => userConvs[k] && (userConvs[k].lastTimestamp || userConvs[k].lastMessage));
+  if (keys.length === 0) return null;
+  if (adminUid && userConvs[adminUid]) return adminUid;
+  if (userConvs["vera"]) return "vera";
+  return keys.sort((a, b) => (userConvs[b].lastTimestamp || 0) - (userConvs[a].lastTimestamp || 0))[0];
+}
+
+function renderAdminConversations() {
+  const list = document.getElementById("adminUsersList");
+  const countEl = document.getElementById("adminConvTableCount");
+  const searchEl = document.getElementById("adminConvSearch");
+  if (!list) return;
+
+  list.innerHTML = `<div class="conv-empty">Chargement des conversations...</div>`;
+
+  const adminUid = firebase.auth().currentUser?.uid;
+
+  firebase.database().ref("users").once("value").then((snapshot) => {
+    const usersData = snapshot.val() || {};
+    const search = searchEl ? searchEl.value.trim().toLowerCase() : "";
+    const users = Object.keys(usersData)
+      .map((id) => ({ id, ...usersData[id] }))
+      .filter((u) => (u.role || "").toString().toLowerCase() !== "admin")
+      .filter((u) => {
+        const name = (u.name || u.displayName || u.email || "").toString().toLowerCase();
+        return !search || name.includes(search);
+      })
+      .sort((a, b) => (a.name || a.displayName || a.email || "").localeCompare(b.name || b.displayName || b.email || ""));
+
+    const convPromises = users.map((u) =>
+      firebase.database().ref("conversations/" + u.id).once("value").then((snap) => {
+        const all = snap.val() || null;
+        const counterparty = pickCounterparty(all, adminUid);
+        const conv = counterparty ? all[counterparty] : null;
+        return { user: u, conv, counterparty };
+      })
+    );
+
+    return Promise.all(convPromises).then((results) => {
+      const withConv = results.filter((r) => r.conv !== null).sort((a, b) => (b.conv.lastTimestamp || 0) - (a.conv.lastTimestamp || 0));
+
+      if (withConv.length === 0) {
+        list.innerHTML = `<div class="conv-empty">Aucune conversation trouvée.</div>`;
+        if (countEl) countEl.textContent = "Affichage de 0 conversation";
+        return;
+      }
+
+      list.innerHTML = withConv.map(({ user, conv, counterparty }) => {
+        const name = user.name || user.displayName || user.email || "Utilisateur";
+        const avatar = user.avatar || user.photoURL || "";
+        const initial = (name.charAt(0) || "?").toUpperCase();
+        const avatarBg = user.avatarBg || getAvatarColor(name);
+        const lastMessage = conv.lastMessage || "";
+        const time = conv.lastTimestamp ? new Date(conv.lastTimestamp).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+        const unread = conv.unread ? 1 : 0;
+        const youPrefix = conv.lastSenderUid === adminUid ? "Vous : " : "";
+        const avatarHtml = avatar
+          ? `<img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}" class="conv-avatar-img">`
+          : escapeHtml(initial);
+
+        return `
+          <div class="conv-item ${adminActiveDiscussionUid === user.id ? "active" : ""}" data-uid="${escapeHtml(user.id)}" data-counterparty="${escapeHtml(counterparty)}">
+            <div class="conv-avatar" style="background:${avatarBg}">${avatarHtml}</div>
+            <div class="conv-body">
+              <div class="conv-top">
+                <span class="conv-name">${escapeHtml(name)}</span>
+                <span class="conv-time">${escapeHtml(time)}</span>
+              </div>
+              <div class="conv-sub">${escapeHtml(user.email || "")}</div>
+              <div class="conv-preview">${escapeHtml(youPrefix + lastMessage)}</div>
+            </div>
+            ${unread ? `<span class="conv-unread"></span>` : ""}
+          </div>
+        `;
+      }).join("");
+
+      list.querySelectorAll(".conv-item").forEach((item) => {
+        item.addEventListener("click", () => {
+          const uid = item.dataset.uid;
+          const cp = item.dataset.counterparty;
+          if (uid) openAdminConversation(uid, cp);
+        });
+      });
+
+      if (countEl) countEl.textContent = `Affichage de ${withConv.length} conversation${withConv.length > 1 ? "s" : ""}`;
+    });
+  }).catch((err) => {
+    console.error("[ADMIN] Erreur chargement conversations:", err);
+    list.innerHTML = `<div class="conv-empty" style="color:var(--red);">Erreur de chargement</div>`;
+  });
+}
+
+function openAdminConversation(userId, counterparty) {
+  adminActiveDiscussionUid = userId;
+  adminActiveCounterparty = counterparty || "vera";
+
+  const list = document.getElementById("adminUsersList");
+  if (list) list.querySelectorAll(".conv-item").forEach((i) => i.classList.toggle("active", i.dataset.uid === userId));
+
+  const emptyEl = document.getElementById("adminChatEmpty");
+  const windowEl = document.getElementById("adminChatWindow");
+  const container = document.getElementById("adminChatMessages");
+  if (emptyEl) emptyEl.style.display = "none";
+  if (windowEl) windowEl.style.display = "flex";
+  if (container) container.innerHTML = `<div class="msg-loading">Chargement...</div>`;
+
+  firebase.database().ref("users/" + userId).once("value").then((snap) => {
+    const user = snap.val() || {};
+    const name = user.name || user.displayName || user.email || "Utilisateur";
+    const avatar = user.avatar || user.photoURL || "";
+    const initial = (name.charAt(0) || "?").toUpperCase();
+    const avatarBg = user.avatarBg || getAvatarColor(name);
+    adminActiveUserAvatar = avatar;
+
+    const nameEl = document.getElementById("adminChatName");
+    const avatarEl = document.getElementById("adminChatAvatar");
+    const statusEl = document.getElementById("adminChatStatus");
+    if (nameEl) nameEl.textContent = name;
+    if (avatarEl) {
+      avatarEl.style.background = avatarBg;
+      avatarEl.innerHTML = avatar
+        ? `<img src="${escapeHtml(avatar)}" alt="" class="conv-avatar-img">`
+        : escapeHtml(initial);
+    }
+    if (statusEl) statusEl.innerHTML = `<span class="dot-online"></span>En ligne`;
+
+    renderAdminContactCard(user, name, avatar, avatarBg);
+
+    const conversationId = [userId, adminActiveCounterparty].sort().join("_");
+    adminActiveConversationId = conversationId;
+
+    if (adminMsgListener) {
+      adminMsgListener.off();
+      adminMsgListener = null;
+    }
+    adminMsgListener = firebase.database().ref("messages/" + conversationId).orderByChild("timestamp");
+    adminMsgListener.on("value", (snapshot) => {
+      const data = snapshot.val() || {};
+      const messages = Object.keys(data).map((key) => ({ id: key, ...data[key] }));
+      messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      renderAdminConversationMessages(messages, document.getElementById("adminChatMessages"));
+    });
+
+    // Marquer comme lu des deux côtés
+    firebase.database().ref("conversations/" + userId + "/" + adminActiveCounterparty).update({ unread: false }).catch(() => {});
+    firebase.database().ref("conversations/" + adminActiveCounterparty + "/" + userId).update({ unread: false }).catch(() => {});
+    if (list) list.querySelectorAll(".conv-item").forEach((i) => {
+      if (i.dataset.uid === userId) {
+        const badge = i.querySelector(".conv-unread");
+        if (badge) badge.remove();
+      }
+    });
+  });
+}
+
+function renderAdminContactCard(user, name, avatar, avatarBg) {
+  const avatarEl = document.getElementById("adminContactAvatar");
+  const nameEl = document.getElementById("adminContactName");
+  const statusEl = document.getElementById("adminContactStatus");
+  const descEl = document.getElementById("adminContactDesc");
+  const roleEl = document.getElementById("adminContactRole");
+  const emailEl = document.getElementById("adminContactEmail");
+  const lastEl = document.getElementById("adminContactLast");
+  const stateEl = document.getElementById("adminContactState");
+
+  if (avatarEl) {
+    avatarEl.style.background = avatarBg;
+    avatarEl.innerHTML = avatar
+      ? `<img src="${escapeHtml(avatar)}" alt="" class="conv-avatar-img">`
+      : escapeHtml((name.charAt(0) || "?").toUpperCase());
+  }
+  if (nameEl) nameEl.textContent = name;
+  if (statusEl) statusEl.innerHTML = `<span class="dot-online"></span>En ligne`;
+  if (descEl) descEl.textContent = "Membre de la plateforme VERA. Consultez l'historique de la conversation sur la gauche.";
+  if (roleEl) roleEl.textContent = user.role || "Utilisateur";
+  if (emailEl) emailEl.textContent = user.email || "—";
+  if (lastEl) lastEl.textContent = user.lastActive ? new Date(user.lastActive).toLocaleString("fr-FR") : "—";
+  if (stateEl) stateEl.textContent = "En ligne";
+}
+
+function renderAdminConversationMessages(messages, container) {
+  if (!container) return;
+  if (!messages || messages.length === 0) {
+    container.innerHTML = `<div class="msg-loading">Aucun message pour le moment. Commencez la conversation.</div>`;
+    return;
+  }
+  container.innerHTML = messages.map((m) => {
+    const isAdmin = m.senderUid === firebase.auth().currentUser?.uid;
+    const rowClass = isAdmin ? "user" : "vera";
+    const bubbleStyle = isAdmin
+      ? 'background:#7dd3fc;color:#0f1730;border-color:#38bdf8;'
+      : 'background:#a5d6a7;color:#0f1730;border-color:#15a55c;';
+
+    let contentHtml = "";
+    if (m.type === "text") {
+      contentHtml = escapeHtml(m.text || "");
+    } else if (m.type === "image" && m.fileUrl) {
+      contentHtml = `<img src="${m.fileUrl}" class="msg-image" onclick="window.open('${m.fileUrl}', '_blank')">`;
+      if (m.text) contentHtml += `<div>${escapeHtml(m.text)}</div>`;
+    } else if (m.type === "file" && m.fileUrl) {
+      contentHtml = `<a href="${m.fileUrl}" target="_blank" class="msg-file">📄 ${escapeHtml(m.fileName || "Fichier")}</a>`;
+      if (m.text) contentHtml += `<div>${escapeHtml(m.text)}</div>`;
+    }
+
+    return `
+      <div class="msg-row ${rowClass}">
+        ${!isAdmin ? `<div class="msg-avatar-sm">${getAvatarForRecipient()}</div>` : ""}
+        <div class="msg-bubble" style="${bubbleStyle}">
+          ${contentHtml}
+          <span class="msg-time" style="color:${isAdmin ? '#0c4a6e' : '#14532d'}">${formatTime(m.timestamp)} <span class="msg-status">${getMessageStatusIcon(m, isAdmin)}</span></span>
+        </div>
+      </div>
+    `;
+  }).join("");
+  container.scrollTop = container.scrollHeight;
+}
+
+function sendAdminMessage() {
+  const input = document.getElementById("adminChatInput");
+  const text = input ? input.value.trim() : "";
+  if (!text || !adminActiveDiscussionUid) return;
+
+  const adminUid = firebase.auth().currentUser?.uid;
+  const userId = adminActiveDiscussionUid;
+  const counterparty = adminActiveCounterparty || "vera";
+  const conversationId = [userId, counterparty].sort().join("_");
+
+  const messageRef = firebase.database().ref("messages/" + conversationId).push();
+  const messageWithId = {
+    text,
+    type: "text",
+    id: messageRef.key,
+    senderUid: adminUid,
+    timestamp: Date.now(),
+    read: false
+  };
+
+  messageRef.set(messageWithId)
+    .then(() => firebase.database().ref("conversations/" + userId + "/" + counterparty).update({
+      lastMessage: text,
+      lastTimestamp: messageWithId.timestamp,
+      recipientId: counterparty,
+      lastSenderUid: adminUid,
+      unread: false
+    }))
+    .then(() => firebase.database().ref("conversations/" + counterparty + "/" + userId).update({
+      lastMessage: text,
+      lastTimestamp: messageWithId.timestamp,
+      recipientId: userId,
+      lastSenderUid: adminUid,
+      unread: true
+    }))
+    .then(() => { if (input) input.value = ""; })
+    .then(() => { if (adminConvListener) renderAdminConversations(); })
+    .catch((err) => {
+      console.error("[ADMIN] Erreur envoi message:", err);
+      alert("Erreur lors de l'envoi du message");
+    });
+}
+
+function getAvatarForRecipient() {
+  const avatar = adminActiveUserAvatar || "";
+  const initial = "?";
+  return avatar
+    ? `<img src="${escapeHtml(avatar)}" alt="" style="width:20px;height:20px;object-fit:contain;">`
+    : `<div style="width:20px;height:20px;border-radius:50%;background:var(--mint-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">${escapeHtml(initial)}</div>`;
+}
+
+function formatTime(timestamp) {
+  if (!timestamp) return "";
+  const d = new Date(timestamp);
+  return d.getHours().toString().padStart(2, "0") + ":" + d.getMinutes().toString().padStart(2, "0");
+}
+
+function getMessageStatusIcon(message, isUser) {
+  return '<span class="status-sent">✓</span>';
+}
+
 async function renderAdminCharts() {
   const growthChart = document.getElementById("growthChart");
   if (growthChart) {
@@ -923,6 +1235,9 @@ document.querySelectorAll(".nav-item").forEach(item => {
     document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
     item.classList.add("active");
 
+    if (adminMsgListener) { adminMsgListener.off(); adminMsgListener = null; }
+    if (adminConvListener) { adminConvListener.off(); adminConvListener = null; }
+
     if (panel) {
       document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
       const target = document.getElementById("panel-" + panel);
@@ -960,11 +1275,61 @@ document.querySelectorAll(".nav-item").forEach(item => {
           renderAdmins();
           updateNavCounts();
         }, 50);
+      } else if (panel === "discussions") {
+        setTimeout(() => {
+          adminActiveDiscussionUid = null;
+          adminActiveCounterparty = null;
+          adminActiveUserAvatar = null;
+          if (adminMsgListener) { adminMsgListener.off(); adminMsgListener = null; }
+          if (adminConvListener) { adminConvListener.off(); adminConvListener = null; }
+          renderAdminConversations();
+          if (!adminConvListener) {
+            adminConvListener = firebase.database().ref("conversations");
+            adminConvListener.on("value", () => renderAdminConversations());
+          }
+          updateNavCounts();
+        }, 50);
       } else {
         setTimeout(() => updateNavCounts(), 50);
       }
     }
   });
+});
+
+document.getElementById("adminConvSearch")?.addEventListener("input", () => {
+  renderAdminConversations();
+});
+
+// ============== DISCUSSIONS : actions de la fenêtre de chat ==============
+document.getElementById("adminSendBtn")?.addEventListener("click", () => {
+  sendAdminMessage();
+});
+
+document.getElementById("adminChatInput")?.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") sendAdminMessage();
+});
+
+document.getElementById("adminConvRefresh")?.addEventListener("click", () => {
+  if (adminActiveDiscussionUid) openAdminConversation(adminActiveDiscussionUid, adminActiveCounterparty);
+});
+
+document.getElementById("adminMarkReadBtn")?.addEventListener("click", () => {
+  if (!adminActiveDiscussionUid) return;
+  const cp = adminActiveCounterparty || "vera";
+  firebase.database().ref("conversations/" + adminActiveDiscussionUid + "/" + cp).update({ unread: false })
+    .then(() => renderAdminConversations())
+    .catch((err) => console.error("[ADMIN] Erreur marquage lu:", err));
+});
+
+document.getElementById("adminClearConvBtn")?.addEventListener("click", () => {
+  if (!adminActiveConversationId) return;
+  if (!confirm("Effacer tous les messages de cette conversation ?")) return;
+  firebase.database().ref("messages/" + adminActiveConversationId).remove()
+    .then(() => {
+      const c = document.getElementById("adminChatMessages");
+      if (c) c.innerHTML = `<div class="msg-loading">Aucun message pour le moment. Commencez la conversation.</div>`;
+    })
+    .catch((err) => console.error("[ADMIN] Erreur suppression conversation:", err));
 });
 
 // ============== CRUD OFFRES D'EMPLOI ==============

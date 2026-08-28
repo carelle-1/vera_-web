@@ -48,8 +48,8 @@
       <a class="nav-item" data-panel="formations">
         <img class="nav-icon" src="/image/3914133.png" alt="Formations"> Administration
       </a>
-      <a class="nav-item" data-panel="moderation">
-        <img class="nav-icon" src="/image/3917385.png" alt="Modération"> Modération <span class="nav-count alert" data-count-path="moderation">0</span>
+      <a class="nav-item" data-panel="discussions">
+        <img class="nav-icon" src="/image/discussion.png" alt="Discussions"> Discussions
       </a>
 
       <div class="nav-label">Gestion</div>
@@ -423,7 +423,7 @@
           </div>
 
           <div class="offres-form-wrapper" id="adminMgmtFormWrapper">
-            <div class="card">
+            <div class="card">   
               <div class="card-head-row">
                 <div class="card-title" id="adminMgmtModalTitle">Ajouter un administrateur</div>
                 <button class="exp-modal-close" id="adminMgmtClose" type="button">×</button>
@@ -467,6 +467,134 @@
               </form>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- DISCUSSIONS PANEL -->
+      <div class="panel" id="panel-discussions">
+        <div class="page-head">
+          <div>
+            <h1 style="color:#12b3c9;">Discussions</h1>
+            <!-- <h1 style="color:#12b3c9;">Discussions <img src="/image/discussion.png" alt="" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"></h1> -->
+            <p>Consultez et répondez aux messages des utilisateurs de la plateforme.</p>
+          </div>
+        </div>
+
+        <div class="messaging-layout">
+
+          <!-- USERS LIST -->
+          <section class="conv-panel">
+            <div class="conv-search">
+              <div class="search small">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                <input type="text" id="adminConvSearch" placeholder="Rechercher un utilisateur...">
+              </div>
+            </div>
+            <div class="conv-list" id="adminUsersList"></div>
+          </section>
+
+          <!-- CHAT WINDOW -->
+          <section class="chat-panel">
+            <div class="chat-empty" id="adminChatEmpty">
+              <div class="chat-empty-icon">💬</div>
+              <p>Sélectionnez une conversation pour afficher les messages.</p>
+            </div>
+
+            <div class="chat-window" id="adminChatWindow" style="display:none;">
+              <div class="chat-header">
+                <div class="chat-header-left">
+                  <div class="chat-avatar" id="adminChatAvatar"><img src="/image/1_nobg.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                  <div>
+                    <div class="chat-name" id="adminChatName">—</div>
+                    <div class="chat-status" id="adminChatStatus"><span class="dot-online"></span>En ligne</div>
+                  </div>
+                </div>
+                <div class="chat-header-actions">
+                  <button class="icon-btn-round" id="adminConvRefresh" title="Actualiser"><img src="/image/3917317.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+                  <button class="icon-btn-round" title="Informations"><img src="/image/3917293.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+                </div>
+              </div>
+
+              <div class="chat-messages" id="adminChatMessages"></div>
+
+              <div class="chat-input">
+                <button class="input-icon" id="attachImageBtn" title="Ajouter une image"><img src="/image/1.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+                <button class="input-icon" id="attachFileBtn" title="Ajouter un fichier"><img src="/image/3917361.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+                <button class="input-icon"><img src="/image/3916880.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+                <input type="file" id="imageInput" accept="image/*" style="display:none;">
+                <input type="file" id="fileInput" style="display:none;">
+                <input type="text" id="adminChatInput" placeholder="Écrivez votre message...">
+                <button class="send-btn" id="adminSendBtn"><img src="/image/envoyez.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+              </div>
+              <div id="previewArea" style="display:none; padding: 10px 18px; background: #fff; border-top: 1px solid var(--border);">
+                <div id="previewContent" style="display: flex; gap: 10px; align-items: center;"></div>
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                  <button class="btn-outline-sm" id="cancelAttachment">Annuler</button>
+                  <button class="btn-primary-sm" id="sendAttachment">Envoyer</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CONTACT INFO -->
+          <aside class="contact-panel">
+            <div class="card contact-card">
+              <div class="contact-avatar" id="adminContactAvatar"><img src="/image/1_nobg.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+              <div class="contact-name" id="adminContactName">Aucune conversation</div>
+              <div class="contact-status" id="adminContactStatus"><span class="dot-online"></span>En ligne</div>
+              <p id="adminContactDesc">Sélectionnez une conversation pour voir les informations de l'utilisateur.</p>
+            </div>
+
+            <div class="card">
+              <div class="card-head-row"><span>Actions rapides</span></div>
+              <div class="quick-action">
+                <div class="quick-icon blue"><img src="/image/3917754.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div><div class="quick-title">Découvrir des opportunités</div><div class="quick-sub">VERA recherche pour vous</div></div>
+              </div>
+              <div class="quick-action">
+                <div class="quick-icon purple"><img src="/image/7653263.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div><div class="quick-title">Améliorer mon profil</div><div class="quick-sub">Conseils personnalisés</div></div>
+              </div>
+              <div class="quick-action">
+                <div class="quick-icon green"><img src="/image/mission.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div><div class="quick-title">Postuler automatiquement</div><div class="quick-sub">VERA postule pour vous</div></div>
+              </div>
+              <div class="quick-action">
+                <div class="quick-icon orange"><img src="/image/3917361.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div><div class="quick-title">Mes recommandations</div><div class="quick-sub">Formations &amp; conseils</div></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head-row"><span>Informations</span></div>
+              <div class="info-row"><span>Rôle</span><strong id="adminContactRole">—</strong></div>
+              <div class="info-row"><span>Email</span><strong id="adminContactEmail">—</strong></div>
+              <div class="info-row"><span>Dernière activité</span><strong id="adminContactLast">—</strong></div>
+              <div class="info-row"><span>Statut</span><strong id="adminContactState">En ligne</strong></div>
+            </div>
+
+            <div class="card">
+              <div class="card-head-row"><span>Fichiers et ressources partagés</span></div>
+              <div class="file-item">
+                <div class="file-icon"><img src="/image/3917505.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div class="file-info">
+                  <div class="file-name">Guide_Optimisation_Profil.pdf</div>
+                  <div class="file-meta">PDF · 1.2 MB · 02 mai 2024</div>
+                </div>
+                <button class="file-download"><img src="/image/download.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+              </div>
+              <div class="file-item">
+                <div class="file-icon"><img src="/image/3917505.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div class="file-info">
+                  <div class="file-name">Top_Competences_2024.pdf</div>
+                  <div class="file-meta">PDF · 892 KB · 28 avr 2024</div>
+                </div>
+                <button class="file-download"><img src="/image/download.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+              </div>
+              <a href="#" class="see-all">Voir tous les fichiers →</a>
+            </div>
+          </aside>
+
         </div>
       </div>
 
@@ -664,6 +792,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="{{ asset('firebase-init.js') }}"></script>
-<script src="{{ asset('scriptAD.js') }}?v=15"></script>
+<script src="{{ asset('scriptAD.js') }}?v=17"></script>
 </body>
 </html>
