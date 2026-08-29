@@ -214,10 +214,14 @@ return [
 
                 'timeout' => env('FIREBASE_HTTP_CLIENT_TIMEOUT'),
 
-                'guzzle_middlewares' => [
-                    // MyInvokableMiddleware::class,
-                    // [MyMiddleware::class, 'static_method'],
-                ],
+                'guzzle_middlewares' => filter_var(env('FIREBASE_DISABLE_SSL_VERIFY', false), FILTER_VALIDATE_BOOLEAN) ? [
+                    function (callable $handler) {
+                        return function (\Psr\Http\Message\RequestInterface $request, array $options) use ($handler) {
+                            $options['verify'] = false;
+                            return $handler($request, $options);
+                        };
+                    },
+                ] : [],
             ],
         ],
     ],

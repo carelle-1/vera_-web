@@ -95,6 +95,7 @@ firebase.auth().onAuthStateChanged((user) => {
     data.uid = user.uid;
     console.log("[ADMIN] accès admin autorisé, initialisation du panel");
     initAdminPanel(data);
+    initAdminSettings();
   }).catch((error) => {
     console.log("[ADMIN] erreur lors de la lecture Firebase:", error);
     window.location.replace("/tableau-de-bord");
@@ -147,6 +148,24 @@ function applyAdminPrivilegesToNav() {
   });
 }
 
+function setAvatarFallback(container, avatarUrl, name, small) {
+  if (!container) return;
+  const initial = (name || "A").charAt(0).toUpperCase();
+  const initialClass = small ? "avatar-initial sm" : "avatar-initial";
+  if (avatarUrl) {
+    container.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(name || 'Admin')}" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+  } else {
+    container.innerHTML = `<span class="${initialClass}">${escapeHtml(initial)}</span>`;
+  }
+}
+
+function applyAdminAvatar(name, avatar) {
+  const sidebar = document.getElementById("sidebarAdminAvatar");
+  const header = document.getElementById("headerAdminAvatar");
+  setAvatarFallback(sidebar, avatar, name, true);
+  setAvatarFallback(header, avatar, name, true);
+}
+
 async function initAdminPanel(data) {
   currentAdminData = data || {};
   renderAdminKPIs();
@@ -156,6 +175,9 @@ async function initAdminPanel(data) {
   updateNavCounts();
   buildPrivilegesGrid();
   applyAdminPrivilegesToNav();
+  const name = data.name || data.displayName || "Admin";
+  const avatar = data.avatar || data.photoURL || "";
+  applyAdminAvatar(name, avatar);
 }
 
 async function renderAdminKPIs() {
@@ -2665,4 +2687,187 @@ if (adminSuperToggle) {
       cb.closest(".priv-box").classList.toggle("disabled", superOn);
     });
   });
+}
+
+// ============== PARAMÈTRES ADMIN ==============
+let adminSettingsReady = false;
+
+function initAdminSettings() {
+  if (adminSettingsReady) return;
+  const adminUid = firebase.auth().currentUser?.uid;
+  if (!adminUid) return;
+  adminSettingsReady = true;
+
+  const nameInput = document.getElementById("adminSettingsName");
+  const emailInput = document.getElementById("adminSettingsEmail");
+  const roleInput = document.getElementById("adminSettingsRole");
+  const nameDisplay = document.getElementById("adminSettingsNameDisplay");
+  const emailDisplay = document.getElementById("adminSettingsEmailDisplay");
+  const uidDisplay = document.getElementById("adminSettingsUid");
+  const roleSideDisplay = document.getElementById("adminSettingsRoleSide");
+  const statusDisplay = document.getElementById("adminSettingsStatus");
+  const lastLoginDisplay = document.getElementById("adminSettingsLastLogin");
+  const avatarContainer = document.getElementById("adminSettingsAvatar");
+  const avatarImg = avatarContainer ? avatarContainer.querySelector("img") : null;
+  const avatarInput = document.getElementById("avatarInput");
+
+  function setAdminAvatar(avatarUrl, name) {
+    if (!avatarContainer) return;
+    if (avatarUrl) {
+      avatarContainer.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(name || 'Admin')}" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+    } else {
+      const initial = (name || "A").charAt(0).toUpperCase();
+      avatarContainer.innerHTML = `<span class="avatar-initial">${escapeHtml(initial)}</span>`;
+    }
+  }
+
+  if (avatarInput) {
+    avatarInput.addEventListener("change", () => {
+      const file = avatarInput.files[0];
+      console.log("[ADMIN] fichier sélectionné:", file);
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        alert("Veuillez sélectionner une image.");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("avatar", file);
+      console.log("[ADMIN] début upload avatar");
+      fetch("/upload-avatar.php", { method: "POST", body: formData })
+        .then((response) => {
+          console.log("[ADMIN] réponse upload:", response.status);
+          return response.ok ? response.json() : Promise.reject(new Error("Échec de l'upload"));
+        })
+        .then((data) => {
+          console.log("[ADMIN] data upload:", data);
+          if (!data.success || !data.url) throw new Error("URL de l'avatar non retournée");
+          return firebase.database().ref("users/" + adminUid).update({ avatar: data.url }).then(() => data.url);
+        })
+        .then((avatarUrl) => {
+          console.log("[ADMIN] avatarUrl:", avatarUrl);
+          const currentName = nameInput ? nameInput.value.trim() : "";
+          setAdminAvatar(avatarUrl, currentName);
+          applyAdminAvatar(currentName, avatarUrl);
+          alert("Photo de profil mise à jour.");
+        })
+        .catch((err) => {
+          console.error("[ADMIN] Erreur upload avatar:", err);
+          alert("Échec de la mise à jour de la photo : " + err.message);
+        });
+    });
+  }
+
+  firebase.database().ref("users/" + adminUid).once("value").then((snap) => {
+    const user = snap.val() || {};
+    const name = user.name || user.displayName || "Admin";
+    const email = user.email || "";
+    const role = user.role || "admin";
+    const avatar = user.avatar || "";
+
+    if (nameInput) nameInput.value = name;
+    if (emailInput) emailInput.value = email;
+    if (roleInput) roleInput.value = role.toUpperCase();
+    if (nameDisplay) nameDisplay.textContent = name;
+    if (emailDisplay) emailDisplay.textContent = email;
+    if (uidDisplay) uidDisplay.textContent = adminUid;
+    if (roleSideDisplay) roleSideDisplay.textContent = role === "super" || user.super === true ? "Super admin" : "Admin";
+    if (statusDisplay) statusDisplay.textContent = user.status === "suspendu" ? "Suspendu" : "Actif";
+    if (lastLoginDisplay && user.lastLogin) lastLoginDisplay.textContent = new Date(user.lastLogin).toLocaleString("fr-FR");
+    setAdminAvatar(avatar, name);
+  });
+
+  const settingsForm = document.getElementById("adminSettingsForm");
+  if (settingsForm) {
+    settingsForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const newName = nameInput ? nameInput.value.trim() : "";
+      const newEmail = emailInput ? emailInput.value.trim() : "";
+
+      if (!newName || !newEmail) {
+        alert("Le nom et l'email sont requis.");
+        return;
+      }
+
+      const updates = {};
+      if (newName) updates.name = newName;
+      if (newEmail) updates.email = newEmail;
+
+      firebase.database().ref("users/" + adminUid).update(updates)
+        .then(() => {
+          if (nameDisplay) nameDisplay.textContent = newName;
+          if (emailDisplay) emailDisplay.textContent = newEmail;
+          alert("Profil mis à jour avec succès.");
+        })
+        .catch((err) => {
+          console.error("[ADMIN] Erreur mise à jour profil:", err);
+          alert("Erreur lors de la mise à jour du profil.");
+        });
+    });
+  }
+
+  const cancelBtn = document.getElementById("adminSettingsCancelBtn");
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", () => {
+      firebase.database().ref("users/" + adminUid).once("value").then((snap) => {
+        const user = snap.val() || {};
+        if (nameInput) nameInput.value = user.name || user.displayName || "Admin";
+        if (emailInput) emailInput.value = user.email || "";
+        setAdminAvatar(user.avatar || "", nameInput ? nameInput.value.trim() : "");
+      });
+    });
+  }
+
+  const passwordForm = document.getElementById("adminPasswordForm");
+  if (passwordForm) {
+    passwordForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const current = document.getElementById("adminCurrentPassword").value;
+      const newPass = document.getElementById("adminNewPassword").value;
+      const confirm = document.getElementById("adminConfirmPassword").value;
+
+      if (!current || !newPass || !confirm) {
+        alert("Veuillez remplir tous les champs du mot de passe.");
+        return;
+      }
+      if (newPass.length < 6) {
+        alert("Le nouveau mot de passe doit contenir au moins 6 caractères.");
+        return;
+      }
+      if (newPass !== confirm) {
+        alert("Les mots de passe ne correspondent pas.");
+        return;
+      }
+
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        alert("Utilisateur non connecté.");
+        return;
+      }
+
+      const credential = firebase.auth.EmailAuthProvider.credential(user.email, current);
+      user.reauthenticateWithCredential(credential)
+        .then(() => user.updatePassword(newPass))
+        .then(() => {
+          alert("Mot de passe mis à jour avec succès.");
+          passwordForm.reset();
+        })
+        .catch((err) => {
+          console.error("[ADMIN] Erreur mot de passe:", err);
+          alert("Erreur lors de la mise à jour du mot de passe : " + (err.message || err.code));
+        });
+    });
+  }
+
+  const passwordCancelBtn = document.getElementById("adminPasswordCancelBtn");
+  if (passwordCancelBtn) {
+    passwordCancelBtn.addEventListener("click", () => {
+      passwordForm.reset();
+    });
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initAdminSettings);
+} else {
+  initAdminSettings();
 }

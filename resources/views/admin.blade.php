@@ -16,9 +16,9 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-logo">V</div>
+      <!-- <div class="brand-logo">V</div> -->
       <div>
-        <div class="brand-name">VERA <span class="admin-tag">Admin</span></div>
+        <div class="brand-name"><img class="brand-name-img" src="/image/veras2.png" alt="VERA"> <span class="admin-tag">Admin</span></div>
         <div class="brand-sub">Console d'administration</div>
       </div>
     </div>
@@ -66,7 +66,9 @@
 
     <div class="sidebar-footer">
       <div class="admin-profile">
-        <img src="https://i.pravatar.cc/64?img=32" alt="admin">
+        <div class="admin-avatar" id="sidebarAdminAvatar">
+          <span class="avatar-initial">A</span>
+        </div>
         <div>
           <div class="admin-name">{{ auth()->user()->name ?? 'Admin' }}</div>
           <div class="admin-role">{{ optional(auth()->user())->role === 'admin' ? 'Administrateur' : 'Utilisateur' }}</div>
@@ -94,8 +96,10 @@
          <button class="icon-btn"><img class="icon-dark" src="/image/discussion.png" alt="Messages"><span class="badge green">3</span></button>
         <div class="env-tag">Production</div>
         <div class="user">
-           <img src="https://i.pravatar.cc/64?img=32" alt="admin">
-         </div>
+          <div class="admin-avatar header-avatar" id="headerAdminAvatar">
+            <span class="avatar-initial">A</span>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -771,6 +775,108 @@
         </div>
       </div>
 
+      <!-- PARAMÈTRES PANEL -->
+      <div class="panel" id="panel-parametres">
+        <div class="page-head">
+          <div>
+            <h1>Paramètres</h1>
+            <p>Gérez les informations de votre compte administrateur.</p>
+          </div>
+        </div>
+
+        <div class="settings-layout">
+          <section class="settings-main">
+            <div class="card">
+              <div class="card-head-row">
+                <div>
+                  <div class="card-title">Profil administrateur</div>
+                  <div class="card-sub">Modifiez vos informations personnelles.</div>
+                </div>
+              </div>
+
+              <form id="adminSettingsForm" class="settings-form">
+                <div class="settings-avatar-row">
+                   <label for="avatarInput" class="avatar-upload-label">
+                     <div class="settings-avatar" id="adminSettingsAvatar">
+                       <span class="avatar-initial">A</span>
+                     </div>
+                     <div class="avatar-change-btn">
+                       <img src="/image/3917317.png" alt="Changer la photo" class="avatar-change-icon">
+                     </div>
+                   </label>
+                  <input type="file" id="avatarInput" accept="image/*" style="display:none;">
+                  <div>
+                    <div class="settings-name" id="adminSettingsNameDisplay">Admin</div>
+                    <div class="settings-email" id="adminSettingsEmailDisplay">admin@vera.com</div>
+                  </div>
+                </div>
+
+                <div class="field-group">
+                  <label>Nom complet</label>
+                  <input type="text" id="adminSettingsName" placeholder="Ex. Jean Dupont">
+                </div>
+
+                <div class="field-group">
+                  <label>Email</label>
+                  <input type="email" id="adminSettingsEmail" placeholder="Ex. admin@vera.com">
+                </div>
+
+                <div class="field-group">
+                  <label>Rôle</label>
+                  <input type="text" id="adminSettingsRole" placeholder="Rôle" disabled style="background:#f3f4f6;color:#6b7280;">
+                </div>
+
+                <div class="settings-form-actions">
+                  <button type="button" class="btn-outline" id="adminSettingsCancelBtn">Annuler</button>
+                  <button type="submit" class="btn-primary" id="adminSettingsSaveBtn">Enregistrer</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card">
+              <div class="card-head-row">
+                <div>
+                  <div class="card-title">Sécurité</div>
+                  <div class="card-sub">Modifiez votre mot de passe.</div>
+                </div>
+              </div>
+
+              <form id="adminPasswordForm" class="settings-form">
+                <div class="field-group">
+                  <label>Mot de passe actuel</label>
+                  <input type="password" id="adminCurrentPassword" placeholder="••••••••">
+                </div>
+
+                <div class="field-group">
+                  <label>Nouveau mot de passe</label>
+                  <input type="password" id="adminNewPassword" placeholder="6 caractères minimum">
+                </div>
+
+                <div class="field-group">
+                  <label>Confirmer le nouveau mot de passe</label>
+                  <input type="password" id="adminConfirmPassword" placeholder="••••••••">
+                </div>
+
+                <div class="settings-form-actions">
+                  <button type="button" class="btn-outline" id="adminPasswordCancelBtn">Annuler</button>
+                  <button type="submit" class="btn-primary" id="adminPasswordSaveBtn">Mettre à jour</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <aside class="settings-side">
+            <div class="card">
+              <div class="card-title">Informations du compte</div>
+              <div class="info-row"><span>ID</span><strong id="adminSettingsUid">—</strong></div>
+              <div class="info-row"><span>Rôle</span><strong id="adminSettingsRoleSide">—</strong></div>
+              <div class="info-row"><span>Statut</span><strong id="adminSettingsStatus">Actif</strong></div>
+              <div class="info-row"><span>Dernière connexion</span><strong id="adminSettingsLastLogin">—</strong></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
     </div>
   </main>
 </div>
@@ -792,6 +898,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="{{ asset('firebase-init.js') }}"></script>
-<script src="{{ asset('scriptAD.js') }}?v=17"></script>
+<script src="{{ asset('scriptAD.js') }}?v=19"></script>
 </body>
 </html>
