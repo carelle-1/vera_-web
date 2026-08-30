@@ -898,6 +898,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="{{ asset('firebase-init.js') }}"></script>
-<script src="{{ asset('scriptAD.js') }}?v=19"></script>
+<script src="{{ asset('scriptAD.js') }}?v=22"></script>
 </body>
 </html>

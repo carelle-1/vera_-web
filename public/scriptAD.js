@@ -597,6 +597,7 @@ function openAdminUserProfile(userId) {
     const status = user.status || "actif";
     const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleString("fr-FR") : "—";
     const phone = user.phone || user.telephone || user.phoneNumber || "—";
+    const verified = user.verified ? "Oui" : "Non";
 
     body.innerHTML = `
       <div class="admin-user-profile-head">
@@ -609,12 +610,216 @@ function openAdminUserProfile(userId) {
       <div class="admin-modal-row"><span>ID</span><strong>${escapeHtml(userId)}</strong></div>
       <div class="admin-modal-row"><span>Rôle</span><strong>${escapeHtml(role)}</strong></div>
       <div class="admin-modal-row"><span>Statut</span><strong>${escapeHtml(status)}</strong></div>
+      <div class="admin-modal-row"><span>Vérifié</span><strong>${escapeHtml(verified)}</strong></div>
       <div class="admin-modal-row"><span>Téléphone</span><strong>${escapeHtml(phone)}</strong></div>
       <div class="admin-modal-row"><span>Inscrit le</span><strong>${escapeHtml(createdAt)}</strong></div>
     `;
   }).catch((err) => {
     body.innerHTML = `<div class="admin-modal-empty error">Impossible de charger le profil : ${escapeHtml(err.message || err.code)}</div>`;
   });
+}
+
+// ============== MODAL DE VÉRIFICATION DES DOCUMENTS ==============
+let verifyCurrentUserId = null;
+
+function ensureVerifyModal() {
+  let overlay = document.getElementById("verifyModalOverlay");
+  if (overlay) return overlay;
+
+  overlay = document.createElement("div");
+  overlay.className = "admin-modal-overlay";
+  overlay.id = "verifyModalOverlay";
+  overlay.innerHTML = `
+    <div class="admin-modal-card">
+      <div class="admin-modal-head">
+        <div class="admin-modal-title">Vérification du compte</div>
+        <button class="admin-modal-close" type="button" id="verifyModalClose" aria-label="Fermer">×</button>
+      </div>
+      <div class="admin-modal-body" id="verifyModalBody">
+        <div class="admin-modal-empty">Chargement...</div>
+      </div>
+      <div class="admin-modal-footer">
+        <button type="button" class="btn-outline" id="verifyModalCancel">Annuler</button>
+        <button type="button" class="btn-primary" id="verifyModalConfirm">✓ Vérifier le compte</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById("verifyModalClose").addEventListener("click", closeVerifyModal);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeVerifyModal();
+  });
+  document.getElementById("verifyModalCancel").addEventListener("click", closeVerifyModal);
+  document.getElementById("verifyModalConfirm").addEventListener("click", confirmVerification);
+
+  return overlay;
+}
+
+function closeVerifyModal() {
+  const overlay = document.getElementById("verifyModalOverlay");
+  if (overlay) overlay.classList.remove("active");
+}
+
+function confirmVerification() {
+  if (!verifyCurrentUserId) return;
+
+  firebase.database().ref("users/" + verifyCurrentUserId).update({ verified: true })
+    .then(() => {
+      closeVerifyModal();
+      renderAllAdminUsers();
+      alert("Compte vérifié avec succès.");
+    })
+    .catch((err) => {
+      console.error("[ADMIN] Erreur vérification:", err);
+      alert("Erreur lors de la vérification : " + (err.message || err.code));
+    });
+}
+
+function openVerificationModal(userId) {
+  verifyCurrentUserId = userId;
+  const overlay = ensureVerifyModal();
+  const body = document.getElementById("verifyModalBody");
+
+  body.innerHTML = `<div class="admin-modal-empty">Chargement des documents...</div>`;
+  overlay.classList.add("active");
+
+  firebase.database().ref("users/" + userId).once("value").then((snap) => {
+    const user = snap.val() || {};
+    const name = user.name || user.displayName || user.email || "Utilisateur";
+    const email = user.email || "—";
+    const avatar = user.avatar || user.photoURL || "";
+    const verified = !!user.verified;
+    const candidatures = user.candidatures || {};
+
+    const cvUrl = candidatures.cvUrl || "";
+    const cvName = candidatures.cvName || "CV.pdf";
+    const cvVerified = !!candidatures.cvVerified;
+    const coverLetterUrl = candidatures.coverLetterUrl || "";
+    const coverLetterName = candidatures.coverLetterName || "Lettre.pdf";
+    const coverLetterVerified = !!candidatures.coverLetterVerified;
+    const portfolio = candidatures.portfolio || "";
+    const portfolioVerified = !!candidatures.portfolioVerified;
+
+    const avatarHtml = avatar
+      ? `<img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}" class="verify-user-avatar">`
+      : `<div class="verify-user-avatar-initial">${escapeHtml((name.charAt(0) || "?").toUpperCase())}</div>`;
+
+    const fileType = (url) => {
+      const ext = (url || "").split(".").pop().toLowerCase();
+      if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "image";
+      if (ext === "pdf") return "pdf";
+      return "doc";
+    };
+
+    const docControl = (docKey, docVerified) => {
+      if (docVerified) {
+        return `<div class="verify-doc-control verified-control">
+          <span class="verify-doc-status verified">✓ Vérifié</span>
+          <button class="btn-unverify-doc" data-doc-key="${escapeHtml(docKey)}" title="Déverifier ce document">✕</button>
+        </div>`;
+      }
+      return `<div class="verify-doc-control">
+        <button class="btn-verify-doc" data-doc-key="${escapeHtml(docKey)}">Vérifier ce document</button>
+      </div>`;
+    };
+
+    const docItem = (label, url, fileName, docKey, docVerified) => {
+      if (!url) {
+        return `
+          <div class="verify-doc-item">
+            <div class="verify-doc-title">${escapeHtml(label)}</div>
+            <span class="verify-doc-missing">Aucun document</span>
+          </div>
+        `;
+      }
+      const type = fileType(url);
+      const isPdf = type === "pdf";
+      const isImage = type === "image";
+      let previewHtml = "";
+      if (isImage) {
+        previewHtml = `<img src="${escapeHtml(url)}" alt="${escapeHtml(fileName)}" class="verify-doc-preview-image">`;
+      } else if (isPdf) {
+        previewHtml = `<iframe src="${escapeHtml(url)}" class="verify-doc-preview-frame" title="${escapeHtml(fileName)}"></iframe>`;
+      } else {
+        previewHtml = `<div class="verify-doc-preview-placeholder">📄 ${escapeHtml(fileName)}</div>`;
+      }
+      return `
+        <div class="verify-doc-item">
+          <div class="verify-doc-title">${escapeHtml(label)}</div>
+          <div class="verify-doc-name">${escapeHtml(fileName)}</div>
+          ${previewHtml}
+          <div class="verify-doc-actions">
+            <a href="${escapeHtml(url)}" target="_blank" class="btn-outline-sm">Télécharger</a>
+            <a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="btn-outline-sm">Ouvrir</a>
+            ${docControl(docKey, docVerified)}
+          </div>
+        </div>
+      `;
+    };
+
+    const confirmBtn = document.getElementById("verifyModalConfirm");
+    if (confirmBtn) {
+      confirmBtn.textContent = verified ? "Compte déjà vérifié" : "✓ Vérifier le compte";
+      confirmBtn.disabled = verified;
+    }
+
+    body.innerHTML = `
+      <div class="verify-user-header">
+        ${avatarHtml}
+        <div>
+          <div class="verify-user-name">${escapeHtml(name)}</div>
+          <div class="verify-user-email">${escapeHtml(email)}</div>
+        </div>
+      </div>
+      ${verified ? '<div class="verify-already-badge">✓ Compte déjà vérifié</div>' : ''}
+      <div class="verify-docs-section">
+        <div class="verify-docs-title">Documents téléchargés</div>
+        ${docItem("CV", cvUrl, cvName, "cv", cvVerified)}
+        ${docItem("Lettre de motivation", coverLetterUrl, coverLetterName, "coverLetter", coverLetterVerified)}
+        ${docItem("Portfolio", portfolio, portfolio, "portfolio", portfolioVerified)}
+      </div>
+    `;
+
+    body.onclick = (e) => {
+      const verifyBtn = e.target.closest(".btn-verify-doc");
+      if (verifyBtn) {
+        e.preventDefault();
+        toggleDocumentVerification(userId, verifyBtn.dataset.docKey, verifyBtn);
+        return;
+      }
+      const unverifyBtn = e.target.closest(".btn-unverify-doc");
+      if (unverifyBtn) {
+        e.preventDefault();
+        toggleDocumentVerification(userId, unverifyBtn.dataset.docKey, unverifyBtn);
+        return;
+      }
+    };
+  }).catch((err) => {
+    console.error("[ADMIN] Erreur chargement documents:", err);
+    body.innerHTML = `<div class="admin-modal-empty error">Erreur de chargement des documents : ${escapeHtml(err.message || "inconnue")}</div>`;
+  });
+}
+
+function toggleDocumentVerification(userId, docKey, btn) {
+  const docRef = firebase.database().ref("users/" + userId + "/candidatures");
+  docRef.once("value").then((snap) => {
+    const data = snap.val() || {};
+    const next = !data[docKey + "Verified"];
+    const update = {};
+    update[docKey + "Verified"] = next;
+    return docRef.update(update).then(() => next);
+  }).then((next) => {
+    const control = btn.closest(".verify-doc-control");
+    if (control) {
+      if (next) {
+        control.innerHTML = '<span class="verify-doc-status verified">✓ Vérifié</span><button class="btn-unverify-doc" data-doc-key="' + escapeHtml(docKey) + '" title="Déverifier ce document">✕</button>';
+      } else {
+        control.innerHTML = '<button class="btn-verify-doc" data-doc-key="' + escapeHtml(docKey) + '">Vérifier ce document</button>';
+      }
+    }
+    alert(next ? "Document vérifié." : "Vérification du document retirée.");
+  }).catch(() => alert("Échec de la vérification."));
 }
 
 function handleAdminUserAction(action, userId) {
@@ -706,14 +911,15 @@ function renderAllAdminUsers() {
               <button type="button" class="row-menu-btn" data-id="${escapeHtml(user.id)}">⋯</button>
               <div class="row-dropdown" id="dropdown-${escapeHtml(user.id)}">
                 <button data-action="view" data-id="${escapeHtml(user.id)}">Voir le profil</button>
+                <button data-action="verify" data-id="${escapeHtml(user.id)}">${user.verified ? "Déverifier" : "Vérifier"}</button>
                 <button data-action="toggle" data-id="${escapeHtml(user.id)}">${status === "suspendu" ? "Réactiver" : "Suspendre"}</button>
                 <button data-action="delete" data-id="${escapeHtml(user.id)}" class="danger">Supprimer</button>
               </div>
-            </div>
-          </td>
-        </tr>
-      `;
-    }).join("");
+             </div>
+           </td>
+         </tr>
+       `;
+     }).join("");
 
     if (countEl) countEl.textContent = `Affichage de ${users.length} utilisateur${users.length > 1 ? "s" : ""}`;
   }).catch((err) => {
@@ -1810,6 +2016,8 @@ document.addEventListener("click", (e) => {
           renderAllAdminUsers();
         }).catch(() => alert("Échec de la suppression"));
       }
+    } else if (action === "verify") {
+      openVerificationModal(userId);
     }
     return;
   }
@@ -2476,8 +2684,8 @@ function renderAdmins() {
             <div class="user-cell">
               <img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}">
               <div>
-                <div class="user-cell-name">${escapeHtml(name)}${isCurrent ? ' <span style="font-size:10px;color:var(--mint-dark);font-weight:700;">(vous)</span>' : ''}</div>
-                <div class="user-cell-email">${escapeHtml(email)}</div>
+                 <div class="user-cell-name">${escapeHtml(name)}${user.verified ? ' <span class="verify-badge" title="Compte vérifié">\u2713</span>' : ''}</div>
+                 <div class="user-cell-email">${escapeHtml(email)}</div>
               </div>
             </div>
           </td>
