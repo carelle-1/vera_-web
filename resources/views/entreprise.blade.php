@@ -445,6 +445,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="{{ asset('firebase-init.js') }}"></script>
 <script src="script_INFO.js?v=4"></script>
-<script src="{{ asset('script_ENT.js') }}?v=7"></script>
+<script src="{{ asset('script_ENT.js') }}?v=8"></script>
 </body>
 </html>

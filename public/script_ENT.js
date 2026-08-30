@@ -701,19 +701,20 @@ let allCandidatures = [];
 const userCache = {};
 
 function getUserInfo(uid) {
-  if (!uid) return Promise.resolve({ name: "Candidat", email: "" });
+  if (!uid) return Promise.resolve({ name: "Candidat", email: "", photoURL: "" });
   if (userCache[uid]) return Promise.resolve(userCache[uid]);
 
   return firebase.database().ref("users/" + uid).once("value").then((snap) => {
     const data = snap.val() || {};
     const info = {
-      name: data.name || data.displayName || "Candidat",
-      email: data.email || ""
+      name: data.name || data.fullName || data.displayName || "Candidat",
+      email: data.email || "",
+      photoURL: data.photoURL || ""
     };
     userCache[uid] = info;
     return info;
   }).catch(() => {
-    const info = { name: "Candidat #" + uid, email: "" };
+    const info = { name: "Candidat #" + uid, email: "", photoURL: "" };
     userCache[uid] = info;
     return info;
   });
@@ -895,19 +896,22 @@ function renderCandidatures() {
     };
 
     const userPromises = pageItems.map((c) => {
-      if (!c.userId) return Promise.resolve({ ...c, candidateName: "Candidat #" + c.id, candidateEmail: "" });
-      return getUserInfo(c.userId).then((info) => ({ ...c, candidateName: info.name, candidateEmail: info.email }));
+      if (!c.userId) return Promise.resolve({ ...c, candidateName: "Candidat #" + c.id, candidateEmail: "", photoURL: "" });
+      return getUserInfo(c.userId).then((info) => ({ ...c, candidateName: info.name, candidateEmail: info.email, photoURL: info.photoURL }));
     });
 
     Promise.all(userPromises).then((enriched) => {
       tbody.innerHTML = enriched.map((c) => {
         const userId = c.userId || "";
+        const avatarUrl = (c.photoURL && c.photoURL.trim())
+          ? c.photoURL
+          : "https://i.pravatar.cc/64?u=" + encodeURIComponent(userId || c.candidateName);
 
         return `
           <tr>
             <td>
               <div class="user-cell">
-                <img src="https://i.pravatar.cc/64?u=${encodeURIComponent(userId || c.candidateName)}" alt="${escapeHtml(c.candidateName)}">
+                <img src="${avatarUrl}" alt="${escapeHtml(c.candidateName)}">
                 <div>
                   <div class="user-cell-name">${escapeHtml(c.candidateName)}</div>
                   <div class="user-cell-email">${escapeHtml(c.candidateEmail)}</div>
@@ -999,15 +1003,15 @@ function openCandidatureDetail(candId) {
   const title = document.getElementById("candDetailTitle");
   if (!overlay || !body || !title) return;
 
-  title.textContent = "Détails de la candidature";
-  body.innerHTML = `
-    <div class="admin-user-profile-head">
-      <img src="https://i.pravatar.cc/96?u=${encodeURIComponent(cand.userId || cand.id)}" alt="${escapeHtml(cand.candidateName || "Candidat")}">
-      <div>
-        <div class="admin-user-profile-name">${escapeHtml(cand.candidateName || "Candidat")}</div>
-        <div class="admin-user-profile-email">${escapeHtml(cand.candidateEmail || "")}</div>
-      </div>
-    </div>
+   title.textContent = "Détails de la candidature";
+   body.innerHTML = `
+     <div class="admin-user-profile-head">
+       <img src="https://i.pravatar.cc/96?img=5" alt="${escapeHtml(cand.candidateName || "Candidat")}" id="candDetailAvatar">
+       <div>
+         <div class="admin-user-profile-name">${escapeHtml(cand.candidateName || "Chargement...")}</div>
+         <div class="admin-user-profile-email">${escapeHtml(cand.candidateEmail || "")}</div>
+       </div>
+     </div>
     <div class="admin-modal-row"><span>Offre</span><strong>${escapeHtml(cand.title || "—")}</strong></div>
     <div class="admin-modal-row"><span>Entreprise</span><strong>${escapeHtml(cand.company || "—")}</strong></div>
     <div class="admin-modal-row"><span>Statut</span><strong>${escapeHtml(cand.statusLabel || cand.status || "—")}</strong></div>
@@ -1021,6 +1025,19 @@ function openCandidatureDetail(candId) {
   `;
 
   overlay.classList.add("active");
+
+   if (cand.userId) {
+     getUserInfo(cand.userId).then((info) => {
+       const avatarEl = body.querySelector("#candDetailAvatar");
+       if (avatarEl && info.photoURL) {
+         avatarEl.src = info.photoURL;
+       }
+       const nameEl = body.querySelector(".admin-user-profile-name");
+       if (nameEl) nameEl.textContent = info.name;
+       const emailEl = body.querySelector(".admin-user-profile-email");
+       if (emailEl) emailEl.textContent = info.email;
+     });
+   }
 
   body.querySelectorAll("[data-action='accept']").forEach((btn) => {
     btn.addEventListener("click", () => {
