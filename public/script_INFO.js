@@ -49,7 +49,7 @@
         ? '<img class="info-item-img" src="' + escapeHtml(it.imageURL) + '" alt="">'
         : "";
       var period = (it.dateDebut || it.dateFin)
-        ? '<div class="info-item-period">Période : ' + escapeHtml(it.dateDebut || "—") + " → " + escapeHtml(it.dateFin || "—") + "</div>"
+        ? '<div class="info-item-period">Période : ' + escapeHtml(it.dateDebut || "—") + ' <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 7l5 5-5 5"/></svg> ' + escapeHtml(it.dateFin || "—") + "</div>"
         : "";
       return '<div class="info-item" data-info-key="' + escapeHtml(it._key) + '">' +
         img +

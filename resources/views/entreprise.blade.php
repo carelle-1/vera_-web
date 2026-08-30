@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VERA Entreprise - Tableau de bord</title>
-<link rel="stylesheet" href="{{ asset('style_ENT.css') }}?v=2">
-<link rel="stylesheet" href="/style_INFO.css">
+<link rel="stylesheet" href="{{ asset('style_ENT.css') }}?v=6">
+<link rel="stylesheet" href="/style_INFO.css?v=4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -28,7 +28,7 @@
       <img src="https://i.pravatar.cc/64?img=15" alt="logo">
       <div>
         <div class="company-name">Notion Labs</div>
-        <div class="company-plan">👑 Plan Business</div>
+        <div class="company-plan"><img src="/image/3917385.png" alt="Plan" width="14" height="14" style="vertical-align:middle;margin-right:4px;"> Plan Business</div>
       </div>
     </div> -->
 
@@ -43,19 +43,19 @@
         <span class="nav-icon"><img src="/image/3917512.png" alt="Candidatures"></span> Candidatures <span class="nav-count green">18</span>
       </a>
       <!-- <a class="nav-item" data-panel="talents">
-        <span class="nav-icon">✨</span> Talents recommandés
+        <span class="nav-icon"><img src="/image/3914260.png" alt="Talents" class="nav-icn"></span> Talents recommandés
       </a> -->
-      <a class="nav-item" data-panel="entretiens">
+      <!-- <a class="nav-item" data-panel="entretiens">
         <span class="nav-icon"><img src="/image/3914425.png" alt="Entretiens"></span> Entretiens <span class="nav-count">3</span>
-      </a>
+      </a> -->
       <a class="nav-item" data-panel="messages">
         <span class="nav-icon"><img src="/image/discussion.png" alt="Messages"></span> Messages <span class="nav-count">5</span>
       </a>
       <!-- <a class="nav-item" data-panel="statistiques">
-        <span class="nav-icon">📈</span> Statistiques
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></span> Statistiques
       </a>
       <a class="nav-item" data-panel="facturation">
-        <span class="nav-icon">💳</span> Facturation
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="2" y1="16" x2="22" y2="16"/></svg></span> Facturation
       </a> -->
       <a class="nav-item" data-panel="parametres">
         <span class="nav-icon"><img src="/image/3917058.png" alt="Paramètres"></span> Paramètres
@@ -66,7 +66,8 @@
       <img src="https://i.pravatar.cc/64?img=15" alt="logo">
       <div>
         <div class="company-name">Notion Labs</div>
-        <div class="company-plan">👑 Plan Business</div>
+        <div class="company-plan">Plan Business</div>
+        <!-- <div class="company-plan"><img src="/image/3917385.png" alt="Plan" width="14" height="14" style="vertical-align:middle;margin-right:4px;"> Plan Business</div> -->
       </div>
     </div>
 
@@ -78,7 +79,7 @@
     </div>
 
     <!-- <div class="upgrade-card">
-      <div class="upgrade-title">🚀 Boostez vos offres</div>
+      <div class="upgrade-title"><img src="/image/3914260.png" alt="" width="18" height="18" style="vertical-align:middle;margin-right:6px;"> Boostez vos offres</div>
       <p>Mettez en avant vos annonces pour 3x plus de candidatures qualifiées.</p>
       <button class="upgrade-btn">Découvrir la mise en avant</button>
     </div> -->
@@ -89,7 +90,7 @@
 
     <!-- TOPBAR -->
     <header class="topbar">
-      <button class="hamburger">☰</button>
+       <button class="hamburger"><img src="/image/3917293.png" alt="Menu" width="20" height="20" style="object-fit:contain;"></button>
       <div class="search">
         <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2"/></svg>
         <input type="text" placeholder="Rechercher un candidat, une compétence...">
@@ -100,10 +101,10 @@
         <div class="user">
           <img src="https://i.pravatar.cc/64?img=15" alt="user">
           <div class="user-text">
-            <div>Notion Labs</div>
-            <div class="user-role">Recruteur</div>
-          </div>
-          <span class="chev">⌄</span>
+             <div>Notion Labs</div>
+             <div class="user-role">Recruteur</div>
+           </div>
+           <span class="chev"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
         </div>
       </div>
     </header>
@@ -118,7 +119,7 @@
             <h1>Tableau de bord</h1>
             <p>Gérez vos offres, suivez vos candidatures et trouvez les meilleurs talents.</p>
           </div>
-          <button class="btn-primary" id="publishBtn">➕ Publier une offre</button>
+          <button class="btn-primary" id="publishBtn"><img src="/image/envoyez.png" alt="" width="16" height="16" style="vertical-align:middle;margin-right:6px;"> Publier une offre</button>
         </div>
 
         <!-- KPI CARDS -->
@@ -158,7 +159,7 @@
               <h2>Vos offres publiées</h2>
               <p>Performance de vos annonces actives</p>
             </div>
-            <a href="#" class="see-all" data-panel-link="offres">Voir toutes les offres →</a>
+            <a href="#" class="see-all" data-panel-link="offres">Voir toutes les offres <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 7l5 5-5 5"/></svg></a>
           </div>
 
           <div class="jobs-table-wrap card">
@@ -184,19 +185,19 @@
           <section class="card candidates-card">
             <div class="card-head-row">
               <div class="card-title">Dernières candidatures</div>
-              <a href="#" class="see-all">Voir tout →</a>
+              <a href="#" class="see-all">Voir tout <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 7l5 5-5 5"/></svg></a>
             </div>
             <div class="candidates-list" id="candidatesList"></div>
           </section>
 
           <aside class="side-col">
-            <div class="card talents-card">
-              <div class="card-head-row"><div class="card-title">✨ Talents recommandés par VERA</div></div>
+            <!-- <div class="card talents-card">
+              <div class="card-head-row">            <div class="card-title"><img src="/image/3914260.png" alt="Talents" width="18" height="18" style="vertical-align:middle;margin-right:6px;"> Talents recommandés par VERA</div></div>
               <div class="talents-list" id="talentsList"></div>
-            </div>
+            </div> -->
 
             <div class="card interviews-card">
-              <div class="card-head-row"><div class="card-title">🗓 Prochains entretiens</div></div>
+              <div class="card-head-row">            <div class="card-title"><img src="/image/3917292.png" alt="Entretiens" width="18" height="18" style="vertical-align:middle;margin-right:6px;"> Prochains entretiens</div></div>
               <div class="interviews-list" id="interviewsList"></div>
             </div>
           </aside>
@@ -249,7 +250,7 @@
               <div class="table-footer">
                 <span id="jobTableCount">Affichage de 0 offre</span>
                 <div style="display:flex;gap:10px;align-items:center;">
-                  <button class="btn-outline-sm" id="bulkDeleteBtn" style="display:none;color:var(--red);border-color:var(--red);">🗑 Supprimer la sélection</button>
+                  <button class="btn-outline-sm" id="bulkDeleteBtn" style="display:none;color:var(--red);border-color:var(--red);"><img src="/image/delete.png" alt="Supprimer" width="14" height="14" style="vertical-align:middle;margin-right:4px;"> Supprimer la sélection</button>
                   <div class="pagination" id="jobPagination"></div>
                 </div>
               </div>
@@ -260,7 +261,7 @@
             <div class="card">
               <div class="card-head-row">
                 <div class="card-title" id="jobModalTitle">Ajouter une offre</div>
-                <button class="exp-modal-close" id="jobModalClose" type="button">×</button>
+                <button class="exp-modal-close" id="jobModalClose" type="button" aria-label="Fermer"><img src="/image/delete.png" alt="Fermer" width="14" height="14"></button>
               </div>
               <form id="jobForm" class="exp-form">
                 <label>Titre de l'offre<input type="text" name="title" required placeholder="Ex. Développeur Full Stack"></label>
@@ -344,7 +345,7 @@
             <div class="card table-card">
               <div class="card-head-row">
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <button class="cand-back-btn" id="candBackBtn" type="button">← Retour</button>
+                  <button class="cand-back-btn" id="candBackBtn" type="button"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour</button>
                   <div class="card-title" id="candListTitle">Candidats</div>
                 </div>
                 <div class="table-tools">
@@ -385,7 +386,7 @@
           <div class="admin-modal-card">
             <div class="admin-modal-head">
               <div class="admin-modal-title" id="candDetailTitle">Détails du candidat</div>
-              <button class="admin-modal-close" id="candDetailClose" type="button">×</button>
+              <button class="admin-modal-close" id="candDetailClose" type="button" aria-label="Fermer"><img src="/image/delete.png" alt="Fermer" width="14" height="14"></button>
             </div>
             <div class="admin-modal-body" id="candDetailBody"></div>
           </div>
@@ -396,7 +397,7 @@
           <div class="admin-modal-card">
             <div class="admin-modal-head">
               <div class="admin-modal-title" id="candDocTitle">Document</div>
-              <button class="admin-modal-close" id="candDocClose" type="button">×</button>
+              <button class="admin-modal-close" id="candDocClose" type="button" aria-label="Fermer"><img src="/image/delete.png" alt="Fermer" width="14" height="14"></button>
             </div>
             <div class="admin-modal-body" id="candDocBody"></div>
           </div>
@@ -407,7 +408,7 @@
           <div class="admin-modal-card">
             <div class="admin-modal-head">
               <div class="admin-modal-title">Envoyer un message au candidat</div>
-              <button class="admin-modal-close" id="candMessageClose" type="button">×</button>
+              <button class="admin-modal-close" id="candMessageClose" type="button" aria-label="Fermer"><img src="/image/delete.png" alt="Fermer" width="14" height="14"></button>
             </div>
             <div class="admin-modal-body">
               <form id="candMessageForm" class="exp-form">
@@ -425,7 +426,7 @@
       <!-- PLACEHOLDER PANEL -->
       <div class="panel" id="panel-placeholder">
         <div class="placeholder-box">
-          <div class="placeholder-icon">🚧</div>
+          <div class="placeholder-icon"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-8-5a2 2 0 0 0-2 0l-8 5a2 2 0 0 0-1 1.73v8a2 2 0 0 0 1 1.73l8 5a2 2 0 0 0 2 0l8-5a2 2 0 0 0 1-1.73z"/></svg></div>
           <h2 id="placeholderTitle">Section en construction</h2>
           <p>Cette section sera bientôt disponible dans votre espace entreprise.</p>
         </div>
@@ -443,7 +444,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="{{ asset('firebase-init.js') }}"></script>
-<script src="script_INFO.js"></script>
-<script src="{{ asset('script_ENT.js') }}?v=2"></script>
+<script src="script_INFO.js?v=4"></script>
+<script src="{{ asset('script_ENT.js') }}?v=7"></script>
 </body>
 </html>

@@ -55,13 +55,13 @@ function saveMessageToFirebase(recipientId, messageData) {
 
 // ============== DONNÉES KPI ==============
 const kpis = [
-  { icon: "💼", iconBg: "#eaf8ff", label: "Offres actives", value: "6", trend: "+2", up: true,
+  { icon: '<img src="/image/mission.png" alt="Offres" class="kpi-img">', iconBg: "#eaf8ff", label: "Offres actives", value: "6", trend: "+2", up: true,
     spark: [3,4,3,5,4,5,6], color: "#0ea5e9" },
-  { icon: "📄", iconBg: "#ecfdf5", label: "Candidatures reçues", value: "18", trend: "+34%", up: true,
+  { icon: '<img src="/image/3917512.png" alt="Candidatures" class="kpi-img">', iconBg: "#ecfdf5", label: "Candidatures reçues", value: "18", trend: "+34%", up: true,
     spark: [4,6,5,8,10,14,18], color: "#22c55e" },
-  { icon: "👁", iconBg: "#f3ecff", label: "Vues du profil entreprise", value: "1 240", trend: "+12%", up: true,
+  { icon: '<img src="/image/oeil.png" alt="Vues" class="kpi-img">', iconBg: "#f3ecff", label: "Vues du profil entreprise", value: "1 240", trend: "+12%", up: true,
     spark: [800,850,900,980,1050,1150,1240], color: "#8b5cf6" },
-  { icon: "⚡", iconBg: "#fdf1de", label: "Taux de réponse", value: "76%", trend: "-4%", up: false,
+  { icon: '<img src="/image/3914260.png" alt="Réponse" class="kpi-img">', iconBg: "#fdf1de", label: "Taux de réponse", value: "76%", trend: "-4%", up: false,
     spark: [85,83,80,79,78,77,76], color: "#f59e0b" }
 ];
 
@@ -69,20 +69,23 @@ function renderKPIs() {
   const grid = document.getElementById("kpiGrid");
   grid.innerHTML = kpis.map(k => {
     const max = Math.max(...k.spark), min = Math.min(...k.spark);
+    const range = max - min || 1;
     const points = k.spark.map((v, i) => {
       const x = (i / (k.spark.length - 1)) * 100;
-      const y = 30 - ((v - min) / (max - min || 1)) * 28;
+      const y = 30 - ((v - min) / range) * 24;
       return `${x},${y}`;
     }).join(" ");
+    const fillPoints = points + ` ${100},${30} 0,${30}`;
     return `
       <div class="kpi-card">
         <div class="kpi-top">
           <div class="kpi-icon" style="background:${k.iconBg}">${k.icon}</div>
-          <span class="kpi-trend ${k.up ? "up" : "down"}">${k.up ? "↗" : "↘"} ${k.trend}</span>
+          <span class="kpi-trend ${k.up ? "up" : "down"}">${k.up ? '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>' : '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>'} ${k.trend}</span>
         </div>
         <div class="kpi-value">${k.value}</div>
         <div class="kpi-label">${k.label}</div>
         <svg class="kpi-spark" viewBox="0 0 100 32" preserveAspectRatio="none">
+          <polygon points="${fillPoints}" fill="${k.color}" opacity="0.12"/>
           <polyline points="${points}" stroke="${k.color}"></polyline>
         </svg>
       </div>
@@ -93,31 +96,37 @@ function renderKPIs() {
 // ============== GRAPHIQUE CANDIDATURES ==============
 const appsData = {
   labels: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
-  applications: [2, 4, 3, 6, 5, 8, 18],
-  views: [40, 55, 48, 70, 65, 90, 120]
+  applications: [0, 0, 0, 0, 0, 0, 0],
+  views: [0, 0, 0, 0, 0, 0, 0]
 };
 
 function renderAppsChart() {
   const svg = document.getElementById("appsChart");
   const w = 640, h = 200, pad = 20;
-  const maxVal = Math.max(...appsData.views);
+
+  const chartHeight = h - pad * 2;
+  const chartWidth = w - pad * 2;
+
+  const allVals = [...appsData.applications, ...appsData.views];
+  const globalMin = Math.min(...allVals, 0);
+  const globalMax = Math.max(...allVals, 1);
+  const valRange = globalMax - globalMin || 1;
 
   function toPoints(arr) {
-    const min = Math.min(...arr);
-    const max = Math.max(...arr);
     return arr.map((v, i) => {
-      const x = pad + (i / (arr.length - 1)) * (w - pad * 2);
-      const y = h - pad - ((v - min) / (max - min || 1)) * 28;
+      const x = pad + (i / (arr.length - 1)) * chartWidth;
+      const normalizedY = (v - globalMin) / valRange;
+      const y = h - pad - normalizedY * chartHeight;
       return `${x},${y}`;
     }).join(" ");
   }
 
-  const appPoints = toPoints(appsData.applications.map(v => v * 6)); // scale for visibility
+  const appPoints = toPoints(appsData.applications);
   const viewPoints = toPoints(appsData.views);
 
   let gridLines = "";
   for (let i = 0; i <= 4; i++) {
-    const y = pad + (i / 4) * (h - pad * 2);
+    const y = pad + (i / 4) * chartHeight;
     gridLines += `<line x1="${pad}" y1="${y}" x2="${w - pad}" y2="${y}" stroke="#eef4f5" stroke-width="1"/>`;
   }
 
@@ -129,6 +138,25 @@ function renderAppsChart() {
   `;
 
   document.getElementById("appsLabels").innerHTML = appsData.labels.map(l => `<span>${l}</span>`).join("");
+}
+
+function getDayLabel(d) {
+  const days = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+  return days[d.getDay()];
+}
+
+function getLast7Days() {
+  const days = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    days.push({
+      date: new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(),
+      label: getDayLabel(d)
+    });
+  }
+  return days;
 }
 
 // ============== DONUT SOURCES ==============
@@ -340,7 +368,9 @@ function updateBulkDeleteButton() {
   const bulkBtn = document.getElementById("bulkDeleteBtn");
   if (bulkBtn) {
     bulkBtn.style.display = checkboxes.length > 0 ? "inline-block" : "none";
-    bulkBtn.textContent = checkboxes.length > 0 ? `🗑 Supprimer la sélection (${checkboxes.length})` : "🗑 Supprimer la sélection";
+    bulkBtn.innerHTML = checkboxes.length > 0
+      ? '<img src="/image/delete.png" alt="Supprimer" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> Supprimer la sélection (' + checkboxes.length + ')'
+      : '<img src="/image/delete.png" alt="Supprimer" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> Supprimer la sélection';
   }
 }
 
@@ -546,8 +576,8 @@ function renderCandidates() {
       </div>
       <span class="candidate-match">${c.match}</span>
       <div class="candidate-actions">
-        <button class="cand-btn accept" data-action="accept" data-index="${i}" title="Accepter">✓</button>
-        <button class="cand-btn reject" data-action="reject" data-index="${i}" title="Refuser">✕</button>
+        <button class="cand-btn accept" data-action="accept" data-index="${i}" title="Accepter"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button>
+        <button class="cand-btn reject" data-action="reject" data-index="${i}" title="Refuser"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
       </div>
     </div>
   `).join("");
@@ -573,7 +603,9 @@ const talents = [
 ];
 
 function renderTalents() {
-  document.getElementById("talentsList").innerHTML = talents.map(t => `
+  const el = document.getElementById("talentsList");
+  if (!el) return;
+  el.innerHTML = talents.map(t => `
     <div class="talent-item">
       <img src="${t.avatar}" alt="${t.name}">
       <div>
@@ -593,13 +625,15 @@ const interviews = [
 ];
 
 function renderInterviews() {
-  document.getElementById("interviewsList").innerHTML = interviews.map(i => `
+  const el = document.getElementById("interviewsList");
+  if (!el) return;
+  el.innerHTML = interviews.map(i => `
     <div class="interview-item">
       <div class="interview-date"><div class="day">${i.day}</div><div class="month">${i.month}</div></div>
       <div class="interview-info">
         <div class="interview-name">${i.name}</div>
         <div class="interview-role">${i.role}</div>
-        <div class="interview-time">🕐 ${i.time}</div>
+        <div class="interview-time"><img src="/image/3917292.png" alt="Heure" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> ${i.time}</div>
       </div>
     </div>
   `).join("");
@@ -1134,10 +1168,150 @@ if (logoutForm) {
   });
 }
 
+// ============== CHARGEMENT DONNÉES DASHBOARD ==============
+function computeDailyCounts(items, daysArr) {
+  const counts = new Array(daysArr.length).fill(0);
+  daysArr.forEach((d, idx) => {
+    const next = idx + 1 < daysArr.length ? daysArr[idx + 1].date : d.date + 86400000;
+    counts[idx] = items.filter(item => {
+      const t = item.createdAt || 0;
+      return t >= d.date && t < next;
+    }).length;
+  });
+  return counts;
+}
+
+function loadDashboardData() {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    renderKPIs();
+    renderAppsChart();
+    renderSourceDonut();
+    return;
+  }
+
+  const db = firebase.database();
+  const days = getLast7Days();
+
+  db.ref("jobs").orderByChild("createdBy").equalTo(user.uid).once("value").then((jobSnap) => {
+    const jobsData = jobSnap.val() || {};
+    const jobs = Object.keys(jobsData).map(id => ({ id, ...jobsData[id] }));
+    const jobIds = new Set(jobs.map(j => j.id));
+
+    const activeJobs = jobs.filter(j => (j.status || "active") === "active");
+    const totalViews = jobs.reduce((sum, j) => sum + (j.views || 0), 0);
+
+    return db.ref("candidatures").once("value").then((candSnap) => {
+      const candData = candSnap.val() || {};
+      const candidatures = Object.keys(candData).map(id => ({ id, ...candData[id] }));
+      const userCands = candidatures.filter(c => jobIds.has(c.jobId));
+
+      const responded = userCands.filter(c => c.status === "accepted" || c.status === "rejected").length;
+      const responseRate = userCands.length > 0
+        ? Math.round((responded / userCands.length) * 100) : 0;
+
+      const dailyApps = computeDailyCounts(userCands, days);
+
+      const today = new Date();
+      const dailyViewsArr = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        const dayEnd = dayStart + 86400000;
+        const count = jobs.filter(j => {
+          const t = j.createdAt || 0;
+          return t >= dayStart && t < dayEnd;
+        }).reduce((sum, j) => sum + (j.views || 0), 0);
+        dailyViewsArr.push(count);
+      }
+
+      const prevApps = dailyApps[dailyApps.length - 2] || 0;
+      const lastApps = dailyApps[dailyApps.length - 1] || 0;
+      const appsTrendUp = lastApps >= prevApps;
+      const appsTrendPct = prevApps > 0 ? Math.round(((lastApps - prevApps) / prevApps) * 100) : (lastApps > 0 ? 100 : 0);
+
+      kpis[0].value = String(activeJobs.length);
+      kpis[0].trend = `+${dailyApps[dailyApps.length - 1]}`;
+      kpis[0].up = true;
+      kpis[0].spark = dailyApps.map(v => Math.max(v, 1));
+
+      kpis[1].value = String(userCands.length);
+      kpis[1].trend = appsTrendPct > 0 ? `+${appsTrendPct}%` : `${appsTrendPct}%`;
+      kpis[1].up = appsTrendUp;
+      kpis[1].spark = dailyApps.map(v => Math.max(v, 1));
+
+      kpis[2].value = totalViews > 0 ? String(totalViews) : "0";
+      kpis[2].spark = dailyViewsArr.map(v => Math.max(v, 1));
+      kpis[2].trend = `+${dailyViewsArr[dailyViewsArr.length - 1]}`;
+      kpis[2].up = true;
+
+      kpis[3].value = `${responseRate}%`;
+      kpis[3].up = responseRate >= 50;
+      kpis[3].trend = responseRate >= 50 ? `+${responseRate}%` : `${responseRate}%`;
+      const dailyResponse = days.map((d, idx) => {
+        const next = idx + 1 < days.length ? days[idx + 1].date : d.date + 86400000;
+        const dayCands = userCands.filter(c => {
+          const t = c.createdAt || 0;
+          return t >= d.date && t < next;
+        });
+        const dayResponded = dayCands.filter(c => c.status === "accepted" || c.status === "rejected").length;
+        return dayCands.length > 0 ? Math.round((dayResponded / dayCands.length) * 100) : 0;
+      });
+      kpis[3].spark = dailyResponse.map(v => Math.max(v, 1));
+      kpis[3].sparkMin = Math.min(...dailyResponse, 1);
+      kpis[3].sparkMax = Math.max(...dailyResponse, 100);
+
+      appsData.labels = days.map(d => d.label);
+      appsData.applications = dailyApps;
+      appsData.views = dailyViewsArr;
+
+      const sourceMap = {};
+      userCands.forEach(c => {
+        const job = jobs.find(j => j.id === c.jobId);
+        if (job) {
+          const src = (job.sourceName || "Candidature directe").trim();
+          sourceMap[src] = (sourceMap[src] || 0) + 1;
+        }
+      });
+
+      if (Object.keys(sourceMap).length > 0) {
+        const colorMap = {
+          "Recherche VERA": "#0ea5e9",
+          "Recommandé par IA": "#22c55e",
+          "Candidature directe": "#8b5cf6",
+          "Réseau / Partage": "#f59e0b"
+        };
+        sourceData.length = 0;
+        Object.entries(sourceMap).forEach(([label, value]) => {
+          sourceData.push({
+            label,
+            color: colorMap[label] || "#6b7280",
+            value
+          });
+        });
+      }
+
+      renderKPIs();
+      renderAppsChart();
+      renderSourceDonut();
+    });
+  }).catch((err) => {
+    console.error("[ENTREPRISE] Erreur chargement dashboard:", err);
+    renderKPIs();
+    renderAppsChart();
+    renderSourceDonut();
+  });
+}
+
 // ============== INIT ==============
-renderKPIs();
-renderAppsChart();
-renderSourceDonut();
+if (firebase.auth().currentUser) {
+  loadDashboardData();
+} else {
+  firebase.auth().onAuthStateChanged(() => {
+    setTimeout(loadDashboardData, 500);
+  });
+}
 renderJobs();
 renderCandidates();
 renderTalents();

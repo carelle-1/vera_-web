@@ -43,10 +43,12 @@
   cursor: pointer;
   background: #f1f5f9;
   color: #475569;
-  font-size: 22px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background 0.15s ease;
 }
+.info-modal-close img{width:16px;height:16px;object-fit:contain;}
 
 .info-modal-close:hover {
   background: #e2e8f0;
