@@ -658,15 +658,22 @@ function goToPanel(panel) {
   const offres = document.getElementById("panel-offres");
   const candidatures = document.getElementById("panel-candidatures");
   const messagesPanel = document.getElementById("panel-messages");
+  const parametresPanel = document.getElementById("panel-parametres");
   const placeholder = document.getElementById("panel-placeholder");
 
   if (dashboard) dashboard.classList.toggle("active", panel === "dashboard");
   if (offres) offres.classList.toggle("active", panel === "offres");
   if (candidatures) candidatures.classList.toggle("active", panel === "candidatures");
   if (messagesPanel) messagesPanel.classList.toggle("active", panel === "messages");
+  if (parametresPanel) {
+    parametresPanel.classList.toggle("active", panel === "parametres");
+    if (panel === "parametres") {
+      loadEntrepriseSettings();
+    }
+  }
   if (placeholder) {
-    placeholder.classList.toggle("active", panel !== "dashboard" && panel !== "offres" && panel !== "candidatures" && panel !== "messages");
-    if (panel !== "dashboard" && panel !== "offres" && panel !== "candidatures" && panel !== "messages" && panelTitles[panel]) {
+    placeholder.classList.toggle("active", panel !== "dashboard" && panel !== "offres" && panel !== "candidatures" && panel !== "messages" && panel !== "parametres");
+    if (panel !== "dashboard" && panel !== "offres" && panel !== "candidatures" && panel !== "messages" && panel !== "parametres" && panelTitles[panel]) {
       document.getElementById("placeholderTitle").textContent = panelTitles[panel];
     }
   }
@@ -992,6 +999,9 @@ function updateCandStatus(candId, status, statusLabel) {
     .then(() => {
       renderCandidatures();
       showToast("Candidature " + statusLabel.toLowerCase());
+      if (typeof loadUsersFromFirebase === 'function') {
+        loadUsersFromFirebase();
+      }
     })
     .catch((err) => alert("Échec de la mise à jour : " + (err.message || err.code)));
 }
@@ -1320,6 +1330,181 @@ function loadDashboardData() {
     renderKPIs();
     renderAppsChart();
     renderSourceDonut();
+  });
+}
+
+// ============== PARAMETRES ENTREPRISE ==============
+function loadEntrepriseSettings() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const ref = firebase.database().ref("users/" + user.uid);
+  ref.once("value").then((snap) => {
+    const d = snap.val() || {};
+    const companyName = d.companyName || d.fullName || d.displayName || d.firstName || "";
+    const sector = d.sector || "";
+    const companySize = d.companySize || "";
+    const website = d.website || "";
+    const description = d.description || "";
+    const address = d.address || "";
+    const city = d.city || "";
+    const photoURL = d.photoURL || "";
+
+    if (document.getElementById("paramCompanyName")) document.getElementById("paramCompanyName").value = companyName;
+    if (document.getElementById("paramSector")) document.getElementById("paramSector").value = sector;
+    if (document.getElementById("paramCompanySize")) document.getElementById("paramCompanySize").value = companySize;
+    if (document.getElementById("paramWebsite")) document.getElementById("paramWebsite").value = website;
+    if (document.getElementById("paramDescription")) document.getElementById("paramDescription").value = description;
+    if (document.getElementById("paramAddress")) document.getElementById("paramAddress").value = address;
+    if (document.getElementById("paramCity")) document.getElementById("paramCity").value = city;
+
+    if (photoURL) {
+      const avatarImg = document.getElementById("entrepriseAvatarImg");
+      const previewImg = document.getElementById("previewAvatarImg");
+      const sidebarLogo = document.getElementById("sidebarCompanyLogo");
+      const topbarImg = document.getElementById("topbarUserImg");
+      if (avatarImg) avatarImg.src = photoURL;
+      if (previewImg) previewImg.src = photoURL;
+      if (sidebarLogo) sidebarLogo.src = photoURL;
+      if (topbarImg) topbarImg.src = photoURL;
+    }
+
+    const sidebarName = document.getElementById("sidebarCompanyName");
+    if (sidebarName) sidebarName.textContent = companyName || "Nom de l'entreprise";
+
+    if (document.getElementById("previewName")) document.getElementById("previewName").textContent = companyName || "Nom de l'entreprise";
+    if (document.getElementById("previewSector")) document.getElementById("previewSector").textContent = sector || "Secteur";
+    if (document.getElementById("previewCity")) document.getElementById("previewCity").textContent = city || "Ville";
+  }).catch((err) => console.error("[PARAMETRES] Erreur chargement:", err));
+}
+
+const entrepriseForm = document.getElementById("entrepriseForm");
+if (entrepriseForm) {
+  entrepriseForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const fd = new FormData(entrepriseForm);
+    const payload = {
+      companyName: (fd.get("companyName") || "").toString().trim(),
+      sector: (fd.get("sector") || "").toString().trim(),
+      companySize: (fd.get("companySize") || "").toString().trim(),
+      website: (fd.get("website") || "").toString().trim(),
+      description: (fd.get("description") || "").toString().trim(),
+      address: (fd.get("address") || "").toString().trim(),
+      city: (fd.get("city") || "").toString().trim(),
+      fullName: (fd.get("companyName") || "").toString().trim(),
+      updatedAt: Date.now()
+    };
+
+    firebase.database().ref("users/" + user.uid).update(payload)
+      .then(() => {
+        showToast("Informations mises à jour avec succès");
+        if (document.getElementById("previewName")) document.getElementById("previewName").textContent = payload.companyName || "Nom de l'entreprise";
+        if (document.getElementById("previewSector")) document.getElementById("previewSector").textContent = payload.sector || "Secteur";
+        if (document.getElementById("previewCity")) document.getElementById("previewCity").textContent = payload.city || "Ville";
+        const sidebarName = document.getElementById("sidebarCompanyName");
+        if (sidebarName) sidebarName.textContent = payload.companyName || "Nom de l'entreprise";
+      })
+      .catch((err) => {
+        console.error("[PARAMETRES] Erreur sauvegarde:", err);
+        showToast("Erreur lors de la sauvegarde");
+      });
+  });
+}
+
+const paramCancel = document.getElementById("paramCancel");
+if (paramCancel) {
+  paramCancel.addEventListener("click", () => loadEntrepriseSettings());
+}
+
+const entrepriseLogoBtn = document.getElementById("entrepriseLogoBtn");
+const entrepriseLogoInput = document.getElementById("entrepriseLogoInput");
+if (entrepriseLogoBtn && entrepriseLogoInput) {
+  entrepriseLogoBtn.addEventListener("click", () => entrepriseLogoInput.click());
+  entrepriseLogoInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Le fichier est trop volumineux (max 2 Mo).");
+      return;
+    }
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const formData = new FormData();
+    formData.append("logo", file);
+
+    fetch("/upload-logo.php", { method: "POST", body: formData })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.url) {
+          return firebase.database().ref("users/" + user.uid).update({ photoURL: data.url }).then(() => {
+            const avatarImg = document.getElementById("entrepriseAvatarImg");
+            const previewImg = document.getElementById("previewAvatarImg");
+            const sidebarLogo = document.getElementById("sidebarCompanyLogo");
+            const topbarImg = document.getElementById("topbarUserImg");
+            if (avatarImg) avatarImg.src = data.url;
+            if (previewImg) previewImg.src = data.url;
+            if (sidebarLogo) sidebarLogo.src = data.url;
+            if (topbarImg) topbarImg.src = data.url;
+            showToast("Photo de profil mise à jour");
+          });
+        }
+        throw new Error(data.error || "Erreur upload");
+      })
+      .catch((err) => {
+        console.error("[PARAMETRES] Erreur upload logo:", err);
+        showToast("Échec de l'upload : " + err.message);
+      });
+  });
+}
+
+const passwordForm = document.getElementById("passwordForm");
+if (passwordForm) {
+  passwordForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const currentPassword = document.getElementById("currentPassword").value;
+    const newPassword = document.getElementById("newPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+
+    if (newPassword !== confirmPassword) {
+      showToast("Les mots de passe ne correspondent pas");
+      return;
+    }
+    if (newPassword.length < 6) {
+      showToast("Le mot de passe doit contenir au moins 6 caractères");
+      return;
+    }
+
+    const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+    user.reauthenticateWithCredential(credential)
+      .then(() => user.updatePassword(newPassword))
+      .then(() => {
+        showToast("Mot de passe mis à jour avec succès");
+        passwordForm.reset();
+      })
+      .catch((err) => {
+        console.error("[PARAMETRES] Erreur mot de passe:", err);
+        if (err.code === "auth/wrong-password") {
+          showToast("Mot de passe actuel incorrect");
+        } else {
+          showToast("Erreur : " + (err.message || err.code));
+        }
+      });
+  });
+}
+
+const passwordCancel = document.getElementById("passwordCancel");
+if (passwordCancel) {
+  passwordCancel.addEventListener("click", () => {
+    document.getElementById("currentPassword").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("confirmPassword").value = "";
   });
 }
 

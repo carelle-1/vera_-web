@@ -94,7 +94,10 @@ a{color:inherit;text-decoration:none;}
 }
 .form-wrap{width:100%;max-width:420px;position:relative;margin-left:60px;}
 
-.mobile-brand{display:none;align-items:center;gap:10px;justify-content:center;margin-bottom:18px;}
+.form-brand-header{display:flex;justify-content:center;align-items:center;margin-bottom:28px;}
+.form-brand-header .brand-name-img{height:100px;width:auto;object-fit:contain;margin-top:0;}
+
+.mobile-brand{display:none;}
 .mobile-brand .brand-logo{
   width:36px;height:36px;border-radius:10px;
   background:#22c55e;color:#fff;
@@ -220,8 +223,9 @@ a{color:inherit;text-decoration:none;}
 /* RESPONSIVE */
 @media (max-width:960px){
   .brand-panel{display:none;}
-  .mobile-brand{display:flex;}
-  .form-panel{padding:24px 16px;}
+  .form-panel{padding:24px 16px;align-items:flex-start;justify-content:center;}
+  .form-wrap{margin-left:0;max-width:480px;}
+  .form-brand-header .brand-name-img{height:60px;}
 }
 @media (max-width:480px){
   .field-row{flex-direction:column;}

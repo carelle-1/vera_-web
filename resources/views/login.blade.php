@@ -17,13 +17,13 @@
   <!-- LEFT PANEL -->
   <aside class="brand-panel">
     <div class="brand-panel-content">
-        <div class="brand" style="flex-direction:column;align-items:center;text-align:center;">
+        <!-- <div class="brand" style="flex-direction:column;align-items:center;text-align:center;">
         <div class="brand-logo" style="background:none;border:none;border-radius:0;backdrop-filter:none;width:224px;height:140px; margin: 0 10px -100px -27px;"><img src="/image/veras1.png" alt="VERA" style="width:100%;height:100%;object-fit:contain;"></div>
         <div>
           <img class="brand-name-img" src="/image/veras2.png" alt="VERA">
           <div class="brand-tag">Real Opportunities, Smart Jobs</div>
         </div>
-      </div>
+      </div> -->
 
       <h1>Ton avenir commence ici.</h1>
       <p>VERA analyse ton profil et trouve les opportunités adaptées à ton profil pour booster ta carrière 24h/24, 7j/7 .</p>
@@ -49,9 +49,8 @@
   <main class="form-panel">
      <div class="form-wrap">
 
-      <div class="mobile-brand">
-        <div class="brand-logo">V</div>
-        <div class="brand-name">VERA</div>
+      <div class="form-brand-header">
+        <img class="brand-name-img" src="/image/vera.png" alt="VERA">
       </div>
 
       <div class="auth-tabs">

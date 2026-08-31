@@ -18,7 +18,7 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="brand">
-      <img src="/image/veras1.png" alt="VERA" class="brand-logo">
+      <!-- <img src="/image/veras1.png" alt="VERA" class="brand-logo"> -->
       <div>
         <div class="brand-name">VERA <span class="biz-tag">Entreprise</span></div>
         <div class="brand-sub">Espace recruteur</div>
@@ -58,9 +58,9 @@
     </nav>
 
      <div class="company-card">
-      <img src="https://i.pravatar.cc/64?img=15" alt="logo">
+      <img src="https://i.pravatar.cc/64?img=15" alt="logo" id="sidebarCompanyLogo">
       <div>
-        <div class="company-name">Notion Labs</div>
+        <div class="company-name" id="sidebarCompanyName">Notion Labs</div>
         <div class="company-plan">Plan Business</div>
         <!-- <div class="company-plan"><img src="/image/3917385.png" alt="Plan" width="14" height="14" style="vertical-align:middle;margin-right:4px;"> Plan Business</div> -->
       </div>
@@ -94,7 +94,7 @@
          <button class="icon-btn"><img src="/image/3917270.png" alt="Notifications"><span class="badge">5</span></button>
          <button class="icon-btn"><img src="/image/discussion.png" alt="Messages"><span class="badge green">5</span></button>
         <div class="user">
-          <img src="https://i.pravatar.cc/64?img=15" alt="user">
+          <img src="https://i.pravatar.cc/64?img=15" alt="user" id="topbarUserImg">
           <div class="user-text">
              <div>Notion Labs</div>
              <div class="user-role">Recruteur</div>
@@ -427,6 +427,94 @@
         </div>
       </div>
 
+      <!-- PARAMETRES PANEL -->
+      <div class="panel" id="panel-parametres">
+        <div class="page-head">
+          <div>
+            <h1>Paramètres</h1>
+            <p>Gérez les informations de votre entreprise et votre compte.</p>
+          </div>
+        </div>
+
+        <div class="parametres-layout">
+          <section class="parametres-main">
+            <div class="card">
+              <div class="card-head-row"><div class="card-title">Informations de l'entreprise</div></div>
+              <form id="entrepriseForm" class="exp-form">
+                <div class="parametres-avatar-upload">
+                  <div class="parametres-avatar-preview" id="entrepriseAvatarPreview">
+                    <img src="https://i.pravatar.cc/64?img=15" alt="Logo" id="entrepriseAvatarImg">
+                  </div>
+                  <div class="parametres-avatar-actions">
+                    <input type="file" id="entrepriseLogoInput" accept="image/*" style="display:none;">
+                    <button type="button" class="btn-outline-sm" id="entrepriseLogoBtn">Changer le logo</button>
+                    <p class="parametres-avatar-hint">JPG, PNG ou GIF. 2 Mo max.</p>
+                  </div>
+                </div>
+
+                <div class="exp-form-row">
+                  <label>Nom de l'entreprise<input type="text" name="companyName" id="paramCompanyName" placeholder="Ex. Notion Labs" required></label>
+                  <label>Secteur d'activité<input type="text" name="sector" id="paramSector" placeholder="Ex. Technologie"></label>
+                </div>
+
+                <div class="exp-form-row">
+                  <label>Taille de l'entreprise
+                    <select name="companySize" id="paramCompanySize">
+                      <option value="">-- Choisir --</option>
+                      <option value="1-10">1-10 employés</option>
+                      <option value="11-50">11-50 employés</option>
+                      <option value="51-200">51-200 employés</option>
+                      <option value="201-500">201-500 employés</option>
+                      <option value="500+">500+ employés</option>
+                    </select>
+                  </label>
+                  <label>Site web<input type="url" name="website" id="paramWebsite" placeholder="https://www.notionlabs.com"></label>
+                </div>
+
+                <label>Description de l'entreprise<textarea name="description" id="paramDescription" rows="4" placeholder="Décrivez votre entreprise, vos valeurs, votre mission..."></textarea></label>
+
+                <div class="exp-form-row">
+                  <label>Adresse<input type="text" name="address" id="paramAddress" placeholder="Ex. 123 Rue de la Paix, Paris"></label>
+                  <label>Ville<input type="text" name="city" id="paramCity" placeholder="Ex. Paris"></label>
+                </div>
+
+                <div class="exp-form-actions">
+                  <button type="button" class="btn-outline-sm" id="paramCancel">Annuler</button>
+                  <button type="submit" class="btn-primary-sm">Enregistrer</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card" style="margin-top:16px;">
+              <div class="card-head-row"><div class="card-title">Sécurité</div></div>
+              <form id="passwordForm" class="exp-form">
+                <label>Mot de passe actuel<input type="password" name="currentPassword" id="currentPassword" placeholder="Mot de passe actuel" required></label>
+                <label>Nouveau mot de passe<input type="password" name="newPassword" id="newPassword" placeholder="Nouveau mot de passe" required minlength="6"></label>
+                <label>Confirmer le nouveau mot de passe<input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirmer le nouveau mot de passe" required minlength="6"></label>
+                <div class="exp-form-actions">
+                  <button type="button" class="btn-outline-sm" id="passwordCancel">Annuler</button>
+                  <button type="submit" class="btn-primary-sm">Mettre à jour</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <aside class="parametres-side">
+            <div class="card">
+              <div class="card-head-row"><div class="card-title">Aperçu public</div></div>
+              <div class="parametres-preview">
+                <div class="parametres-preview-avatar" id="previewAvatar">
+                  <img src="https://i.pravatar.cc/64?img=15" alt="Logo" id="previewAvatarImg">
+                </div>
+                <div class="parametres-preview-name" id="previewName">Notion Labs</div>
+                <div class="parametres-preview-sector" id="previewSector">Technologie</div>
+                <div class="parametres-preview-city" id="previewCity">Paris</div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
       <!-- MESSAGES PANEL -->
       <div class="panel" id="panel-messages">
 
@@ -588,6 +676,7 @@ function loadUsersFromFirebase() {
   firebase.database().ref("users").once("value").then((snapshot) => {
     const data = snapshot.val() || {};
     const enterpriseContacts = [];
+    const verificationPromises = [];
 
     Object.keys(data).forEach((uid) => {
       if (uid === currentUser.uid) return;
@@ -606,49 +695,72 @@ function loadUsersFromFirebase() {
       const initials = getInitials(firstName, lastName);
       const color = getAvatarColor(displayName);
 
-      enterpriseContacts.push({
-        id: uid,
-        type: role.includes("entreprise") || role.includes("company") || role.includes("recrut") ? "entreprise" : "user",
-        name: displayName,
-        role: roleField || "Job Seeker",
-        avatar: initials,
-        avatarBg: color,
-        avatarImg: u.photoURL || null,
-        status: u.online !== false ? "en ligne" : "hors ligne",
-        unread: 0,
-        photoURL: u.photoURL || null
+      const verificationPromise = firebase.database().ref("candidatures").orderByChild("userId").equalTo(uid).once("value").then((candSnap) => {
+        const candData = candSnap.val() || {};
+        const acceptedCandidatures = Object.values(candData).filter(cand => cand.status === "accepted" && cand.jobId);
+        
+        if (acceptedCandidatures.length === 0) return;
+
+        const jobChecks = acceptedCandidatures.map(cand => {
+          return firebase.database().ref("jobs/" + cand.jobId).once("value").then((jobSnap) => {
+            const job = jobSnap.val() || {};
+            return job.createdBy === currentUser.uid;
+          }).catch(() => false);
+        });
+
+        return Promise.all(jobChecks).then((results) => {
+          const hasAcceptedForThisEnterprise = results.some(isAccepted => isAccepted);
+          if (hasAcceptedForThisEnterprise) {
+            enterpriseContacts.push({
+              id: uid,
+              type: role.includes("entreprise") || role.includes("company") || role.includes("recrut") ? "entreprise" : "user",
+              name: displayName,
+              role: roleField || "Job Seeker",
+              avatar: initials,
+              avatarBg: color,
+              avatarImg: u.photoURL || null,
+              status: u.online !== false ? "en ligne" : "hors ligne",
+              unread: 0,
+              photoURL: u.photoURL || null
+            });
+          }
+        });
       });
+
+      verificationPromises.push(verificationPromise);
     });
 
-    const veraUser = {
-      id: "vera",
-      type: "vera",
-      name: "VERA (Assistant IA)",
-      role: "Assistant IA",
-      avatar: "VERA",
-      avatarImg: "/image/1_nobg.png",
-      avatarBg: "linear-gradient(135deg,#5b8bff,#1e40c9)",
-      status: "en ligne",
-      unread: 2
-    };
+    Promise.all(verificationPromises).then(() => {
+      const veraUser = {
+        id: "vera",
+        type: "vera",
+        name: "VERA (Assistant IA)",
+        role: "Assistant IA",
+        avatar: "VERA",
+        avatarImg: "/image/1_nobg.png",
+        avatarBg: "linear-gradient(135deg,#5b8bff,#1e40c9)",
+        status: "en ligne",
+        unread: 2
+      };
 
-    allUsers = [veraUser, ...enterpriseContacts];
-    if (!activeUserId && allUsers.length > 0) activeUserId = allUsers[0].id;
-    updateTabCounts();
-    renderUsersList();
-    if (activeUserId) {
-      updateChatHeader(allUsers.find(u => u.id === activeUserId) || allUsers[0]);
-      loadConversationMessages(activeUserId);
-    }
-
-    firebase.database().ref("conversations/" + currentUser.uid).once("value").then((snapshot) => {
-      const convs = snapshot.val() || {};
-      allUsers.forEach(u => {
-        const c = convs[u.id];
-        if (c) u.unread = c.unread ? 1 : 0;
-      });
+      allUsers = [veraUser, ...enterpriseContacts];
+      if (!activeUserId && allUsers.length > 0) activeUserId = allUsers[0].id;
       updateTabCounts();
       renderUsersList();
+      if (activeUserId) {
+        updateChatHeader(allUsers.find(u => u.id === activeUserId) || allUsers[0]);
+        loadConversationMessages(activeUserId);
+      }
+
+      firebase.database().ref("conversations/" + currentUser.uid).once("value").then((snapshot) => {
+        const convs = snapshot.val() || {};
+        allUsers.forEach(u => {
+          const c = convs[u.id];
+          if (c) u.unread = c.unread ? 1 : 0;
+        });
+        updateTabCounts();
+        renderUsersList();
+      });
     });
   }).catch((err) => {
     console.error("Erreur chargement utilisateurs:", err);
