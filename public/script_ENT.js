@@ -657,14 +657,16 @@ function goToPanel(panel) {
   const dashboard = document.getElementById("panel-dashboard");
   const offres = document.getElementById("panel-offres");
   const candidatures = document.getElementById("panel-candidatures");
+  const messagesPanel = document.getElementById("panel-messages");
   const placeholder = document.getElementById("panel-placeholder");
 
   if (dashboard) dashboard.classList.toggle("active", panel === "dashboard");
   if (offres) offres.classList.toggle("active", panel === "offres");
   if (candidatures) candidatures.classList.toggle("active", panel === "candidatures");
+  if (messagesPanel) messagesPanel.classList.toggle("active", panel === "messages");
   if (placeholder) {
-    placeholder.classList.toggle("active", panel !== "dashboard" && panel !== "offres" && panel !== "candidatures");
-    if (panel !== "dashboard" && panel !== "offres" && panel !== "candidatures" && panelTitles[panel]) {
+    placeholder.classList.toggle("active", panel !== "dashboard" && panel !== "offres" && panel !== "candidatures" && panel !== "messages");
+    if (panel !== "dashboard" && panel !== "offres" && panel !== "candidatures" && panel !== "messages" && panelTitles[panel]) {
       document.getElementById("placeholderTitle").textContent = panelTitles[panel];
     }
   }

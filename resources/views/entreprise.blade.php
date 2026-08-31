@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VERA Entreprise - Tableau de bord</title>
-<link rel="stylesheet" href="{{ asset('style_ENT.css') }}?v=6">
+<link rel="stylesheet" href="style_M.css?v=2">
+<link rel="stylesheet" href="{{ asset('style_ENT.css') }}?v=9">
 <link rel="stylesheet" href="/style_INFO.css?v=4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -51,12 +52,6 @@
       <a class="nav-item" data-panel="messages">
         <span class="nav-icon"><img src="/image/discussion.png" alt="Messages"></span> Messages <span class="nav-count">5</span>
       </a>
-      <!-- <a class="nav-item" data-panel="statistiques">
-        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></span> Statistiques
-      </a>
-      <a class="nav-item" data-panel="facturation">
-        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="2" y1="16" x2="22" y2="16"/></svg></span> Facturation
-      </a> -->
       <a class="nav-item" data-panel="parametres">
         <span class="nav-icon"><img src="/image/3917058.png" alt="Paramètres"></span> Paramètres
       </a>
@@ -423,7 +418,7 @@
         </div>
       </div>
 
-      <!-- PLACEHOLDER PANEL -->
+      <!-- PLACEHOLDER PANEL (for unimplemented sections) -->
       <div class="panel" id="panel-placeholder">
         <div class="placeholder-box">
           <div class="placeholder-icon"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-8-5a2 2 0 0 0-2 0l-8 5a2 2 0 0 0-1 1.73v8a2 2 0 0 0 1 1.73l8 5a2 2 0 0 0 2 0l8-5a2 2 0 0 0 1-1.73z"/></svg></div>
@@ -431,6 +426,138 @@
           <p>Cette section sera bientôt disponible dans votre espace entreprise.</p>
         </div>
       </div>
+
+      <!-- MESSAGES PANEL -->
+      <div class="panel" id="panel-messages">
+
+        <div class="page-head">
+          <div>
+            <h1 style="color: #12b3c9;">Messages <img src="/image/discussion.png" alt="" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"></h1>
+            <p>Échangez avec VERA, les candidats et notre équipe. Nous sommes là pour vous accompagner.</p>
+          </div>
+          <button class="btn-primary" id="newMsgBtn"><img src="/image/mail.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Nouveau message</button>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs" id="msgTabs">
+          <button class="tab active" data-filter="all">Toutes <span id="tabCountAll">0</span></button>
+          <button class="tab" data-filter="vera">VERA (IA)</button>
+          <button class="tab" data-filter="unread">Non lues <span id="tabCountUnread">0</span></button>
+        </div>
+
+        <!-- MESSAGING LAYOUT -->
+        <div class="messaging-layout">
+
+          <!-- USERS LIST -->
+          <section class="conv-panel">
+            <div class="conv-search">
+              <div class="search small">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                <input type="text" id="userSearchInput" placeholder="Rechercher un utilisateur...">
+              </div>
+            </div>
+            <div class="conv-list" id="usersList"></div>
+          </section>
+
+          <!-- CHAT WINDOW -->
+          <section class="chat-panel">
+            <div class="chat-header">
+              <div class="chat-header-left">
+                <div class="chat-avatar" id="chatAvatar"><img src="/image/1_nobg.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div>
+                  <div class="chat-name">VERA (Assistant IA) <span class="ia-badge">IA</span></div>
+                  <div class="chat-status"><span class="dot-online"></span>En ligne</div>
+                </div>
+              </div>
+              <div class="chat-header-actions">
+                <button class="icon-btn-round"><img src="/image/3917317.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+                <button class="icon-btn-round"><img src="/image/3917293.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+              </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages"></div>
+
+            <div class="chat-input">
+              <button class="input-icon" id="attachImageBtn" title="Ajouter une image"><img src="/image/1.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+              <button class="input-icon" id="attachFileBtn" title="Ajouter un fichier"><img src="/image/3917361.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+              <button class="input-icon"><img src="/image/3916880.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+              <input type="file" id="imageInput" accept="image/*" style="display:none;">
+              <input type="file" id="fileInput" style="display:none;">
+              <input type="text" id="chatInput" placeholder="Écrivez votre message...">
+              <button class="send-btn" id="sendBtn"><img src="/image/envoyez.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+            </div>
+            <div id="previewArea" style="display:none; padding: 10px 18px; background: #fff; border-top: 1px solid var(--border);">
+              <div id="previewContent" style="display: flex; gap: 10px; align-items: center;"></div>
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button class="btn-outline-sm" id="cancelAttachment">Annuler</button>
+                <button class="btn-primary-sm" id="sendAttachment">Envoyer</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- CONTACT INFO -->
+          <aside class="contact-panel">
+            <div class="card contact-card">
+              <div class="contact-avatar"><img src="/image/1_nobg.png" alt="" style="width:20px;width:20px;height:20px;object-fit:contain;"></div>
+              <div class="contact-name">VERA (Assistant IA) <span class="ia-badge">IA</span></div>
+              <div class="contact-status"><span class="dot-online"></span>En ligne</div>
+              <p>Votre assistant carrière intelligent. VERA vous aide à trouver des opportunités, postuler automatiquement et booster votre carrière.</p>
+              <button class="btn-outline full">Voir le profil de VERA</button>
+            </div>
+
+            <div class="card">
+              <div class="card-head-row"><span>Actions rapides</span></div>
+              <div class="quick-action">
+                <div class="quick-icon blue"><img src="/image/3917754.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div><div class="quick-title">Découvrir des opportunités</div><div class="quick-sub">VERA recherche pour vous</div></div>
+              </div>
+              <div class="quick-action">
+                <div class="quick-icon purple"><img src="/image/7653263.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div><div class="quick-title">Améliorer mon profil</div><div class="quick-sub">Conseils personnalisés</div></div>
+              </div>
+              <div class="quick-action">
+                <div class="quick-icon green"><img src="/image/mission.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div><div class="quick-title">Postuler automatiquement</div><div class="quick-sub">VERA postule pour vous</div></div>
+              </div>
+              <div class="quick-action">
+                <div class="quick-icon orange"><img src="/image/3917361.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div><div class="quick-title">Mes recommandations</div><div class="quick-sub">Formations &amp; conseils</div></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head-row"><span>Informations</span></div>
+              <div class="info-row"><span>Type</span><strong>Assistant IA</strong></div>
+              <div class="info-row"><span>Réponses moyennes</span><strong>Instantanées</strong></div>
+              <div class="info-row"><span>Disponibilité</span><strong>24/7</strong></div>
+              <div class="info-row"><span>Langue</span><strong>Français</strong></div>
+            </div>
+
+            <div class="card">
+              <div class="card-head-row"><span>Fichiers et ressources partagés</span></div>
+              <div class="file-item">
+                <div class="file-icon"><img src="/image/3917505.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div class="file-info">
+                  <div class="file-name">Guide_Optimisation_Profil.pdf</div>
+                  <div class="file-meta">PDF · 1.2 MB · 02 mai 2024</div>
+                </div>
+                <button class="file-download"><img src="/image/download.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+              </div>
+              <div class="file-item">
+                <div class="file-icon"><img src="/image/3917505.png" alt="" style="width:20px;height:20px;object-fit:contain;"></div>
+                <div class="file-info">
+                  <div class="file-name">Top_Competences_2024.pdf</div>
+                  <div class="file-meta">PDF · 892 KB · 28 avr 2024</div>
+                </div>
+                <button class="file-download"><img src="/image/download.png" alt="" style="width:16px;height:16px;object-fit:contain;"></button>
+              </div>
+              <a href="#" class="see-all">Voir tous les fichiers →</a>
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    
 
     </div>
   </main>
@@ -445,6 +572,172 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="{{ asset('firebase-init.js') }}"></script>
 <script src="script_INFO.js?v=4"></script>
-<script src="{{ asset('script_ENT.js') }}?v=8"></script>
+<script src="script_ENT.js?v=9"></script>
+<script src="script_M.js?v=2"></script>
+<script>
+// Override loadUsersFromFirebase for enterprise users - load job seekers/candidates, not admins
+function loadUsersFromFirebase() {
+  const currentUser = firebase.auth().currentUser;
+  if (!currentUser) {
+    firebase.auth().onAuthStateChanged((u) => {
+      if (u) loadUsersFromFirebase();
+    });
+    return;
+  }
+
+  firebase.database().ref("users").once("value").then((snapshot) => {
+    const data = snapshot.val() || {};
+    const enterpriseContacts = [];
+
+    Object.keys(data).forEach((uid) => {
+      if (uid === currentUser.uid) return;
+      const u = data[uid];
+      const fullName = (u.fullName || u.firstName || "").trim();
+      const email = (u.email || "").trim();
+      const displayName = fullName || email || "Utilisateur";
+      if (!displayName || displayName === "Utilisateur") return;
+
+      const roleField = u.role || u.jobTitle || "";
+      const role = String(roleField).toLowerCase();
+      if (isAdminRole(role)) return;
+
+      const firstName = fullName || email || "Utilisateur";
+      const lastName = "";
+      const initials = getInitials(firstName, lastName);
+      const color = getAvatarColor(displayName);
+
+      enterpriseContacts.push({
+        id: uid,
+        type: role.includes("entreprise") || role.includes("company") || role.includes("recrut") ? "entreprise" : "user",
+        name: displayName,
+        role: roleField || "Job Seeker",
+        avatar: initials,
+        avatarBg: color,
+        avatarImg: u.photoURL || null,
+        status: u.online !== false ? "en ligne" : "hors ligne",
+        unread: 0,
+        photoURL: u.photoURL || null
+      });
+    });
+
+    const veraUser = {
+      id: "vera",
+      type: "vera",
+      name: "VERA (Assistant IA)",
+      role: "Assistant IA",
+      avatar: "VERA",
+      avatarImg: "/image/1_nobg.png",
+      avatarBg: "linear-gradient(135deg,#5b8bff,#1e40c9)",
+      status: "en ligne",
+      unread: 2
+    };
+
+    allUsers = [veraUser, ...enterpriseContacts];
+    if (!activeUserId && allUsers.length > 0) activeUserId = allUsers[0].id;
+    updateTabCounts();
+    renderUsersList();
+    if (activeUserId) {
+      updateChatHeader(allUsers.find(u => u.id === activeUserId) || allUsers[0]);
+      loadConversationMessages(activeUserId);
+    }
+
+    firebase.database().ref("conversations/" + currentUser.uid).once("value").then((snapshot) => {
+      const convs = snapshot.val() || {};
+      allUsers.forEach(u => {
+        const c = convs[u.id];
+        if (c) u.unread = c.unread ? 1 : 0;
+      });
+      updateTabCounts();
+      renderUsersList();
+    });
+  }).catch((err) => {
+    console.error("Erreur chargement utilisateurs:", err);
+  });
+}
+
+// Override renderUsersList to support photoURL avatars
+const originalRenderUsersList = renderUsersList;
+function renderUsersList() {
+  const list = document.getElementById("usersList");
+  const search = document.getElementById("userSearchInput").value.toLowerCase();
+
+  const filtered = allUsers.filter(u => {
+    const typeOk =
+      currentFilter === "all" ? true :
+      currentFilter === "unread" ? u.unread > 0 :
+      u.type === currentFilter;
+    const searchOk = (u.name + " " + u.role).toLowerCase().includes(search);
+    return typeOk && searchOk;
+  });
+
+  list.innerHTML = filtered.map(u => {
+    let avatarHtml = "";
+    if (u.avatarImg) {
+      avatarHtml = `<img src="${u.avatarImg}" alt="${u.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else {
+      avatarHtml = u.avatar;
+    }
+    return `
+      <div class="conv-item ${u.id === activeUserId ? 'active' : ''}" data-id="${u.id}">
+        <div class="conv-avatar" style="background:${u.avatarBg}">${avatarHtml}</div>
+        <div class="conv-body">
+          <div class="conv-top">
+            <span class="conv-name">${u.name}</span>
+          </div>
+          <div class="conv-sub">${u.role}</div>
+          <div class="conv-preview" style="color:${u.status === 'en ligne' ? 'var(--green)' : 'var(--muted)'}">
+            ${u.status === 'en ligne' ? '● En ligne' : '● Hors ligne'}
+          </div>
+        </div>
+        ${u.unread > 0 ? `<span class="conv-unread">${u.unread}</span>` : ""}
+      </div>
+    `;
+  }).join("");
+
+  list.querySelectorAll(".conv-item").forEach(item => {
+    item.addEventListener("click", () => {
+      activeUserId = item.dataset.id;
+      const user = allUsers.find(u => u.id === activeUserId);
+      if (user) {
+        user.unread = 0;
+        updateChatHeader(user);
+      }
+      renderUsersList();
+    });
+  });
+}
+
+// Override updateChatHeader to support photoURL avatars
+function updateChatHeader(user) {
+  const avatarEl = document.getElementById("chatAvatar");
+  if (avatarEl) {
+    if (user.avatarImg) {
+      avatarEl.innerHTML = `<img src="${user.avatarImg}" alt="${user.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      avatarEl.style.background = "transparent";
+    } else {
+      avatarEl.textContent = user.avatar;
+      avatarEl.style.background = user.avatarBg;
+    }
+  }
+  document.querySelector(".chat-name").innerHTML = user.name + (user.type === "vera" ? ' <span class="ia-badge">IA</span>' : "");
+}
+
+// Override getAvatarForRecipient to support photo avatars
+function getAvatarForRecipient() {
+  const user = allUsers.find(u => u.id === activeUserId);
+  if (!user) return "🤖";
+  if (user.avatarImg) {
+    return `<img src="${user.avatarImg}" alt="${user.name}" style="width:100%;height:100%;object-fit:cover;">`;
+  }
+  return user.avatar || "🤖";
+}
+
+// Initialize after Firebase auth is ready
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    loadUsersFromFirebase();
+  }
+});
+</script>
 </body>
 </html>
