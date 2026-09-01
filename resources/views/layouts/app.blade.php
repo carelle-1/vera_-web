@@ -7,6 +7,7 @@
 <title>@yield('title', 'VERA')</title>
   <link rel="stylesheet" href="/fonts/inter-local.css">
   <link rel="stylesheet" href="/style_INFO.css">
+  <link rel="stylesheet" href="/styleI.css?v=2">
   @yield('styles')
 </head>
 <body>
@@ -98,9 +99,10 @@
 
     <!-- TOP BAR -->
     <header class="topbar">
-      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('collapsed')" aria-label="Menu">
+      <button class="hamburger" id="sidebarToggle" aria-label="Menu">
         <img src="/image/list2.png" alt="Menu" style="width:22px;height:22px;object-fit:contain;">
       </button>
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
       <div class="search">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <input type="text" placeholder="Rechercher un emploi, compétence, entreprise...">
@@ -192,6 +194,42 @@
       }
     });
   });
+
+  (function setupSidebarToggle(){
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const toggle = document.getElementById('sidebarToggle');
+    if (!sidebar || !toggle) return;
+
+    function isMobile(){ return window.matchMedia('(max-width: 820px)').matches; }
+    function closeSidebar(){
+      document.body.classList.remove('sidebar-mobile-open');
+      if (overlay) overlay.classList.remove('active');
+    }
+    function openSidebar(){
+      document.body.classList.add('sidebar-mobile-open');
+      if (overlay) overlay.classList.add('active');
+    }
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (document.body.classList.contains('sidebar-mobile-open')) {
+        closeSidebar();
+      } else {
+        openSidebar();
+      }
+    });
+
+    if (overlay) overlay.addEventListener('click', closeSidebar);
+
+    sidebar.querySelectorAll('a').forEach((a) => {
+      a.addEventListener('click', () => { if (isMobile()) closeSidebar(); });
+    });
+
+    window.addEventListener('resize', () => {
+      if (!isMobile()) closeSidebar();
+    });
+  })();
 </script>
 @yield('scripts')
 </body>

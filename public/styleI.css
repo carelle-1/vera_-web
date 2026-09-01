@@ -131,7 +131,9 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke
   display:flex;align-items:center;gap:16px;
   padding:16px 28px;background:#fff;border-bottom:1px solid var(--border);
 }
-.hamburger{background:none;border:none;cursor:pointer;color:var(--text);display:flex;}
+.hamburger{background:none;border:none;cursor:pointer;color:var(--text);display:flex;padding:6px;border-radius:8px;}
+.hamburger:hover{background:var(--bg);}
+.hamburger img{width:22px;height:22px;object-fit:contain;display:block;}
 .search{
   flex:1;max-width:520px;display:flex;align-items:center;gap:8px;
   background:var(--bg);border:1px solid var(--border);border-radius:12px;
@@ -471,18 +473,45 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke
 }
 
 /* ================= RESPONSIVE ================= */
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;background:rgba(15,23,42,0.45);
+  backdrop-filter:blur(2px);z-index:90;
+}
+.sidebar-overlay.active{display:block;}
+
 @media (max-width:1100px){
   .content{grid-template-columns:1fr;}
   .col-right{flex-direction:row;overflow-x:auto;}
   .col-right .card{min-width:260px;}
 }
 @media (max-width:820px){
-  .sidebar{display:none;}
-  .hero{flex-direction:column;text-align:center;gap:20px;}
-  .hero-stats{justify-content:center;}
+  .sidebar{
+    position:fixed;top:0;left:0;height:100vh;width:260px;z-index:100;
+    transform:translateX(-105%);transition:transform .25s ease;will-change:transform;
+  }
+  body.sidebar-mobile-open .sidebar{transform:translateX(0);box-shadow:8px 0 30px rgba(0,0,0,0.25);}
+  .main{width:100%;}
+  .topbar{padding:12px 16px;gap:10px;}
+  .search{max-width:none;}
+  .user-text{display:none;}
+  .lang{display:none;}
+  .content{padding:16px;}
+  .hero{flex-direction:column;text-align:center;gap:20px;padding:24px 18px;}
+  .hero-stats{justify-content:center;flex-wrap:wrap;gap:12px;}
+  .hero-stats .divider{display:none;}
   .job{flex-wrap:wrap;}
   .job-side{align-items:flex-start;flex-direction:row;justify-content:space-between;width:100%;}
   .col-right{flex-direction:column;}
+}
+@media (max-width:520px){
+  .topbar .icon-btn:not(:last-of-type){display:none;}
+  .top-actions{gap:10px;}
+  .content{padding:12px;}
+  .hero{padding:20px 14px;}
+  .job{padding:12px;gap:10px;}
+  .job-thumb{width:44px;height:44px;}
+  .modal-card{border-radius:14px;}
+  .modal-head,.modal-body{padding:16px;}
 }
 
 /* ================= MODAL DÉTAILS OFFRE ================= */
