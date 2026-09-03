@@ -7,7 +7,7 @@
 <title>@yield('title', 'VERA')</title>
   <link rel="stylesheet" href="/fonts/inter-local.css">
   <link rel="stylesheet" href="/style_INFO.css">
-  <link rel="stylesheet" href="/styleI.css?v=2">
+  <link rel="stylesheet" href="/styleI.css?v=3">
   @yield('styles')
 </head>
 <body>

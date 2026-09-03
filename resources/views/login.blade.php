@@ -6,7 +6,7 @@
 <link rel="icon" href="/image/vera1.png">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>VERA - Connexion / Inscription</title>
-<link rel="stylesheet" href="/style_L.css?v=9">
+<link rel="stylesheet" href="/style_L.css?v=10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
