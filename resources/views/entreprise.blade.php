@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VERA Entreprise - Tableau de bord</title>
 <link rel="stylesheet" href="style_M.css?v=2">
-<link rel="stylesheet" href="{{ asset('style_ENT.css') }}?v=9">
+<link rel="stylesheet" href="{{ asset('style_ENT.css') }}?v=10">
 <link rel="stylesheet" href="/style_INFO.css?v=4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -20,7 +20,7 @@
     <div class="brand">
       <!-- <img src="/image/veras1.png" alt="VERA" class="brand-logo"> -->
       <div>
-        <div class="brand-name">VERA <span class="biz-tag">Entreprise</span></div>
+        <div class="brand-name"><img src="/image/veras2.png" alt="VERA" class="brand-name-img" style="width:55px;height:auto;object-fit:contain;display:inline-block;vertical-align:middle;"> <span class="biz-tag">Entreprise</span></div>
         <div class="brand-sub">Espace recruteur</div>
       </div>
     </div>

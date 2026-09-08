@@ -2684,7 +2684,7 @@ function renderAdmins() {
             <div class="user-cell">
               <img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}">
               <div>
-                 <div class="user-cell-name">${escapeHtml(name)}${user.verified ? ' <span class="verify-badge" title="Compte vérifié">\u2713</span>' : ''}</div>
+                 <div class="user-cell-name">${escapeHtml(name)}${u.verified ? ' <span class="verify-badge" title="Compte vérifié">\u2713</span>' : ''}</div>
                  <div class="user-cell-email">${escapeHtml(email)}</div>
               </div>
             </div>

@@ -6,7 +6,7 @@
 <link rel="icon" href="/image/vera1.png">
 <title>VERA - Tableau de bord</title>
   <link rel="stylesheet" href="/styleI.css?v=3">
-<link rel="stylesheet" href="/style_INFO.css?v=2">
+<link rel="stylesheet" href="/style_INFO.css?v=3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
@@ -19,7 +19,7 @@
     <div class="brand">
         <!-- <div class="brand-logo"><img src="/image/veras1.png" alt="VERA" style="width:100%;height:100%;object-fit:contain;border-radius:8px;"></div> -->
       <div>
-        <img class="brand-name-img" src="/image/veras2.png" alt="VERA">
+        <img class="brand-name-img" src="/image/vera3.png" alt="VERA">
         <div class="brand-tag">Real Opportunities, Smart Jobs</div>
       </div>
     </div>

@@ -78,12 +78,14 @@ function renderKPIs() {
     const fillPoints = points + ` ${100},${30} 0,${30}`;
     return `
       <div class="kpi-card">
-        <div class="kpi-top">
+        <div class="kpi-card-row">
           <div class="kpi-icon" style="background:${k.iconBg}">${k.icon}</div>
-          <span class="kpi-trend ${k.up ? "up" : "down"}">${k.up ? '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>' : '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>'} ${k.trend}</span>
+          <div class="kpi-info">
+            <div class="kpi-value">${k.value}</div>
+            <div class="kpi-label">${k.label}</div>
+            <span class="kpi-trend ${k.up ? "up" : "down"}">${k.up ? '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>' : '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>'} ${k.trend}</span>
+          </div>
         </div>
-        <div class="kpi-value">${k.value}</div>
-        <div class="kpi-label">${k.label}</div>
         <svg class="kpi-spark" viewBox="0 0 100 32" preserveAspectRatio="none">
           <polygon points="${fillPoints}" fill="${k.color}" opacity="0.12"/>
           <polyline points="${points}" stroke="${k.color}"></polyline>
@@ -1220,6 +1222,23 @@ function loadDashboardData() {
   }
 
   const db = firebase.database();
+
+  db.ref("users/" + user.uid).once("value").then((snap) => {
+    const d = snap.val() || {};
+    const photoURL = d.photoURL || "";
+    const companyName = d.companyName || d.fullName || d.displayName || d.firstName || "";
+
+    if (photoURL) {
+      const sidebarLogo = document.getElementById("sidebarCompanyLogo");
+      const topbarImg = document.getElementById("topbarUserImg");
+      if (sidebarLogo) sidebarLogo.src = photoURL;
+      if (topbarImg) topbarImg.src = photoURL;
+    }
+
+    const sidebarName = document.getElementById("sidebarCompanyName");
+    if (sidebarName) sidebarName.textContent = companyName || "Nom de l'entreprise";
+  }).catch((err) => console.error("[ENT] Erreur chargement profil:", err));
+
   const days = getLast7Days();
 
   db.ref("jobs").orderByChild("createdBy").equalTo(user.uid).once("value").then((jobSnap) => {
