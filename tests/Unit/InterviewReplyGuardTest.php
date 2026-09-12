@@ -36,6 +36,24 @@ class InterviewReplyGuardTest extends TestCase
         $this->assertStringContainsString('Laravel', $answer);
     }
 
+    public function test_intro_model_answer_starts_by_stating_the_profile_target_position(): void
+    {
+        $controller = new ChatController(new VeraContextService());
+        $method = new ReflectionMethod($controller, 'buildPersonalizedModelAnswer');
+        $method->setAccessible(true);
+
+        $answer = $method->invoke($controller, 'Bonjour, je m’appelle Carelle.', ['id' => 'intro'], [
+            'nom' => 'Carelle Djeuwou',
+            'poste_recherche' => 'développeur full stack',
+        ]);
+
+        $this->assertStringContainsString("entretien au poste de développeur full stack", $answer);
+        $this->assertLessThan(
+            mb_strpos($answer, 'Sur le plan professionnel'),
+            mb_strpos($answer, 'entretien au poste de développeur full stack')
+        );
+    }
+
     public function test_it_uses_the_users_actual_motivation_in_the_model_answer(): void
     {
         $controller = new ChatController(new VeraContextService());

@@ -2,60 +2,52 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 class StatsController extends Controller
 {
     public function data()
     {
-        $userCount = User::count();
-
-        $companyCount = 0;
-        $satisfactionRate = 92;
-
         try {
-            $credentialsPath = base_path('storage/app/firebase/vera-firebase.json');
-            $databaseUrl = env('FIREBASE_DATABASE_URL');
-            $storageBucket = env('FIREBASE_STORAGE_DEFAULT_BUCKET');
+            // Utilise le client configuré dans config/firebase.php, notamment les
+            // options SSL nécessaires à l'environnement XAMPP.
+            $database = app('firebase.database');
 
-            if (file_exists($credentialsPath) && $databaseUrl && $storageBucket) {
-                $firebase = (new \Kreait\Firebase\Factory)
-                    ->withServiceAccount($credentialsPath)
-                    ->withDatabaseUri($databaseUrl)
-                    ->withProjectId('vera-1bd37');
+            // Les inscriptions de la page de connexion sont stockées dans Firebase.
+            $users = $database->getReference('users')->getValue();
+            $users = is_array($users) ? $users : [];
+            $companyCount = 0;
 
-                $database = $firebase->createDatabase();
-
-                $companiesSnapshot = $database->getReference('companies')->getValue();
-                if (is_array($companiesSnapshot)) {
-                    $companyCount = count($companiesSnapshot);
-                }
-
-                $ratingsSnapshot = $database->getReference('ratings')->getValue();
-                if (is_array($ratingsSnapshot) && count($ratingsSnapshot) > 0) {
-                    $total = 0;
-                    $sum = 0;
-                    foreach ($ratingsSnapshot as $rating) {
-                        if (isset($rating['score'])) {
-                            $sum += (int) $rating['score'];
-                            $total++;
-                        }
-                    }
-                    if ($total > 0) {
-                        $satisfactionRate = round(($sum / $total) * 100);
-                    }
+            foreach ($users as $user) {
+                if (is_array($user) && strtolower((string) ($user['role'] ?? '')) === 'entreprise') {
+                    $companyCount++;
                 }
             }
-        } catch (\Exception $e) {
-            \Log::error('StatsController: Firebase error: ' . $e->getMessage());
-        }
 
-        return response()->json([
-            'members' => $userCount,
-            'companies' => $companyCount,
-            'satisfaction' => $satisfactionRate,
-        ]);
+            $ratings = $database->getReference('ratings')->getValue();
+            $scores = [];
+            foreach (is_array($ratings) ? $ratings : [] as $rating) {
+                if (is_array($rating) && is_numeric($rating['score'] ?? null)) {
+                    $scores[] = (float) $rating['score'];
+                }
+            }
+
+            // Une note sur 5 devient un pourcentage ; une note sur 100 est conservée.
+            $satisfactionRate = null;
+            if ($scores !== []) {
+                $average = array_sum($scores) / count($scores);
+                $satisfactionRate = (int) round($average <= 5 ? $average * 20 : $average);
+            }
+
+            return response()->json([
+                'members' => count($users),
+                'companies' => $companyCount,
+                'satisfaction' => $satisfactionRate,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('StatsController: Firebase error: ' . $e->getMessage());
+
+            return response()->json(['message' => 'Statistiques indisponibles.'], 503);
+        }
     }
 }

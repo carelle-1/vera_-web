@@ -8,9 +8,14 @@ Route::get('/', function () {
 });
 
 Route::get('/login-stats', [App\Http\Controllers\StatsController::class, 'data'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+Route::get('/api/home-texts', [App\Http\Controllers\HomeTextController::class, 'index'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 
 // Route de synchronisation Firebase -> Laravel (sans protection d'auth)
 Route::post('/sync-firebase-auth', [AuthController::class, 'syncFirebaseAuth'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+
+// Phone verification via WhatsApp
+Route::post('/api/send-whatsapp-code', [App\Http\Controllers\PhoneVerificationController::class, 'sendCode'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+Route::post('/api/verify-whatsapp-code', [App\Http\Controllers\PhoneVerificationController::class, 'verifyCode'])->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 
 Route::get('/tableau-de-bord', function () {
     return view('index');

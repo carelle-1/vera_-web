@@ -85,10 +85,14 @@ class ChatController extends Controller
                 $replyData = $this->getInterviewReply($message, $interviewStep, $profile);
                 $nextStep = $replyData['nextStep'] ?? $interviewStep;
 
+                $nextQuestion = $this->interviewQuestions[$nextStep] ?? null;
+                $nextQuestionText = $nextQuestion ? $this->getInterviewQuestionText($nextQuestion, $profile) : null;
+
                 return response()->json([
                     'success' => true,
                     'reply' => $replyData['reply'],
                     'interviewStep' => $nextStep,
+                    'nextQuestionText' => $nextQuestionText,
                     'score' => $replyData['score'] ?? null,
                     'criteria' => $replyData['criteria'] ?? [],
                     'summary' => $replyData['summary'] ?? null,
@@ -225,11 +229,6 @@ class ChatController extends Controller
                         $reply = $minimumSafeReply;
                         $feedback = $this->extractSection($reply, 'Feedback');
                         $modelAnswerFromOllama = $this->extractSection($reply, 'Réponse modèle');
-                        $nextQuestionText = $this->extractSection($reply, 'Question suivante');
-                        $nextQuestion = $this->interviewQuestions[$this->getNextQuestionIndex($question['id'])] ?? null;
-                        if ($nextQuestion) {
-                            $nextQuestionText = "❓ Question suivante : " . $this->getInterviewQuestionText($nextQuestion, $profile);
-                        }
 
                         $candidate = $modelAnswerFromOllama ?: '';
                         if ($question['id'] === 'intro' || $candidate === '' || $this->isUserMessageEcho($message, $candidate) || mb_strlen(trim($candidate)) < 140) {
@@ -243,7 +242,6 @@ class ChatController extends Controller
 
                         $finalReply = $feedback;
                         if ($modelAnswer) $finalReply .= "\n\n" . $modelAnswer;
-                        if ($nextQuestionText) $finalReply .= "\n\n" . $nextQuestionText;
 
                         return $finalReply;
                     }
@@ -254,15 +252,13 @@ class ChatController extends Controller
         }
 
         $nextQuestion = $this->interviewQuestions[$this->getNextQuestionIndex($question['id'])] ?? null;
-        $nextQuestionText = $nextQuestion ? "❓ Question suivante : " . $this->getInterviewQuestionText($nextQuestion, $profile) : "";
 
         $personalizedModel = $this->buildPersonalizedModelAnswer($message, $question, $profile);
 
         $feedback = $this->buildAdaptiveFeedback($message, $question, $scoreData, $profile);
 
         return $feedback . "\n\n"
-            . "💡 Réponse modèle : " . $personalizedModel
-            . ($nextQuestionText ? "\n\n" . $nextQuestionText : "");
+            . "💡 Réponse modèle : " . $personalizedModel;
     }
 
     private function buildAdaptiveFeedback(string $message, array $question, array $scoreData, array $profile = []): string
@@ -355,6 +351,7 @@ class ChatController extends Controller
                 $availability = $this->cleanProfileValue($additional['availability'] ?? '') ?: 'non renseignée';
                 $contractType = $this->cleanProfileValue($additional['contractType'] ?? '') ?: 'non renseigné';
                 $salary = $this->cleanProfileValue($additional['salary'] ?? '') ?: 'non renseigné';
+                $targetPosition = $this->cleanProfileValue($poste);
                 $role = $this->cleanProfileValue($poste ?: $statut) ?: 'professionnel dans mon domaine';
                 $uniqueExperiences = $this->uniqueProfileItems(array_merge($stages, $experiences));
                 $uniqueSkills = $this->uniqueProfileItems(array_merge($competences, $technologies));
@@ -371,6 +368,9 @@ class ChatController extends Controller
                 $qualitiesText = implode(', ', array_slice($qualities, 0, 4));
 
                 $parts[] = "Bonjour, je m'appelle " . ($profileName ?: '[Prénom] [Nom]') . ".";
+                if ($targetPosition !== '') {
+                    $parts[] = "Je vous remercie de me recevoir aujourd'hui pour un entretien au poste de " . $targetPosition . ".";
+                }
                 $parts[] = "Je suis de nationalité " . $nationality . " et je réside actuellement à " . $residence . ". Je suis " . $maritalStatus . " et ma langue principale est " . $mainLanguage . ".";
                 $parts[] = "Sur le plan professionnel, je suis " . $role . ". Je suis actuellement " . $availability . " et je recherche principalement un contrat de type " . $contractType . ". En termes de rémunération, mes attentes se situent autour de " . $salary . ", tout en restant ouvert(e) à une discussion en fonction des responsabilités du poste et des conditions proposées.";
                 $parts[] = "Au cours de mon parcours, j'ai développé plusieurs compétences, notamment " . $skillsText . ". Ces compétences m'ont permis de réaliser " . $projectsCount . " projets, dans lesquels j'ai pu mettre en pratique mes connaissances et développer mon expérience professionnelle.";

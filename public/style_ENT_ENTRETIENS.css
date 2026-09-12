@@ -91,8 +91,18 @@ a{color:inherit;}
   background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 14px;
   font-size:12.5px;line-height:1.5;white-space:pre-line;
 }
-.msg-row.user .msg-bubble{background:var(--sky)!important;color:#0f1730!important;border-color:var(--sky-dark)!important;}
-.msg-row.vera .msg-bubble{background:var(--green-light)!important;color:#0f1730!important;border-color:var(--green-dark)!important;}
+.msg-row.user .msg-bubble{
+    background: #2196f34a !important;
+    font-size: 18px;
+    color: #000 !important;
+    border-color: #2196f34a !important;
+}
+.msg-row.vera .msg-bubble{
+    background: #03a9f412 !important;
+    font-size: 18px;
+    color: #000 !important;
+    border-color: #03a9f412 !important;
+}
 .msg-time{font-size:10px;color:var(--muted);margin-top:4px;display:block;text-align:right;}
 .msg-row.user .msg-time{color:#0c4a6e;}
 .msg-row.vera .msg-time{color:#14532d;}

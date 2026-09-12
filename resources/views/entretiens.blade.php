@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'VERA - Entretiens')
 @section('styles')
-<link rel="stylesheet" href="style_M.css">
+<link rel="stylesheet" href="style_ENT_ENTRETIENS.css">
 <style>
   .messaging-layout {
     grid-template-columns: 1fr 300px !important;

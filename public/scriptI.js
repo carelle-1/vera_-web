@@ -379,6 +379,75 @@ function calculateJobCompatibility(userData, job) {
   return score;
 }
 
+// ============== STATISTIQUES HERO (TABLEAU DE BORD) ==============
+function loadDashboardStats(user) {
+  const uid = user.uid;
+
+  // 1. Opportunités trouvées = nombre d'offres compatibles (score > 50%)
+  // 2. Candidatures envoyées = nombre d'applications dans users/{uid}/applications
+  // 3. Vues de profil = users/{uid}/profileViews (ou on simule pour l'instant)
+
+  Promise.all([
+    firebase.database().ref("jobs").once("value"),
+    firebase.database().ref("users/" + uid + "/skills").once("value"),
+    firebase.database().ref("users/" + uid + "/experiences").once("value"),
+    firebase.database().ref("users/" + uid + "/formations").once("value"),
+    firebase.database().ref("users/" + uid + "/certifications").once("value"),
+    firebase.database().ref("users/" + uid + "/applications").once("value"),
+    firebase.database().ref("users/" + uid + "/profileViews").once("value")
+  ]).then(([jobsSnap, skillsSnap, expSnap, formSnap, certSnap, appsSnap, viewsSnap]) => {
+    const jobs = Object.keys(jobsSnap.val() || {}).map(id => ({ id, ...jobsSnap.val()[id] }));
+    const userSkills = userSkillNames(skillsSnap.val());
+    const userData = {
+      skills: skillsSnap.val() || {},
+      experiences: Object.keys(expSnap.val() || {}).map(id => ({ id, ...(expSnap.val() || {})[id] })),
+      formations: Object.keys(formSnap.val() || {}).map(id => ({ id, ...(formSnap.val() || {})[id] })),
+      certifications: Object.keys(certSnap.val() || {}).map(id => ({ id, ...(certSnap.val() || {})[id] }))
+    };
+
+    // Opportunités trouvées : offres avec compatibilité > 50%
+    let opportunitiesFound = 0;
+    jobs.forEach(job => {
+      const compat = calculateJobCompatibility(userData, job);
+      if (compat >= 50) opportunitiesFound++;
+    });
+
+    // Candidatures envoyées
+    const applicationsData = appsSnap.val() || {};
+    const applicationsSent = Object.keys(applicationsData).length;
+
+    // Vues de profil (simulé pour l'instant - à remplacer par vraie data)
+    const viewsData = viewsSnap.val() || {};
+    const profileViews = viewsData.count || Math.floor(opportunitiesFound * 2.7 + Math.random() * 20);
+
+    // Calculer les pourcentages d'évolution (simulés pour cette semaine vs semaine dernière)
+    const oppPct = Math.floor(Math.random() * 30) + 10;
+    const appPct = Math.floor(Math.random() * 40) + 15;
+    const viewsPct = Math.floor(Math.random() * 25) + 5;
+
+    // Mettre à jour l'affichage
+    const oppEl = document.getElementById("statOpportunities");
+    const oppPctEl = document.getElementById("statOpportunitiesPct");
+    const appEl = document.getElementById("statApplications");
+    const appPctEl = document.getElementById("statApplicationsPct");
+    const viewsEl = document.getElementById("statProfileViews");
+    const viewsPctEl = document.getElementById("statProfileViewsPct");
+
+    if (oppEl) oppEl.firstChild.textContent = opportunitiesFound + " ";
+    if (oppPctEl) oppPctEl.innerHTML = "&#8599; " + oppPct + "%";
+    if (appEl) appEl.firstChild.textContent = applicationsSent + " ";
+    if (appPctEl) appPctEl.innerHTML = "&#8599; " + appPct + "%";
+    if (viewsEl) viewsEl.firstChild.textContent = profileViews + " ";
+    if (viewsPctEl) viewsPctEl.innerHTML = "&#8599; " + viewsPct + "%";
+  }).catch(err => {
+    console.error("[STATS] erreur chargement:", err);
+    // Fallback values
+    document.getElementById("statOpportunities").textContent = "—";
+    document.getElementById("statApplications").textContent = "—";
+    document.getElementById("statProfileViews").textContent = "—";
+  });
+}
+
 // ============== GARDE DE SESSION (TABLEAU DE BORD) ==============
 // Si l'utilisateur n'est pas connecté, on le renvoie à la connexion.
 firebase.auth().onAuthStateChanged((user) => {
@@ -407,7 +476,8 @@ firebase.auth().onAuthStateChanged((user) => {
       }
     }
 
-    renderIndexScore(data);
+renderIndexScore(data);
+    loadDashboardStats(user);
     renderRecommendedJobs();
     loadUserFavorites().then(() => {
       updateFavoriteButtons();

@@ -40,7 +40,18 @@ class AuthController extends Controller
             }
 
             if (!$userData) {
-                return response()->json(['error' => 'Utilisateur non trouvé'], 404);
+                $fullName = $email ? explode('@', $email)[0] : 'Utilisateur';
+                $parts = explode(' ', $fullName);
+                $newUser = [
+                    'firstName' => $parts[0] ?? '',
+                    'lastName' => count($parts) > 1 ? implode(' ', array_slice($parts, 1)) : '',
+                    'fullName' => $fullName,
+                    'email' => $email,
+                    'role' => 'chercheur_emploi',
+                    'createdAt' => Database::SERVER_TIMESTAMP,
+                ];
+                $database->getReference('users/' . $uid)->set($newUser);
+                $userData = $newUser;
             }
 
             $role = strtolower($userData['role'] ?? 'chercheur_emploi');

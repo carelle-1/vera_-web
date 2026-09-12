@@ -774,3 +774,30 @@ document.getElementById("usersList").addEventListener("click", (e) => {
 
 // ============== INIT ==============
 loadUsersFromFirebase();
+
+// Handle ?recipient=admin query parameter to auto-open admin conversation
+setTimeout(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const recipient = urlParams.get("recipient");
+  if (recipient === "admin") {
+    // Switch to admin tab
+    const adminTab = document.querySelector(".tab[data-filter='admin']");
+    if (adminTab) {
+      adminTab.click();
+    }
+    // Wait for users to load, then select first admin
+    const checkAdminUser = setInterval(() => {
+      const adminUser = allUsers.find(u => u.type === "admin");
+      if (adminUser) {
+        clearInterval(checkAdminUser);
+        activeUserId = adminUser.id;
+        updateChatHeader(adminUser);
+        loadConversationMessages(adminUser.id);
+        renderUsersList();
+        // Highlight the admin user in the list
+        const adminItem = document.querySelector(`.conv-item[data-id="${adminUser.id}"]`);
+        if (adminItem) adminItem.classList.add("active");
+      }
+    }, 500);
+  }
+}, 1000);

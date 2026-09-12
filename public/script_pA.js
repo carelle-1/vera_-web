@@ -96,6 +96,11 @@ function saveProfileChanges() {
     }
   });
 
+  // Also save firstName extracted from fullName for header greeting
+  if (updates.fullName) {
+    updates.firstName = updates.fullName.split(" ")[0];
+  }
+
   const btn = document.getElementById("editProfileBtn");
   btn.textContent = "Enregistrement...";
   btn.disabled = true;

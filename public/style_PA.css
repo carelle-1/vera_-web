@@ -174,7 +174,7 @@ select{font-family:inherit;}
   background:#14a55d;border:1px solid #14a55f;color:#ffffff;
   padding:9px 15px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;
 }
-.btn-outline:hover{background:var(--bg);}
+.btn-outline:hover{    background: #03A9F4;border: none;}
 .btn-outline.full{width:100%;color: #fff;background: linear-gradient(45deg, #00BCD4, #15a661);}
 
 /* PROFILE INFO */

@@ -540,17 +540,55 @@ function sendMessage() {
             type: "text"
           };
 
+          const previousStep = interviewStep;
           if (data.interviewStep !== undefined) {
             interviewStep = data.interviewStep;
           }
 
-          return saveMessageToFirebase(recipientId, replyData).then(() => replyData);
+          // Pass data.nextQuestionText through the chain
+          return saveMessageToFirebase(recipientId, replyData).then(() => ({ 
+            replyData, 
+            previousStep,
+            nextQuestionText: data.nextQuestionText 
+          }));
         }
         throw new Error("Réponse VERA vide");
       })
-      .then(replyData => {
-        if (replyData) {
-          appendVeraMessageToChat(replyData);
+      .then(result => {
+        if (result) {
+          appendVeraMessageToChat(result.replyData);
+          
+          // If interview step advanced, show "Question suivante" button instead of auto-displaying
+          if (interviewMode && result.previousStep !== undefined && interviewStep > result.previousStep) {
+            const nextQuestionText = result.nextQuestionText;
+            
+            if (nextQuestionText) {
+              setTimeout(() => {
+                const btnHtml = `
+                  <div class="msg-row vera" id="nextQuestionBtnRow">
+                    <div class="msg-avatar-sm"><img src="/image/1.png" alt="" style="width:40px;height:40px;object-fit:contain;"></div>
+                    <div class="msg-bubble" style="background:#86efac;color:#0f1730;border-color:#22c55e;text-align:center;">
+                      <button class="btn-primary" id="nextQuestionBtn" style="margin-top:8px;padding:12px 24px;font-size:14px;background:#03A9F4;border-color:#03A9F4;">
+                        Question suivante ➤
+                      </button>
+                    </div>
+                  </div>
+                `;
+                const container = document.getElementById("chatMessages");
+                container.insertAdjacentHTML("beforeend", btnHtml);
+                container.scrollTop = container.scrollHeight;
+                
+                document.getElementById("nextQuestionBtn").addEventListener("click", () => {
+                  const btnRow = document.getElementById("nextQuestionBtnRow");
+                  if (btnRow) btnRow.remove();
+                  
+                  const nextQData = { text: "❓ Question suivante : " + nextQuestionText, type: "text" };
+                  appendVeraMessageToChat(nextQData);
+                  saveMessageToFirebase(recipientId, nextQData).catch(() => {});
+                });
+              }, 500);
+            }
+          }
         }
       })
       .catch(err => {
@@ -703,9 +741,43 @@ setTimeout(() => {
   const isEmpty = container.querySelectorAll(".msg-row").length === 0;
   const noDivider = !container.querySelector(".day-divider");
   if (isEmpty && noDivider && interviewMode) {
-    const q = interviewQuestions[interviewStep] || { question: "Parlez-moi de vous." };
-    const replyData = { text: q.question, type: "text" };
-    appendVeraMessageToChat(replyData);
-    saveMessageToFirebase(recipientId, replyData).catch(() => {});
+    // Show welcome message first
+    const welcomeMsg = `Bienvenue dans votre entretien d'entraînement.
+
+Cet entretien est une simulation destinée à vous aider à vous préparer aux vrais entretiens d'embauche. Il ne s'agit pas d'un entretien réel avec une entreprise et vos réponses n'engagent aucun recruteur.
+
+Répondez naturellement aux questions comme si vous étiez face à un recruteur. À la fin, vous pourrez évaluer votre prestation et identifier les points à améliorer.
+
+Commençons !`;
+    
+    const welcomeData = { text: welcomeMsg, type: "text" };
+    appendVeraMessageToChat(welcomeData);
+    saveMessageToFirebase(recipientId, welcomeData).catch(() => {});
+    
+    // Add a "Commencer l'entretien" button after the welcome message
+    setTimeout(() => {
+      const startBtnHtml = `
+        <div class="msg-row vera" id="interviewStartBtnRow">
+          <div class="msg-avatar-sm"><img src="/image/1.png" alt="" style="width:40px;height:40px;object-fit:contain;"></div>
+          <div class="msg-bubble" style="background:#86efac;color:#0f1730;border-color:#22c55e;text-align:center;">
+            <button class="btn-primary" id="startInterviewBtn" style="margin-top:8px;padding:12px 24px;font-size:14px;background:#03A9F4;border-color:#03A9F4;">
+              Commencer l'entretien
+            </button>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML("beforeend", startBtnHtml);
+      container.scrollTop = container.scrollHeight;
+      
+      document.getElementById("startInterviewBtn").addEventListener("click", () => {
+        const btnRow = document.getElementById("interviewStartBtnRow");
+        if (btnRow) btnRow.remove();
+        
+        const q = interviewQuestions[interviewStep] || { question: "Parlez-moi de vous." };
+        const replyData = { text: q.question, type: "text" };
+        appendVeraMessageToChat(replyData);
+        saveMessageToFirebase(recipientId, replyData).catch(() => {});
+      });
+    }, 500);
   }
 }, 1500);

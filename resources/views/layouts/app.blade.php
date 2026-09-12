@@ -38,8 +38,8 @@
         Candidatures
       </a>
       <a class="nav-item {{ request()->is('entretiens') ? 'active' : '' }}" href="/entretiens">
-        <img class="nav-icon" src="/image/user.png" alt="Entretiens">
-        Entretiens
+        <img class="nav-icon" src="/image/user.png" alt="Entretiens test">
+        Entretiens test
       </a>
       <a class="nav-item {{ request()->is('profil') ? 'active' : '' }}" href="/profil">
         <img class="nav-icon" src="/image/user.png" alt="Profil">
@@ -86,11 +86,13 @@
     </div> -->
 
     <div class="help">
-      <div class="help-icon"><img src="/image/3917604.png" alt="Besoin d'aide" style="width:100%;height:100%;object-fit:contain;"></div>
-      <div>
-        <div class="help-title">Besoin d'aide ?</div>
-        <div class="help-sub">Chattez avec notre support</div>
-      </div>
+      <a href="/messages?recipient=admin" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;width:100%;">
+        <div class="help-icon"><img src="/image/3917604.png" alt="Besoin d'aide" style="width:100%;height:100%;object-fit:contain;"></div>
+        <div>
+          <div class="help-title">Besoin d'aide ?</div>
+          <div class="help-sub">Chattez avec notre support</div>
+        </div>
+      </a>
     </div>
   </aside>
 
@@ -108,10 +110,10 @@
         <input type="text" placeholder="Rechercher un emploi, compétence, entreprise...">
       </div>
       <div class="top-actions">
-          <button class="icon-btn">
+          <a class="icon-btn" href="/notifications">
             <img src="/image/3917270.png" alt="" style="width:20px;height:20px;object-fit:contain;">
             <span class="badge" id="topNotifUnread">8</span>
-          </button>
+          </a>
           <div class="user">
             <div class="user-avatar-wrap">
               <img id="userAvatar" src="https://i.pravatar.cc/64?img=13" alt="avatar">

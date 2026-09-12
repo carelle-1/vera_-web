@@ -1,8 +1,11 @@
 firebase.auth().onAuthStateChanged((user) => {
   if (!user) return;
-  firebase.database().ref("users/" + user.uid).once("value").then((snapshot) => {
+
+  const ref = firebase.database().ref("users/" + user.uid);
+
+  ref.on("value", (snapshot) => {
     const data = snapshot.val() || {};
-    const firstName = data.firstName
+    const firstName = data.firstName || data.fullName
       || (user.displayName ? user.displayName.split(" ")[0] : "")
       || (user.email ? user.email.split("@")[0] : "");
     const h = new Date().getHours();

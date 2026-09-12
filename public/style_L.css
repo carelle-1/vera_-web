@@ -57,7 +57,7 @@ a{color:inherit;text-decoration:none;}
 .brand-name-img{height:38px;width:auto;object-fit:contain;margin-top:26px;}
 .brand-tag{font-size:11px;color:#03A9F4 !important;font-weight:500;}
 
-.brand-panel-content h1{font-size:28px;font-weight:800;line-height:1.25;margin-bottom:12px;}
+.brand-panel-content h1{font-size:24px;font-weight:800;line-height:1.25;margin-bottom:12px;}
 .brand-panel-content p{font-size:13.5px;color:rgba(255,255,255,0.9);line-height:1.5;margin-bottom:20px;}
 
 .feature-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
@@ -97,8 +97,8 @@ a{color:inherit;text-decoration:none;}
 /* ================= FORM PANEL ================= */
 .form-panel{
   position:relative;
-  flex:1;display:flex;align-items:center;justify-content:flex-start;
-  padding:24px 40px 24px 60px;overflow-y:auto;
+  flex:1;display:flex;align-items:flex-start;justify-content:flex-start;
+  padding:32px 40px 24px 60px;overflow-y:auto;
 }
 .form-wrap{width:100%;max-width:420px;position:relative;margin-left:120px;}
 
@@ -210,14 +210,39 @@ a{color:inherit;text-decoration:none;}
 .btn-submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 16px rgba(33,196,100,0.28);background:#1cb85a;}
 .btn-submit:active:not(:disabled){transform:translateY(0);}
 .btn-submit:disabled{opacity:0.55;cursor:not-allowed;box-shadow:none;}
-.btn-submit.loading{opacity:0.75;pointer-events:none;}
-.btn-state-icon{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:18px;height:18px;font-size:14px;line-height:1;
-}
+  .btn-submit.loading{opacity:0.75;pointer-events:none;}
+  #signupSubmitBtn:disabled::after{
+    content: " (validez le reCAPTCHA)";
+    font-size: 10px;
+    font-weight: 500;
+    opacity: 0.8;
+  }
+  .btn-state-icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:18px;height:18px;font-size:14px;line-height:1;
+  }
+
+  .verify-actions{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+  .btn-verify-send,.btn-verify-check{
+    background:var(--sky);color:#fff;border:none;
+    padding:8px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;
+    box-shadow:0 2px 8px rgba(14,165,233,0.2);transition:transform .12s ease, box-shadow .12s ease, background .15s ease, opacity .15s ease;
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .btn-verify-send:hover:not(:disabled),.btn-verify-check:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 12px rgba(14,165,233,0.3);background:#0284c7;}
+  .btn-verify-send:active:not(:disabled),.btn-verify-check:active:not(:disabled){transform:translateY(0);}
+  .btn-verify-send:disabled,.btn-verify-check:disabled{opacity:0.55;cursor:not-allowed;box-shadow:none;}
 
 .switch-line{text-align:center;font-size:11.5px;color:var(--muted);margin-top:4px;}
-.link-switch{background:none;border:none;color:var(--sky-dark);font-weight:700;font-size:11.5px;cursor:pointer;}
+  .link-switch{background:none;border:none;color:var(--sky-dark);font-weight:700;font-size:11.5px;cursor:pointer;}
+
+  .store-badges{display:flex;align-items:center;justify-content:center;gap:48px;margin-top:12px;}
+  .store-badge{display:block;height:40px;width:auto;border-radius:12px;object-fit:contain;pointer-events:none;}
+  .store-badge-apple{filter:grayscale(100%);opacity:0.7;}
+  .store-badge-google{filter:none;opacity:1;}
+  .store-badge-link{display:inline-flex;align-items:center;justify-content:center;border-radius:12px;overflow:hidden;text-decoration:none;}
+  .store-badge-link:hover .store-badge-google{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+  .store-badge-link:hover{text-decoration:none;}
 
 /* SUCCESS BOX */
 .success-box{

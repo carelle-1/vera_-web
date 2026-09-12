@@ -8,7 +8,26 @@
 <title>VERA - Connexion / Inscription</title>
 <link rel="stylesheet" href="/style_L.css?v=10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    window.onRecaptchaSuccess = function(token) {
+      var btn = document.getElementById('signupSubmitBtn');
+      var errorEl = document.getElementById('recaptchaError');
+      var tokenInput = document.getElementById('recaptchaToken');
+      if (btn) btn.disabled = false;
+      if (errorEl) errorEl.textContent = '';
+      if (tokenInput) tokenInput.value = token;
+    };
+    window.onRecaptchaExpired = function() {
+      var btn = document.getElementById('signupSubmitBtn');
+      var errorEl = document.getElementById('recaptchaError');
+      if (btn) btn.disabled = true;
+      if (errorEl) errorEl.textContent = 'reCAPTCHA expiré. Veuillez réessayer.';
+    };
+  </script>
+  @if(config('services.recaptcha.enabled'))
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  @endif
   </head>
 <body>
 
@@ -25,13 +44,13 @@
         </div>
       </div> -->
 
-      <h1>Ton avenir commence ici.</h1>
-      <p>VERA analyse ton profil et trouve les opportunités adaptées à ton profil pour booster ta carrière 24h/24, 7j/7 .</p>
+      <h1 data-home-text="hero_title">Trouvez votre prochaine opportunité.</h1>
+      <p data-home-text="hero_subtitle">VERA analyse ton profil et trouve les opportunités adaptées à ton profil pour booster ta carrière 24h/24, 7j/7 .</p>
 
       <ul class="feature-list">
-        <li><span class="feature-icon"><span class="feature-glyph" style="-webkit-mask-image:url(/image/mission.png);mask-image:url(/image/mission.png);"></span></span> Des offres qui correspondent vraiment à ton profil</li>
-        <li><span class="feature-icon"><span class="feature-glyph" style="-webkit-mask-image:url(/image/3914260.png);mask-image:url(/image/3914260.png);"></span></span> Les offres d'emploi boostées automatiquement par l'IA</li>
-        <li><span class="feature-icon"><span class="feature-glyph" style="-webkit-mask-image:url(/image/3916740.png);mask-image:url(/image/3916740.png);"></span></span> Un coaching carrière personnalisé</li>
+        <li><span class="feature-icon"><span class="feature-glyph" style="-webkit-mask-image:url(/image/mission.png);mask-image:url(/image/mission.png);"></span></span> <span data-home-text="feature_1">Des offres qui correspondent vraiment à ton profil</span></li>
+        <li><span class="feature-icon"><span class="feature-glyph" style="-webkit-mask-image:url(/image/3914260.png);mask-image:url(/image/3914260.png);"></span></span> <span data-home-text="feature_2">Les offres d'emploi boostées automatiquement par l'IA</span></li>
+        <li><span class="feature-icon"><span class="feature-glyph" style="-webkit-mask-image:url(/image/3916740.png);mask-image:url(/image/3916740.png);"></span></span> <span data-home-text="feature_3">Un coaching carrière personnalisé</span></li>
       </ul>
 
       <div class="stats-row">
@@ -61,7 +80,7 @@
 
       <!-- LOGIN FORM -->
       <form class="auth-form active" id="loginForm" novalidate>
-        <h2>Content de te revoir</h2>
+        <!-- <h2>Content de te revoir</h2> -->
         <p class="form-sub">Connecte-toi pour retrouver tes opportunités.</p>
 
         <div class="social-row">
@@ -102,6 +121,15 @@
         <button type="submit" class="btn-submit">Se connecter</button>
 
         <p class="switch-line">Pas encore de compte ? <button type="button" class="link-switch" data-form="signup">Créer un compte</button></p>
+
+        <div class="store-badges">
+          <a href="https://play.google.com/store/apps/details?id=veras.com&pcampaignid=web_share" target="_blank" rel="noopener" class="store-badge-link">
+            <img src="{{ asset('image/google-play.png') }}" alt="Télécharger sur Google Play" class="store-badge store-badge-google">
+          </a>
+          <a href="https://apps.apple.com/" target="_blank" rel="noopener" class="store-badge-link">
+            <img src="{{ asset('image/App-Store.png') }}" alt="Télécharger sur l'App Store" class="store-badge store-badge-apple">
+          </a>
+        </div>
       </form>
 
       <!-- SIGNUP FORM -->
@@ -204,13 +232,20 @@
               </div>
             </div>
 
-            <label class="remember terms">
-           <input type="checkbox" id="termsCheckbox">
-           J'accepte les <a href="#">Conditions d'utilisation</a> et la <a href="#">Politique de confidentialité</a>
-         </label>
-         <span class="field-error" id="termsError"></span>
+<label class="remember terms">
+            <input type="checkbox" id="termsCheckbox">
+            J'accepte les <a href="#">Conditions d'utilisation</a> et la <a href="#">Politique de confidentialité</a>
+          </label>
+          <span class="field-error" id="termsError"></span>
 
-        <button type="submit" class="btn-submit" id="signupSubmitBtn">
+          <div class="field-group">
+            <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}" data-callback="onRecaptchaSuccess" data-expired-callback="onRecaptchaExpired"></div>
+            <span class="field-error" id="recaptchaError"></span>
+          </div>
+
+          <input type="hidden" id="recaptchaToken" name="g-recaptcha-response">
+
+          <button type="button" class="btn-submit" id="signupSubmitBtn" disabled>
           <span class="btn-state-icon" id="signupBtnIcon">—</span>
           <span class="btn-label">Créer mon compte</span>
         </button>
@@ -267,36 +302,230 @@
 
 <script src="script_L.js?v=2"></script>
 <script>
-  fetch('/login-stats').then(function(r){return r.json();}).then(function(data){
-    var m = document.getElementById('statMembers');
-    var s = document.getElementById('statSatisfaction');
-    if(m) m.textContent = data.members >= 1000 ? Math.round(data.members/1000) + 'K+' : data.members + '+';
-    if(s) s.textContent = data.satisfaction + '%';
-  }).catch(function(){
-    var m = document.getElementById('statMembers'); if(m) m.textContent = '120K+';
-    var s = document.getElementById('statSatisfaction'); if(s) s.textContent = '92%';
-  });
+  // Affiche les valeurs par défaut immédiatement
+    (function() {
+      var m = document.getElementById('statMembers');
+      var s = document.getElementById('statSatisfaction');
+      var c = document.getElementById('statCompanies');
+      if(m) m.textContent = '—';
+      if(s) s.textContent = '—';
+      if(c) c.textContent = '—';
+    })();
 
-  // Nombre réel de comptes entreprise présents dans Firebase (users avec role = entreprise)
-  function countCompanyAccounts() {
-    var c = document.getElementById('statCompanies');
-    if (!c || typeof firebase === 'undefined' || !firebase.database) return;
-    firebase.database().ref('users').once('value').then(function(snapshot){
-      var data = snapshot.val() || {};
-      var count = 0;
-      Object.keys(data).forEach(function(id){
-        if ((data[id].role || '').toString().toLowerCase() === 'entreprise') count++;
+  function formatStat(value) {
+    return value >= 1000 ? Math.round(value / 1000) + 'K+' : value + '+';
+  }
+
+  function loadRealtimeStats() {
+    if (typeof firebase === 'undefined' || !firebase.database) return;
+
+    Promise.all([
+      firebase.database().ref('users').once('value'),
+      firebase.database().ref('ratings').once('value')
+    ]).then(function(snapshots) {
+      var users = snapshots[0].val() || {};
+      var ratings = snapshots[1].val() || {};
+      var members = Object.keys(users).length;
+      var companies = Object.keys(users).reduce(function(total, id) {
+        return total + ((users[id].role || '').toString().toLowerCase() === 'entreprise' ? 1 : 0);
+      }, 0);
+      var scores = Object.keys(ratings).map(function(id) {
+        return Number(ratings[id].score);
+      }).filter(function(score) {
+        return Number.isFinite(score);
       });
-      c.textContent = count + '+';
-    }).catch(function(){
-      if (c && c.textContent === '0') c.textContent = '8 500+';
+      var satisfaction = null;
+      if (scores.length) {
+        var average = scores.reduce(function(sum, score) { return sum + score; }, 0) / scores.length;
+        satisfaction = Math.round(average <= 5 ? average * 20 : average);
+      }
+
+      document.getElementById('statMembers').textContent = formatStat(members);
+      document.getElementById('statCompanies').textContent = formatStat(companies);
+      document.getElementById('statSatisfaction').textContent = satisfaction === null ? '—' : satisfaction + '%';
+    }).catch(function(error) {
+      console.warn('Lecture des statistiques Firebase impossible :', error);
     });
   }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', countCompanyAccounts);
-  } else {
-    countCompanyAccounts();
-  }
+
+  loadRealtimeStats();
+
+  fetch('/api/home-texts', { signal: AbortSignal.timeout(5000) })
+    .then(function(r){return r.json();})
+    .then(function(texts){
+      Object.keys(texts || {}).forEach(function(key){
+        var els = document.querySelectorAll('[data-home-text="' + key + '"]');
+        els.forEach(function(el){ el.textContent = texts[key]; });
+      });
+    })
+    .catch(function(err){
+      console.warn('Home texts fallback active:', err);
+    });
+
+  // Nombre réel de comptes entreprise présents dans Firebase (users avec role = entreprise)
+  // Signup form validation with reCAPTCHA
+  (function() {
+    var signupBtn = document.getElementById('signupSubmitBtn');
+    var signupForm = document.getElementById('signupForm');
+    var recaptchaError = document.getElementById('recaptchaError');
+
+    // Prevent any native form submission
+    signupForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return false;
+    });
+
+    // Prevent Enter key from submitting the form
+    ['signupFirstName', 'signupLastName', 'signupEmail', 'signupPassword', 'signupConfirm'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        });
+      }
+    });
+
+    function validateForm() {
+      var firstName = document.getElementById('signupFirstName').value.trim();
+      var lastName = document.getElementById('signupLastName').value.trim();
+      var email = document.getElementById('signupEmail').value.trim();
+      var password = document.getElementById('signupPassword').value;
+      var confirm = document.getElementById('signupConfirm').value;
+      var terms = document.getElementById('termsCheckbox').checked;
+
+      if (!firstName) return 'Veuillez entrer votre prénom';
+      if (!lastName) return 'Veuillez entrer votre nom';
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Email invalide';
+      if (password.length < 6) return 'Mot de passe trop court (min 6 caractères)';
+      if (password !== confirm) return 'Les mots de passe ne correspondent pas';
+      if (!terms) return 'Vous devez accepter les conditions';
+      return null;
+    }
+
+    // Prevent any native form submission
+    signupForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    // Intercept submit button click
+    signupBtn.addEventListener('click', function(e) {
+      // If reCAPTCHA not validated, button is disabled and click won't reach here
+      // But we add a check for safety
+      if (this.disabled) {
+        recaptchaError.textContent = 'Veuillez valider le reCAPTCHA.';
+        return;
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      var validationError = validateForm();
+      if (validationError) {
+        recaptchaError.textContent = validationError;
+        return;
+      }
+
+      recaptchaError.textContent = '';
+
+      // Show loading state
+      var btn = signupForm.querySelector('.btn-submit');
+      var original = btn.textContent;
+      btn.textContent = "Création du compte...";
+      btn.classList.add("loading");
+
+      // Get form data
+      var firstName = document.getElementById('signupFirstName').value.trim();
+      var lastName = document.getElementById('signupLastName').value.trim();
+      var email = document.getElementById('signupEmail').value.trim();
+      var password = document.getElementById('signupPassword').value;
+      var isCompany = document.getElementById('signupIsCompany') ? document.getElementById('signupIsCompany').getAttribute('aria-checked') === 'true' : false;
+      var companyDocInput = document.getElementById('signupCompanyDoc');
+      var role = isCompany ? 'entreprise' : 'chercheur_emploi';
+      var fullName = (firstName + ' ' + lastName).trim();
+
+      // Create Firebase user
+      firebase.auth().createUserWithEmailAndPassword(email, password)
+          .then(function(userCredential) {
+            var user = userCredential.user;
+
+            var userData = {
+              firstName: firstName,
+              lastName: lastName,
+              fullName: fullName,
+              email: email,
+              role: role,
+              createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            if (isCompany && companyDocInput && companyDocInput.files.length > 0) {
+              var file = companyDocInput.files[0];
+              return user.getIdToken().then(function(idToken) {
+                return uploadCompanyDocToCloudinary(file, idToken).then(function(cloudinaryResult) {
+                  if (cloudinaryResult && cloudinaryResult.success) {
+                    userData.companyDocUrl = cloudinaryResult.url || '';
+                    userData.companyDocName = cloudinaryResult.name || file.name;
+                    userData.companyDocPublicId = cloudinaryResult.publicId || '';
+                  } else {
+                    userData.companyDocUrl = '';
+                    userData.companyDocName = file.name;
+                  }
+                  return firebase.database().ref('users/' + user.uid).set(userData);
+                });
+              });
+            }
+
+            return firebase.database().ref('users/' + user.uid).set(userData);
+          })
+          .then(function() {
+            if (firebase.auth().currentUser) {
+              firebase.auth().currentUser.updateProfile({ displayName: fullName });
+            }
+            btn.textContent = original;
+            btn.classList.remove('loading');
+            window.location.href = isCompany ? '/entreprise' : '/tableau-de-bord';
+          })
+          .catch(function(error) {
+            btn.textContent = original;
+            btn.classList.remove('loading');
+            recaptchaError.textContent = firebaseAuthError(error);
+          });
+    });
+
+    // Helper: upload company doc to Cloudinary
+    function getCsrfToken() {
+      var meta = document.querySelector('meta[name="csrf-token"]');
+      return meta ? meta.getAttribute('content') : '';
+    }
+    function uploadCompanyDocToCloudinary(file, idToken) {
+      var formData = new FormData();
+      formData.append('file', file);
+      formData.append('_token', getCsrfToken());
+      return fetch('/upload-company-doc', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': getCsrfToken(),
+          'Authorization': 'Bearer ' + (idToken || '')
+        },
+        body: formData
+      }).then(function(response) {
+        return response.json().then(function(data) {
+          if (!response.ok) {
+            var error = new Error(data.message || 'Erreur upload Cloudinary');
+            error.response = response;
+            error.data = data;
+            throw error;
+          }
+          return data;
+        });
+      });
+    }
+  })();
 </script>
 </body>
 </html>

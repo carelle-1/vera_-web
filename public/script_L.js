@@ -20,6 +20,10 @@ function switchTo(formName) {
   });
   indicator.style.transform = formName === "signup" ? "translateX(100%)" : "translateX(0)";
   successBox.classList.remove("active");
+  const formPanel = document.querySelector(".form-panel");
+  if (formPanel) {
+    formPanel.style.overflowY = formName === "login" ? "hidden" : "auto";
+  }
   if (formName === "signup") {
     setTimeout(updateSignupButtonState, 0);
   }
@@ -338,175 +342,6 @@ if (termsCheckbox) termsCheckbox.addEventListener("change", updateSignupButtonSt
 if (companyDocInput) companyDocInput.addEventListener("change", updateSignupButtonState);
 if (signupIsCompany) signupIsCompany.addEventListener("click", () => setTimeout(updateSignupButtonState, 50));
 
-const signupForm = document.getElementById("signupForm");
-signupForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  let valid = true;
-
-  const firstName = document.getElementById("signupFirstName").value.trim();
-  const lastName = document.getElementById("signupLastName").value.trim();
-  const email = document.getElementById("signupEmail").value.trim();
-  const password = document.getElementById("signupPassword").value;
-  const confirm = document.getElementById("signupConfirm").value;
-  const terms = document.getElementById("termsCheckbox").checked;
-  const isCompany = signupIsCompany ? signupIsCompany.getAttribute("aria-checked") === "true" : false;
-  const companyDocInput = document.getElementById("signupCompanyDoc");
-  const companyDocError = document.getElementById("signupCompanyDocError");
-
-  if (!firstName) {
-    setError("signupFirstName", "signupFirstNameError", "Requis.");
-    valid = false;
-  } else {
-    setError("signupFirstName", "signupFirstNameError", "");
-  }
-
-  if (!lastName) {
-    setError("signupLastName", "signupLastNameError", "Requis.");
-    valid = false;
-  } else {
-    setError("signupLastName", "signupLastNameError", "");
-  }
-
-  if (!email) {
-    setError("signupEmail", "signupEmailError", "L'adresse email est requise.");
-    valid = false;
-  } else if (!isValidEmail(email)) {
-    setError("signupEmail", "signupEmailError", "Adresse email invalide.");
-    valid = false;
-  } else {
-    setError("signupEmail", "signupEmailError", "");
-  }
-
-  if (!password) {
-    setError("signupPassword", "signupPasswordError", "Le mot de passe est requis.");
-    valid = false;
-  } else if (password.length < 6) {
-    setError("signupPassword", "signupPasswordError", "6 caractères minimum.");
-    valid = false;
-  } else {
-    setError("signupPassword", "signupPasswordError", "");
-  }
-
-  if (!confirm) {
-    setError("signupConfirm", "signupConfirmError", "Merci de confirmer le mot de passe.");
-    valid = false;
-  } else if (confirm !== password) {
-    setError("signupConfirm", "signupConfirmError", "Les mots de passe ne correspondent pas.");
-    valid = false;
-  } else {
-    setError("signupConfirm", "signupConfirmError", "");
-  }
-
-  if (isCompany && companyDocInput && companyDocInput.files.length === 0) {
-    if (companyDocError) companyDocError.textContent = "Le document d'entreprise est requis.";
-    valid = false;
-  } else {
-    if (companyDocError) companyDocError.textContent = "";
-  }
-
-  const termsError = document.getElementById("termsError");
-  if (!terms) {
-    termsError.textContent = "Tu dois accepter les conditions pour continuer.";
-    valid = false;
-  } else {
-    termsError.textContent = "";
-  }
-
-  if (!valid) return;
-
-  const btn = signupForm.querySelector(".btn-submit");
-  const original = btn.textContent;
-  btn.textContent = "Création du compte...";
-  btn.classList.add("loading");
-
-  const role = isCompany ? "entreprise" : "chercheur_emploi";
-  let user = null;
-  let fullName = "";
-
-  function getCsrfToken() {
-    const meta = document.querySelector('meta[name="csrf-token"]');
-    return meta ? meta.getAttribute('content') : '';
-  }
-
-  function uploadCompanyDocToCloudinary(file, idToken) {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('_token', getCsrfToken());
-
-    return fetch('/upload-company-doc', {
-      method: 'POST',
-      headers: {
-        'X-CSRF-TOKEN': getCsrfToken(),
-        'Authorization': 'Bearer ' + (idToken || '')
-      },
-      body: formData
-    }).then(function(response) {
-      return response.json().then(function(data) {
-        if (!response.ok) {
-          var error = new Error(data.message || 'Erreur upload Cloudinary');
-          error.response = response;
-          error.data = data;
-          throw error;
-        }
-        return data;
-      });
-    });
-  }
-
-  firebase.auth().createUserWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      user = userCredential.user;
-      fullName = (firstName + " " + lastName).trim();
-
-      const userData = {
-        firstName: firstName,
-        lastName: lastName,
-        fullName: fullName,
-        email: email,
-        role: role,
-        createdAt: firebase.database.ServerValue.TIMESTAMP
-      };
-
-      if (isCompany && companyDocInput && companyDocInput.files.length > 0) {
-        const file = companyDocInput.files[0];
-        return user.getIdToken().then((idToken) => {
-          return uploadCompanyDocToCloudinary(file, idToken).then((cloudinaryResult) => {
-            if (cloudinaryResult && cloudinaryResult.success) {
-              userData.companyDocUrl = cloudinaryResult.url || '';
-              userData.companyDocName = cloudinaryResult.name || file.name;
-              userData.companyDocPublicId = cloudinaryResult.publicId || '';
-              if (companyDocFileName) {
-                companyDocFileName.textContent = cloudinaryResult.name || file.name;
-              }
-            } else {
-              userData.companyDocUrl = '';
-              userData.companyDocName = file.name;
-              if (companyDocFileName) {
-                companyDocFileName.textContent = file.name;
-              }
-            }
-            return firebase.database().ref("users/" + user.uid).set(userData);
-          });
-        });
-      }
-
-      return firebase.database().ref("users/" + user.uid).set(userData);
-    })
-    .then(() => {
-      if (user) {
-        user.updateProfile({ displayName: fullName });
-      }
-      btn.textContent = original;
-      btn.classList.remove("loading");
-      window.location.href = isCompany ? "/entreprise" : "/tableau-de-bord";
-    })
-    .catch((error) => {
-      btn.textContent = original;
-      btn.classList.remove("loading");
-      setError("signupEmail", "signupEmailError", firebaseAuthError(error));
-    });
-});
-
 // ============== FORGOT PASSWORD ==============
 const forgotLink = document.getElementById("forgotLink");
 if (forgotLink) {
@@ -628,3 +463,11 @@ document.querySelectorAll(".social-btn").forEach((btn) => {
     btn.addEventListener("click", signInWithGoogle);
   }
 });
+
+(function() {
+  const formPanel = document.querySelector(".form-panel");
+  const activeTab = document.querySelector(".auth-tab.active");
+  if (formPanel && activeTab) {
+    formPanel.style.overflowY = activeTab.dataset.form === "login" ? "hidden" : "auto";
+  }
+})();

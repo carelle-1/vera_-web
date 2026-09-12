@@ -38,8 +38,8 @@
         Candidatures
       </a>
       <a class="nav-item" href="/entretiens">
-        <img class="nav-icon" src="/image/user.png" alt="Entretiens">
-        Entretiens
+        <img class="nav-icon" src="/image/user.png" alt="Entretiens test">
+        Entretiens test
       </a>
       <a class="nav-item" href="/profil">
         <img class="nav-icon" src="/image/user.png" alt="Profil">
@@ -82,11 +82,13 @@
     </div> -->
 
     <div class="help">
-      <div class="help-icon"><img src="/image/3917604.png" alt="Besoin d'aide" style="width:100%;height:100%;object-fit:contain;"></div>
-      <div>
-        <div class="help-title">Besoin d'aide ?</div>
-        <div class="help-sub">Chattez avec notre support</div>
-      </div>
+      <a href="/messages?recipient=admin" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;width:100%;">
+        <div class="help-icon"><img src="/image/3917604.png" alt="Besoin d'aide" style="width:100%;height:100%;object-fit:contain;"></div>
+        <div>
+          <div class="help-title">Besoin d'aide ?</div>
+          <div class="help-sub">Chattez avec notre support</div>
+        </div>
+      </a>
     </div>
   </aside>
 
@@ -104,10 +106,10 @@
         <input type="text" placeholder="Rechercher un emploi, compétence, entreprise...">
       </div>
       <div class="top-actions">
-          <button class="icon-btn">
+          <a class="icon-btn" href="/notifications">
             <img src="/image/3917270.png" alt="" style="width:20px;height:20px;object-fit:contain;">
             <span class="badge" id="topNotifUnread">8</span>
-          </button>
+          </a>
           <!-- <div class="lang"><img src="/image/3917561.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;"> FR </div> -->
           <div class="user">
             <img id="userAvatar" src="https://i.pravatar.cc/64?img=13" alt="avatar">
@@ -138,7 +140,7 @@
                 <div class="stat-icon blue"><img src="/image/3916670.png" alt="Opportunités"></div>
                 <div>
                   <div class="stat-label">Opportunités trouvées</div>
-                  <div class="stat-value">128 <span class="up">&#8599; 23%</span></div>
+                  <div class="stat-value" id="statOpportunities">— <span class="up" id="statOpportunitiesPct"></span></div>
                   <div class="stat-period">Cette semaine</div>
                 </div>
               </div>
@@ -146,7 +148,7 @@
                 <div class="stat-icon teal"><img src="/image/3917512.png" alt="Candidatures"></div>
                 <div>
                   <div class="stat-label">Candidatures envoyées</div>
-                  <div class="stat-value">16 <span class="up">&#8599; 40%</span></div>
+                  <div class="stat-value" id="statApplications">— <span class="up" id="statApplicationsPct"></span></div>
                   <div class="stat-period">Cette semaine</div>
                 </div>
               </div>
@@ -154,7 +156,7 @@
                 <div class="stat-icon purple"><img src="/image/oeil.png" alt="Vues"></div>
                 <div>
                   <div class="stat-label">Vues de ton profil</div>
-                  <div class="stat-value">342 <span class="up">&#8599; 18%</span></div>
+                  <div class="stat-value" id="statProfileViews">— <span class="up" id="statProfileViewsPct"></span></div>
                   <div class="stat-period">Cette semaine</div>
                 </div>
               </div>
@@ -162,7 +164,7 @@
           </div>
           <div class="hero-robot" aria-hidden="true">
             <img src="/image/1.png" alt="" style="width:100%;height:100%;object-fit:contain;">
-            <div class="robot-data-stream">
+            <div class="robot-loading-dots" aria-hidden="true">
               <span></span>
               <span></span>
               <span></span>
