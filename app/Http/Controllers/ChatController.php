@@ -101,6 +101,14 @@ class ChatController extends Controller
             }
 
             $reply = $this->getVeraReply($message);
+        } elseif ($recipientId === 'admin') {
+            // Broadcast message to all admin users
+            $this->broadcastToAllAdmins($uid, $message);
+
+            return response()->json([
+                'success' => true,
+                'reply' => 'Message envoyé à l\'équipe d\'administration. Nous vous répondrons dans les plus brefs délais.',
+            ]);
         } else {
             $reply = "Merci pour votre message. Un administrateur vous répondra bientôt.";
         }
@@ -1338,6 +1346,66 @@ class ChatController extends Controller
         return "Je suis désolé, je n'arrive pas à répondre pour le moment. "
             . "Veuillez réessayer dans quelques instants. "
             . "En attendant, je peux vous aider sur vos candidatures, votre carrière ou vos entretiens.";
+    }
+
+    private function broadcastToAllAdmins(string $senderUid, string $message): void
+    {
+        try {
+            // Get all admin users from Firebase
+            $usersRef = firebase()->database()->getReference('users');
+            $snapshot = $usersRef->getValue();
+
+            if (!$snapshot) return;
+
+            $allUsers = $snapshot->getValue() ?? [];
+            $adminUids = [];
+
+            foreach ($allUsers as $uid => $userData) {
+                $role = strtolower((string) ($userData['role'] ?? $userData['jobTitle'] ?? ''));
+                if (str_contains($role, 'admin')) {
+                    $adminUids[] = $uid;
+                }
+            }
+
+            if (empty($adminUids)) return;
+
+            // Get sender info for the message
+            $senderRef = firebase()->database()->getReference('users/' . $senderUid);
+            $senderSnapshot = $senderRef->getValue();
+            $senderData = $senderSnapshot ? $senderSnapshot->getValue() : [];
+            $senderName = $senderData['fullName'] ?? $senderData['firstName'] ?? $senderData['email'] ?? 'Utilisateur';
+
+            // Create conversation ID for admin support (shared)
+            $conversationId = 'admin_support_' . $senderUid;
+
+            // Save message to each admin's conversation
+            foreach ($adminUids as $adminUid) {
+                $messageRef = firebase()->database()->getReference("messages/$conversationId")->push();
+                $messageData = [
+                    'id' => $messageRef->getKey(),
+                    'senderUid' => $senderUid,
+                    'senderName' => $senderName,
+                    'text' => $message,
+                    'type' => 'text',
+                    'timestamp' => time() * 1000,
+                    'read' => false,
+                ];
+                $messageRef->set($messageData);
+
+                // Update conversation metadata for this admin
+                firebase()->database()->getReference("conversations/$adminUid/admin_support")
+                    ->update([
+                        'lastMessage' => $message,
+                        'lastTimestamp' => time() * 1000,
+                        'recipientId' => 'admin_support',
+                        'unread' => true,
+                        'senderName' => $senderName,
+                        'senderUid' => $senderUid,
+                    ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Broadcast to admins failed: ' . $e->getMessage());
+        }
     }
 
     private function verifyFirebaseToken(Request $request): ?string

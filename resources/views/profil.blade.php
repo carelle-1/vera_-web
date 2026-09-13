@@ -199,13 +199,39 @@
             </ul>
           </div>
 
-          <div class="card">
-            <div class="card-head-row"><span>Documents &amp; Vérifications</span><span class="verified-pill">✓ Vérifié</span></div>
+<div class="card">
+            <div class="card-head-row"><span>Documents & Vérifications</span></div>
             <ul class="doc-list">
-              <li><span class="info-icon"><img src="/image/3917505.png" alt="Pièce d'identité"></span><span class="info-label">Pièce d'identité</span><span class="doc-status ok">Vérifié ✓</span></li>
-              <li><span class="info-icon"><img src="/image/formation.png" alt="Diplômes"></span><span class="info-label">Diplômes</span><span class="doc-status ok">Vérifiés ✓</span></li>
-              <li><span class="info-icon"><img src="/image/3917361.png" alt="Certifications"></span><span class="info-label">Certifications</span><span class="doc-status ok">Vérifiés ✓</span></li>
-              <li><span class="info-icon"><img src="/image/3917385.png" alt="Badge Bleu"></span><span class="info-label">Badge Bleu</span><span class="doc-status ok">Actif ✓</span></li>
+              <li>
+                <span class="info-icon"><img src="/image/3917505.png" alt="Pièce d'identité"></span>
+                <span class="info-label">Pièce d'identité</span>
+                <div class="doc-upload-area" data-doc-type="id_card">
+                  <span class="doc-status" id="idCardStatus">En attente</span>
+                  <div class="doc-upload-controls" id="idCardControls">
+                    <input type="file" id="idCardInput" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
+                    <button class="btn-primary-sm btn-doc-submit" type="button" onclick="document.getElementById('idCardInput').click()">Soumettre</button>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <span class="info-icon"><img src="/image/formation.png" alt="Diplômes"></span>
+                <span class="info-label">Diplômes</span>
+                <div class="doc-upload-area" data-doc-type="diploma">
+                  <span class="doc-status" id="diplomaStatus">En attente</span>
+                </div>
+              </li>
+              <li>
+                <span class="info-icon"><img src="/image/3917361.png" alt="Certifications"></span>
+                <span class="info-label">Certifications</span>
+                <div class="doc-upload-area" data-doc-type="certification">
+                  <span class="doc-status" id="certificationStatus">En attente</span>
+                </div>
+              </li>
+              <li>
+                <span class="info-icon"><img src="/image/3917385.png" alt="Badge Bleu"></span>
+                <span class="info-label">Badge Bleu</span>
+                <span class="doc-status" id="blueBadgeStatus">Non disponible</span>
+              </li>
             </ul>
           </div>
 

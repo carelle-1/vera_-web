@@ -127,18 +127,32 @@ function loadUsersFromFirebase() {
     console.log("[MESSAGES] users roles:", debugRoles);
     console.log("[MESSAGES] admins found:", adminUsers.length);
 
+    // Create a single "Admin Support" entry instead of multiple admins
+    const adminSupportUser = {
+      id: "admin_support",
+      type: "admin",
+      name: "administrateur",
+      role: "Équipe d'administration",
+      avatar: "a",  // First letter of "administrateur"
+      avatarBg: "linear-gradient(135deg,#03A9F4,#0288D1)",
+      status: "en ligne",
+      unread: 0,
+      avatarIsImage: false
+    };
+
     const veraUser = {
       id: "vera",
       type: "vera",
       name: "VERA (Assistant IA)",
       role: "Assistant IA",
-      avatar: "🤖",
-      avatarBg: "linear-gradient(135deg,#5b8bff,#1e40c9)",
+      avatar: "/image/1_nobg.png",
+      avatarBg: "transparent",
       status: "en ligne",
-      unread: 2
+      unread: 2,
+      avatarIsImage: true
     };
 
-    allUsers = [veraUser, ...adminUsers];
+    allUsers = [veraUser, adminSupportUser];
     if (!activeUserId && allUsers.length > 0) activeUserId = allUsers[0].id;
     updateTabCounts();
     renderUsersList();
@@ -178,9 +192,13 @@ function renderUsersList() {
     return typeOk && searchOk;
   });
 
-  list.innerHTML = filtered.map(u => `
+  list.innerHTML = filtered.map(u => {
+    const avatarHtml = u.avatarIsImage
+      ? `<img src="${u.avatar}" alt="${u.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      : u.avatar;
+    return `
     <div class="conv-item ${u.id === activeUserId ? 'active' : ''}" data-id="${u.id}">
-      <div class="conv-avatar" style="background:${u.avatarBg}">${u.avatar}</div>
+      <div class="conv-avatar" style="background:${u.avatarBg}">${avatarHtml}</div>
       <div class="conv-body">
         <div class="conv-top">
           <span class="conv-name">${u.name}</span>
@@ -192,7 +210,8 @@ function renderUsersList() {
       </div>
       ${u.unread > 0 ? `<span class="conv-unread">${u.unread}</span>` : ""}
     </div>
-  `).join("");
+  `;
+  }).join("");
 
   list.querySelectorAll(".conv-item").forEach(item => {
     item.addEventListener("click", () => {
@@ -208,8 +227,14 @@ function renderUsersList() {
 }
 
 function updateChatHeader(user) {
-  document.getElementById("chatAvatar").textContent = user.avatar;
-  document.getElementById("chatAvatar").style.background = user.avatarBg;
+  const avatarEl = document.getElementById("chatAvatar");
+  if (user.avatarIsImage) {
+    avatarEl.innerHTML = `<img src="${user.avatar}" alt="${user.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    avatarEl.style.background = "transparent";
+  } else {
+    avatarEl.textContent = user.avatar;
+    avatarEl.style.background = user.avatarBg;
+  }
   document.querySelector(".chat-name").innerHTML = user.name + (user.role === "Assistant IA" ? ' <span class="ia-badge">IA</span>' : "");
 }
 
@@ -516,7 +541,11 @@ function hideTypingIndicator() {
 
 function getAvatarForRecipient() {
   const user = allUsers.find(u => u.id === activeUserId);
-  return user ? user.avatar : "🤖";
+  if (!user) return "🤖";
+  if (user.avatarIsImage) {
+    return `<img src="${user.avatar}" alt="${user.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+  }
+  return user.avatar;
 }
 
 function formatTime(timestamp) {
@@ -546,6 +575,9 @@ function sendMessage() {
     showToast("Veuillez sélectionner un destinataire");
     return;
   }
+
+  // Map admin_support to admin for backend broadcasting
+  const backendRecipientId = recipientId === "admin_support" ? "admin" : recipientId;
 
   if (!text && !pendingAttachment) return;
 
@@ -624,7 +656,7 @@ function sendMessage() {
             "Authorization": "Bearer " + idToken,
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ message: text, recipientId: recipientId })
+          body: JSON.stringify({ message: text, recipientId: backendRecipientId })
         });
       })
       .then(res => {

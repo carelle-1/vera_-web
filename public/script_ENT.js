@@ -704,6 +704,11 @@ document.querySelectorAll("[data-panel-link]").forEach(link => {
   });
 });
 
+const publishBtn = document.getElementById("publishBtn");
+if (publishBtn) {
+  publishBtn.addEventListener("click", () => goToPanel("offres"));
+}
+
 // ============== CANDIDATURES ==============
 let candSelectedJobId = null;
 let candCurrentPage = 1;
@@ -1237,6 +1242,9 @@ function loadDashboardData() {
 
     const sidebarName = document.getElementById("sidebarCompanyName");
     if (sidebarName) sidebarName.textContent = companyName || "Nom de l'entreprise";
+
+    const topbarName = document.getElementById("topbarCompanyName");
+    if (topbarName) topbarName.textContent = companyName || "Nom de l'entreprise";
   }).catch((err) => console.error("[ENT] Erreur chargement profil:", err));
 
   const days = getLast7Days();
@@ -1391,6 +1399,9 @@ function loadEntrepriseSettings() {
     const sidebarName = document.getElementById("sidebarCompanyName");
     if (sidebarName) sidebarName.textContent = companyName || "Nom de l'entreprise";
 
+    const topbarName = document.getElementById("topbarCompanyName");
+    if (topbarName) topbarName.textContent = companyName || "Nom de l'entreprise";
+
     if (document.getElementById("previewName")) document.getElementById("previewName").textContent = companyName || "Nom de l'entreprise";
     if (document.getElementById("previewSector")) document.getElementById("previewSector").textContent = sector || "Secteur";
     if (document.getElementById("previewCity")) document.getElementById("previewCity").textContent = city || "Ville";
@@ -1425,6 +1436,8 @@ if (entrepriseForm) {
         if (document.getElementById("previewCity")) document.getElementById("previewCity").textContent = payload.city || "Ville";
         const sidebarName = document.getElementById("sidebarCompanyName");
         if (sidebarName) sidebarName.textContent = payload.companyName || "Nom de l'entreprise";
+        const topbarName = document.getElementById("topbarCompanyName");
+        if (topbarName) topbarName.textContent = payload.companyName || "Nom de l'entreprise";
       })
       .catch((err) => {
         console.error("[PARAMETRES] Erreur sauvegarde:", err);

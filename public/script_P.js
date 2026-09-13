@@ -1482,6 +1482,7 @@ function buildSkillModal() {
             <option value="Expert">Expert</option>
           </select>
         </label>
+        <label>Certificat (PDF, JPG, PNG - max 5 Mo)<input type="file" name="skillCertFile" accept=".pdf,.jpg,.jpeg,.png"></label>
         <div class="exp-form-actions">
           <button type="button" class="btn-outline-sm" id="skillCancel">Annuler</button>
           <button type="submit" class="btn-primary-sm">Enregistrer</button>
@@ -1511,9 +1512,20 @@ function buildSkillModal() {
     const ref = skillsRef();
     if (!ref) return;
     const task = skillEditId ? ref.child(skillEditId).update(payload) : ref.push(payload);
-    task.then(() => { updateLastModified();
-          renderCompletion(); closeSkillModal(); renderSkillsManage(); renderKeySkills(); })
-        .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
+    task.then((snap) => {
+      const skillId = skillEditId || snap.key;
+      updateLastModified();
+      renderCompletion();
+      closeSkillModal();
+      renderSkillsManage();
+      renderKeySkills();
+      // Upload skill certificate file if provided
+      const file = fd.get("skillCertFile");
+      if (file && file.size > 0) {
+        uploadDocumentForSkill(skillId, file, user.uid);
+      }
+    })
+      .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
   });
 }
 
@@ -1540,6 +1552,39 @@ function openSkillModal(id) {
 function closeSkillModal() {
   if (skillModal) skillModal.classList.remove("active");
   skillEditId = null;
+}
+
+function uploadDocumentForSkill(skillId, file, userId) {
+  const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+  if (!allowedTypes.includes(file.type)) {
+    console.warn("Format de fichier non supporté pour le certificat de compétence");
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    console.warn("Fichier certificat de compétence trop volumineux (max 5 Mo)");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    const fileName = file.name;
+    const timestamp = Date.now();
+    firebase.database().ref("users/" + userId + "/documents/certification").set({
+      fileName: fileName,
+      mimeType: file.type,
+      base64: base64,
+      status: "pending",
+      submittedAt: timestamp,
+      submittedBy: userId,
+      linkedSkillId: skillId
+    }).then(() => {
+      console.log("Certificat de compétence uploadé pour la compétence:", skillId);
+      loadDocumentStatus();
+    }).catch((err) => {
+      console.error("Erreur upload certificat de compétence:", err);
+    });
+  };
+  reader.readAsDataURL(file);
 }
 
 const skillAddBtn = document.getElementById("skillAddBtn");
@@ -1679,6 +1724,7 @@ function buildFormModal() {
           </label>
         </div>
         <label>Description<input type="text" name="description" placeholder="Votre spécialité en quelques mots..."></label>
+        <label>Diplôme (PDF, JPG, PNG - max 5 Mo)<input type="file" name="diplomaFile" accept=".pdf,.jpg,.jpeg,.png"></label>
         <div class="exp-form-actions">
           <button type="button" class="btn-outline-sm" id="formCancel">Annuler</button>
           <button type="submit" class="btn-primary-sm">Enregistrer</button>
@@ -1713,9 +1759,19 @@ function buildFormModal() {
     const ref = formRef();
     if (!ref) return;
     const task = formEditId ? ref.child(formEditId).update(payload) : ref.push(payload);
-    task.then(() => { updateLastModified();
-          renderCompletion(); closeFormModal(); renderFormations(); })
-        .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
+    task.then((snap) => {
+      const formationId = formEditId || snap.key;
+      updateLastModified();
+      renderCompletion();
+      closeFormModal();
+      renderFormations();
+      // Upload diploma file if provided
+      const file = fd.get("diplomaFile");
+      if (file && file.size > 0) {
+        uploadDocumentForFormation(formationId, file, user.uid);
+      }
+    })
+      .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
   });
 }
 
@@ -1746,6 +1802,39 @@ function openFormModal(id) {
 function closeFormModal() {
   if (formModal) formModal.classList.remove("active");
   formEditId = null;
+}
+
+function uploadDocumentForFormation(formationId, file, userId) {
+  const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+  if (!allowedTypes.includes(file.type)) {
+    console.warn("Format de fichier non supporté pour le diplôme");
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    console.warn("Fichier diplôme trop volumineux (max 5 Mo)");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    const fileName = file.name;
+    const timestamp = Date.now();
+    firebase.database().ref("users/" + userId + "/documents/diploma").set({
+      fileName: fileName,
+      mimeType: file.type,
+      base64: base64,
+      status: "pending",
+      submittedAt: timestamp,
+      submittedBy: userId,
+      linkedFormationId: formationId
+    }).then(() => {
+      console.log("Diplôme uploadé pour la formation:", formationId);
+      loadDocumentStatus();
+    }).catch((err) => {
+      console.error("Erreur upload diplôme:", err);
+    });
+  };
+  reader.readAsDataURL(file);
 }
 
 const formAddBtn = document.getElementById("formAddBtn");
@@ -1877,6 +1966,7 @@ function buildCertifModal() {
           <label>Date d'expiration<input type="date" name="expiryDate" placeholder="YYYY-MM-DD"></label>
         </div>
         <label>Description<input type="text" name="description" placeholder="Détails sur la certification..."></label>
+        <label>Certificat (PDF, JPG, PNG - max 5 Mo)<input type="file" name="certifFile" accept=".pdf,.jpg,.jpeg,.png"></label>
         <div class="exp-form-actions">
           <button type="button" class="btn-outline-sm" id="certifCancel">Annuler</button>
           <button type="submit" class="btn-primary-sm">Enregistrer</button>
@@ -1909,9 +1999,19 @@ function buildCertifModal() {
     const ref = certifRef();
     if (!ref) return;
     const task = certifEditId ? ref.child(certifEditId).update(payload) : ref.push(payload);
-    task.then(() => { updateLastModified();
-          renderCompletion(); closeCertifModal(); renderCertifications(); })
-        .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
+    task.then((snap) => {
+      const certifId = certifEditId || snap.key;
+      updateLastModified();
+      renderCompletion();
+      closeCertifModal();
+      renderCertifications();
+      // Upload certification file if provided
+      const file = fd.get("certifFile");
+      if (file && file.size > 0) {
+        uploadDocumentForCertification(certifId, file, user.uid);
+      }
+    })
+      .catch((err) => alert("Échec de l'enregistrement : " + (err.message || err.code)));
   });
 }
 
@@ -1941,6 +2041,39 @@ function openCertifModal(id) {
 function closeCertifModal() {
   if (certifModal) certifModal.classList.remove("active");
   certifEditId = null;
+}
+
+function uploadDocumentForCertification(certifId, file, userId) {
+  const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+  if (!allowedTypes.includes(file.type)) {
+    console.warn("Format de fichier non supporté pour la certification");
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    console.warn("Fichier certification trop volumineux (max 5 Mo)");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    const fileName = file.name;
+    const timestamp = Date.now();
+    firebase.database().ref("users/" + userId + "/documents/certification").set({
+      fileName: fileName,
+      mimeType: file.type,
+      base64: base64,
+      status: "pending",
+      submittedAt: timestamp,
+      submittedBy: userId,
+      linkedCertificationId: certifId
+    }).then(() => {
+      console.log("Certification uploadée pour la certification:", certifId);
+      loadDocumentStatus();
+    }).catch((err) => {
+      console.error("Erreur upload certification:", err);
+    });
+  };
+  reader.readAsDataURL(file);
 }
 
 const certifAddBtn = document.getElementById("certifAddBtn");
@@ -2541,9 +2674,134 @@ function addCvItem(type) {
     });
   }
 }
-
 if (cvModalClose) cvModalClose.addEventListener("click", closeCvModal);
+
 if (cvModalCancel) cvModalCancel.addEventListener("click", closeCvModal);
+
+// ============== DOCUMENTS & VÉRIFICATIONS ==============
+const DOC_TYPES = {
+  id_card: { label: "Pièce d'identité", statusEl: "idCardStatus", inputEl: "idCardInput", controlsEl: "idCardControls", previewEl: "idCardPreview" },
+  diploma: { label: "Diplômes", statusEl: "diplomaStatus" },
+  certification: { label: "Certifications", statusEl: "certificationStatus" }
+};
+
+function loadDocumentStatus() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  
+  firebase.database().ref("users/" + user.uid + "/documents").once("value").then((snap) => {
+    const docs = snap.val() || {};
+    Object.keys(DOC_TYPES).forEach(key => {
+      const doc = docs[key];
+      const config = DOC_TYPES[key];
+      const statusEl = document.getElementById(config.statusEl);
+      const controlsEl = document.getElementById(config.controlsEl);
+      const previewEl = document.getElementById(config.previewEl);
+      const inputEl = document.getElementById(config.inputEl);
+      
+      if (!statusEl) return;
+      
+      // For diploma and certification, only show status (no controls/preview)
+      const hasControls = !!controlsEl;
+      const hasPreview = !!previewEl;
+      
+      if (doc) {
+        if (doc.status === "pending") {
+          statusEl.textContent = "En vérification";
+          statusEl.className = "doc-status pending";
+        } else if (doc.status === "accepted") {
+          statusEl.textContent = "Vérifié";
+          statusEl.className = "doc-status ok";
+        } else if (doc.status === "rejected") {
+          statusEl.textContent = "Rejeté";
+          statusEl.className = "doc-status rejected";
+        }
+        if (hasControls) controlsEl.style.display = "none";
+      } else {
+        statusEl.textContent = "En attente";
+        statusEl.className = "doc-status";
+        if (hasControls) controlsEl.style.display = "block";
+      }
+      
+      // Hide preview for all doc types (no Voir button)
+      if (hasPreview) previewEl.style.display = "none";
+      
+      // Setup file input only for id_card
+      if (inputEl) {
+        inputEl.addEventListener("change", (e) => handleDocumentUpload(key, e));
+      }
+    });
+  });
+}
+
+function handleDocumentUpload(docType, event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  
+  const config = DOC_TYPES[docType];
+  const statusEl = document.getElementById(config.statusEl);
+  const controlsEl = document.getElementById(config.controlsEl);
+  const previewEl = document.getElementById(config.previewEl);
+  
+  // Validate file
+  const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+  if (!allowedTypes.includes(file.type)) {
+    alert("Format non supporté. Utilisez PDF, JPG ou PNG.");
+    event.target.value = "";
+    return;
+  }
+  
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Fichier trop volumineux (max 5 Mo).");
+    event.target.value = "";
+    return;
+  }
+  
+  statusEl.textContent = "Envoi...";
+  statusEl.className = "doc-status uploading";
+  controlsEl.style.display = "none";
+  
+  // Convert to base64 and save to Firebase
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    const fileName = file.name;
+    const timestamp = Date.now();
+    
+    firebase.database().ref("users/" + user.uid + "/documents/" + docType).set({
+      fileName: fileName,
+      mimeType: file.type,
+      base64: base64,
+      status: "pending",
+      submittedAt: timestamp,
+      submittedBy: user.uid
+    }).then(() => {
+      statusEl.textContent = "En vérification";
+      statusEl.className = "doc-status pending";
+      if (previewEl) {
+        previewEl.innerHTML = `<a href="${base64}" target="_blank" class="btn-outline-sm btn-voir">Voir</a>`;
+        previewEl.style.display = "block";
+      }
+      event.target.value = "";
+    }).catch((err) => {
+      statusEl.textContent = "Erreur";
+      statusEl.className = "doc-status rejected";
+      controlsEl.style.display = "block";
+      console.error(err);
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+// Initialize document status on load
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    loadDocumentStatus();
+  }
+});
 if (cvEditBtn) cvEditBtn.addEventListener("click", openCvModal);
 if (cvModalSave) cvModalSave.addEventListener("click", closeCvModal);
 

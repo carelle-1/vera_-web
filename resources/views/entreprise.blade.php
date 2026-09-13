@@ -20,7 +20,7 @@
     <div class="brand">
       <!-- <img src="/image/veras1.png" alt="VERA" class="brand-logo"> -->
       <div>
-        <div class="brand-name"><img src="/image/veras2.png" alt="VERA" class="brand-name-img" style="width:55px;height:auto;object-fit:contain;display:inline-block;vertical-align:middle;"> <span class="biz-tag">Entreprise</span></div>
+        <div class="brand-name"><img src="/image/veras2.png" alt="VERA" class="brand-name-img"> <span class="biz-tag">Entreprise</span></div>
         <div class="brand-sub">Espace recruteur</div>
       </div>
     </div>
@@ -57,14 +57,14 @@
       </a>
     </nav>
 
-     <div class="company-card">
-      <img src="https://i.pravatar.cc/64?img=15" alt="logo" id="sidebarCompanyLogo">
-      <div>
-        <div class="company-name" id="sidebarCompanyName">Notion Labs</div>
-        <div class="company-plan">Plan Business</div>
+     <!-- <div class="company-card">
+      <img src="https://i.pravatar.cc/64?img=15" alt="logo" id="sidebarCompanyLogo"> -->
+      <!-- <div> -->
+        <!-- <div class="company-name" id="sidebarCompanyName">Notion Labs</div>
+        <div class="company-plan">Plan Business</div> -->
         <!-- <div class="company-plan"><img src="/image/3917385.png" alt="Plan" width="14" height="14" style="vertical-align:middle;margin-right:4px;"> Plan Business</div> -->
-      </div>
-    </div>
+      <!-- </div> -->
+    <!-- </div> -->
 
     <div style="padding:0 14px 14px;">
       <form id="logoutForm" action="/logout" method="POST" style="margin-top:0;">
@@ -96,7 +96,7 @@
         <div class="user">
           <img src="https://i.pravatar.cc/64?img=15" alt="user" id="topbarUserImg">
           <div class="user-text">
-             <div>Notion Labs</div>
+             <div id="topbarCompanyName">Notion Labs</div>
              <div class="user-role">Recruteur</div>
            </div>
            <span class="chev"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
@@ -114,7 +114,7 @@
             <h1>Tableau de bord</h1>
             <p>Gérez vos offres, suivez vos candidatures et trouvez les meilleurs talents.</p>
           </div>
-          <button class="btn-primary" id="publishBtn"><img src="/image/envoyez.png" alt="" width="16" height="16" style="vertical-align:middle;margin-right:6px;"> Publier une offre</button>
+          <button class="btn-primary" id="publishBtn"><img src="/image/envoyez.png" alt="" width="16" height="16" style="vertical-align:middle;margin-right:6px;  filter: brightness(0) invert(1);"> Publier une offre</button>
         </div>
 
         <!-- KPI CARDS -->
@@ -520,7 +520,7 @@
 
         <div class="page-head">
           <div>
-            <h1 style="color: #12b3c9;">Messages <img src="/image/discussion.png" alt="" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"></h1>
+            <h1 style="color: #12b3c9;">Messages</h1>
             <p>Échangez avec VERA, les candidats et notre équipe. Nous sommes là pour vous accompagner.</p>
           </div>
           <button class="btn-primary" id="newMsgBtn"><img src="/image/mail.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Nouveau message</button>
